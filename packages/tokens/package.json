@@ -1,0 +1,22 @@
+{
+  "name": "@devwebdex/tokens",
+  "version": "0.1.0",
+  "description": "Design tokens WEbdEX (fonte: Variables do Figma) expostos como tema do Tailwind 4",
+  "license": "UNLICENSED",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./theme.css": "./dist/theme.css"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "5.6.1"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

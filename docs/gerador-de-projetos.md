@@ -1,6 +1,6 @@
 # Gerador de projetos WEbdEX
 
-Status: **em definição**. Nenhum código foi escrito ainda. Este documento registra as decisões fechadas e o que ainda está em aberto. Atualize-o a cada decisão nova.
+Status: **fundação implementada, gerador ainda não**. Existem o monorepo (pnpm + Turborepo), os pacotes de configuração, `@devwebdex/tokens`, `@devwebdex/ui` (vazio) e o kit de handoff do design. A TUI e os templates de projeto ainda não foram escritos. Este documento registra as decisões fechadas e o que ainda está em aberto. Atualize-o a cada decisão nova.
 
 ## Objetivo
 
@@ -95,15 +95,34 @@ Decisão:
 - Os agentes apontam para esses `.md` em vez de repetir o conteúdo, e a mesma documentação serve humanos e LLMs.
 - Os docs são copiados, não instalados como pacote, porque ferramentas de IA costumam ignorar `node_modules`. Por isso o Renovate não os atualiza; um `webdex sync` fica para a v2.
 
+### D7. Componentes e tokens: responsabilidade do time de design
+
+- O time de design cria tokens e componentes com o subagente `design-to-code`, seguindo [ui/figma-para-componentes.md](ui/figma-para-componentes.md). O time de dev mantém a fundação (pacotes, build, convenções).
+- Componentes são distribuídos como pacote npm `@devwebdex/ui`, publicado a partir de `packages/ui` deste monorepo. A opção de registry com cópia (estilo shadcn) foi descartada: correções não chegariam aos projetos.
+- Tokens no formato DTCG em `packages/tokens/src/`. O Style Dictionary gera `dist/theme.css` com bloco `@theme`, então os nomes dos tokens seguem os namespaces do Tailwind 4 (`color`, `radius`, `spacing`, `font`, `text`...).
+- Componentes: variantes com `class-variance-authority`, classes mescladas por `cn` (`clsx` + `tailwind-merge`), só classes ligadas a tokens.
+
+### D8. Distribuição da TUI
+
+- `bunx @devwebdex/create`: exige Bun ≥ 1.3 instalado. O `.npmrc` com acesso ao GitHub Packages já é necessário para os pacotes `@devwebdex/*`.
+- Escolhido por padrão (recomendação aceita sem objeção). Binário compilado por SO fica descartado na v1: exigiria pipeline de release por SO e assinatura no Windows.
+
+### D9. Versões fixadas
+
+- TypeScript **6.0.x** em todo o monorepo: o typescript-eslint 8.71 declara suporte a `typescript <6.1.0`, e o TypeScript 7 (nativo em Go) já é o `latest` no npm.
+- tsconfigs explícitos em `module`/`types`, porque o TypeScript 6 mudou os padrões (`types: []`, `module: NodeNext`).
+
 ## Em aberto
 
 | # | Tema | Pendência |
 |---|---|---|
-| A1 | Distribuição da TUI | `bunx @devwebdex/create` (exige Bun instalado) ou binário compilado por SO |
-| A2 | Componentes de UI | Pacote npm `@devwebdex/ui` ou registry no estilo shadcn (cópia para o projeto) |
-| A3 | Pipeline Figma | Link do Figma pendente; definir o que é automatizado (tokens) e o que é assistido (componentes). MCP oficial do Figma instalado (plugin `figma@claude-plugins-official`), mas a conta conectada é Starter/View: limite de 6 chamadas por mês. O pipeline exige assento Dev ou Full em plano Professional, Organization ou Enterprise |
+| A3 | Assento Figma | O time de design precisa de assento Dev ou Full em plano Professional ou superior. A conta testada (Starter/View) tem limite de 6 chamadas por mês |
 | A4 | Identidade do repositório | O nome `webdex-shared-components` não descreve um gerador |
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
+| A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
+| A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
+| A8 | Primitivos acessíveis | Biblioteca para dialog, menu, select, popover, tooltip e tabs (ex.: Radix ou Base UI). Até decidir, esses componentes não são implementados |
+| A9 | Publicação | Versionamento (ex.: changesets) e workflow de publicação no GitHub Packages |
 
 ## Riscos conhecidos
 
@@ -111,3 +130,4 @@ Decisão:
 - **R2** Cerca de 21 combinações de stack. Sem matriz de CI, as combinações pouco usadas quebram sem ninguém notar.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
 - **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 6 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma.
+- **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3).

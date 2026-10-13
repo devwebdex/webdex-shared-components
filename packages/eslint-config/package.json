@@ -1,0 +1,23 @@
+{
+  "name": "@devwebdex/eslint-config",
+  "version": "0.1.0",
+  "description": "ESLint mínimo para backends WEbdEX: só regras de promessas com informação de tipo (o resto é Biome)",
+  "license": "UNLICENSED",
+  "type": "module",
+  "files": [
+    "index.js"
+  ],
+  "exports": {
+    ".": "./index.js"
+  },
+  "dependencies": {
+    "typescript-eslint": "8.71.2"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.22.0",
+    "typescript": ">=5.0.0 <6.1.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@devwebdex/biome-config",
+  "version": "0.1.0",
+  "description": "Configuração Biome (lint e formatação) padrão dos projetos WEbdEX",
+  "license": "UNLICENSED",
+  "type": "module",
+  "files": [
+    "config.json"
+  ],
+  "exports": {
+    ".": "./config.json"
+  },
+  "peerDependencies": {
+    "@biomejs/biome": ">=2.5.0 <3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

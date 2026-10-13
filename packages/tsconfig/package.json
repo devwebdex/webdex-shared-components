@@ -1,0 +1,17 @@
+{
+  "name": "@devwebdex/tsconfig",
+  "version": "0.1.0",
+  "description": "tsconfigs padrão dos projetos WEbdEX",
+  "license": "UNLICENSED",
+  "files": [
+    "*.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./node.json": "./node.json",
+    "./react-library.json": "./react-library.json"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
