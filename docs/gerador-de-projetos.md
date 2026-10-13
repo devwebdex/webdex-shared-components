@@ -67,6 +67,7 @@ Escolha fixa, não é opção na TUI.
 - Runtime: Bun ≥ 1.3. Node só funciona a partir da 26.4 com `--experimental-ffi`.
 - Ink foi descartado porque descarta eventos de mouse. Bubble Tea (Go) foi descartado por exigir uma linguagem que o time não usa.
 - **Risco:** OpenTUI se declara "em desenvolvimento". Mitigação: versão fixada e TUI como camada fina sobre um núcleo de geração que não depende dela.
+- **Visual** (escolhido pelo operador): painel com etapas. Logo "WEbdEX" em fonte ASCII (`block`) com "BD" em cor clara para lembrar o "bd" minúsculo da marca; barra lateral com ✓ feito, ● atual e ○ próximo (etapas feitas são clicáveis para voltar); cartões com descrição e selos "recomendado" / "em breve"; cores da marca tiradas do painel WEbdEX (magenta `#f5127c`, fundo ameixa `#0c0611`). Em terminal menor que 72×34, entra o modo compacto: logo pequeno, sem barra lateral e cartões sem descrição.
 - **Modo não interativo** com o mesmo núcleo, por exemplo `webdex create --backend nest --orm drizzle --db postgres --frontend next --yes`. Necessário para o CI das combinações, para agentes de IA e para terminais sem suporte a mouse.
 
 ### D5. Trava contra reexecução
@@ -176,7 +177,7 @@ Validado: build, check-types e lint das três combinações (fullstack, só fron
 | A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
 | A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
 | A8 | Primitivos acessíveis | Biblioteca para dialog, menu, select, popover, tooltip e tabs (ex.: Radix ou Base UI). Até decidir, esses componentes não são implementados |
-| A9 | Publicação | Versionamento (ex.: changesets) e workflow de publicação no GitHub Packages. Bloqueia o uso via `bunx` e os Dockerfiles |
+| A9 | Publicação | Publicar os `@devwebdex/*` no GitHub Packages. Proposta: changesets (cada PR declara pacote e tipo de mudança: patch, minor ou major), versões independentes por pacote, e publicação quando alguém aprova o PR de release aberto pelo GitHub Actions. Aguarda confirmação. Bloqueia o uso via `bunx` e os Dockerfiles |
 | A10 | Testes nos projetos gerados | Ferramenta e estrutura de testes do template (o Nest 12 usa vitest por padrão) |
 | A11 | Dockerfile por app | Adiado até A9 |
 | A12 | CI | Workflow deste repositório (lint, tipos, testes, matriz de combinações com `--yes --link-packages`) e workflow do projeto gerado |

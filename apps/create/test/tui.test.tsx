@@ -39,14 +39,14 @@ test('fluxo completo pelo mouse', async () => {
     result = r
   })
 
-  expect(s.captureCharFrame()).toContain('Passo 1 de 5: Arquitetura')
+  expect(s.captureCharFrame()).toContain('● Arquitetura')
   await click(s, 'Monólito modular')
   await click(s, 'NestJS')
-  expect(s.captureCharFrame()).toContain('Drizzle (em breve)')
+  expect(s.captureCharFrame()).toMatch(/○ Drizzle +em breve/)
   await click(s, 'Prisma')
   await click(s, 'PostgreSQL')
   await click(s, 'Next.js')
-  expect(s.captureCharFrame()).toContain('Resumo do projeto')
+  expect(s.captureCharFrame()).toContain('● Resumo')
   await click(s, 'Criar projeto')
 
   expect(result).toEqual({
@@ -57,8 +57,8 @@ test('fluxo completo pelo mouse', async () => {
 
 test('opção indisponível não avança', async () => {
   const s = await mount(() => {})
-  await click(s, 'Microserviços (em breve)')
-  expect(s.captureCharFrame()).toContain('Passo 1 de 5: Arquitetura')
+  await click(s, 'Microserviços')
+  expect(s.captureCharFrame()).toContain('● Arquitetura')
 })
 
 test('sem backend pula ORM e banco', async () => {
@@ -68,7 +68,10 @@ test('sem backend pula ORM e banco', async () => {
   })
   await click(s, 'Monólito modular')
   await click(s, 'Sem backend')
-  expect(s.captureCharFrame()).toContain('Passo 3 de 3: Frontend')
+  const frame = s.captureCharFrame()
+  expect(frame).toContain('● Frontend')
+  expect(frame).not.toContain('○ ORM')
+  expect(frame).not.toContain('○ Banco de dados')
   await click(s, 'Next.js')
   await click(s, 'Criar projeto')
   expect(result?.options.backend).toBe('none')
@@ -80,11 +83,22 @@ test('Enter seleciona a opção destacada e Esc cancela', async () => {
     result = r
   })
   await interact(s, () => s.mockInput.pressEnter())
-  expect(s.captureCharFrame()).toContain('Passo 2 de 5: Backend')
+  expect(s.captureCharFrame()).toContain('● Backend')
   // O parser de teclado só emite um ESC isolado após um intervalo, para distingui-lo de sequências de escape.
   await interact(s, async () => {
     s.mockInput.pressEscape()
     await Bun.sleep(100)
   })
   expect(result).toBeNull()
+})
+
+test('terminal estreito usa o layout compacto', async () => {
+  setup = await testRender(
+    <App directory="/tmp/webdex-tui-test/acme" initial={defaults} onDone={() => {}} />,
+    { width: 64, height: 30 }
+  )
+  await setup.renderOnce()
+  const frame = setup.captureCharFrame()
+  expect(frame).toContain('Arquitetura (1 de 6)')
+  expect(frame).not.toContain('Etapas')
 })

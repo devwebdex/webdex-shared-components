@@ -1,6 +1,7 @@
 export type Option<T extends string> = {
   value: T
   label: string
+  description: string
   available: boolean
 }
 
@@ -21,27 +22,77 @@ export type ProjectOptions = {
 
 export const catalog = {
   architecture: [
-    { value: 'modular-monolith', label: 'Monólito modular', available: true },
-    { value: 'microservices', label: 'Microserviços', available: false },
+    {
+      value: 'modular-monolith',
+      label: 'Monólito modular',
+      description: 'Uma aplicação, dividida em módulos com fronteiras claras',
+      available: true,
+    },
+    {
+      value: 'microservices',
+      label: 'Microserviços',
+      description: 'Serviços separados, cada um com deploy próprio',
+      available: false,
+    },
   ] satisfies Option<Architecture>[],
   backend: [
-    { value: 'nest', label: 'NestJS', available: true },
-    { value: 'adonis', label: 'AdonisJS', available: false },
-    { value: 'express', label: 'Express', available: false },
-    { value: 'none', label: 'Sem backend', available: true },
+    {
+      value: 'nest',
+      label: 'NestJS',
+      description: 'Módulos e injeção de dependência, em TypeScript',
+      available: true,
+    },
+    {
+      value: 'adonis',
+      label: 'AdonisJS',
+      description: 'Framework completo, com ORM e autenticação próprios',
+      available: false,
+    },
+    {
+      value: 'express',
+      label: 'Express',
+      description: 'Mínimo e flexível, com a estrutura de módulos da WEbdEX',
+      available: false,
+    },
+    { value: 'none', label: 'Sem backend', description: 'Só o frontend', available: true },
   ] satisfies Option<Backend>[],
   orm: [
-    { value: 'prisma', label: 'Prisma', available: true },
-    { value: 'drizzle', label: 'Drizzle', available: false },
-    { value: 'lucid', label: 'Lucid', available: false },
+    {
+      value: 'prisma',
+      label: 'Prisma',
+      description: 'Schema declarativo e migrações geradas',
+      available: true,
+    },
+    {
+      value: 'drizzle',
+      label: 'Drizzle',
+      description: 'Consultas próximas do SQL, tipadas em TypeScript',
+      available: false,
+    },
+    { value: 'lucid', label: 'Lucid', description: 'ORM nativo do AdonisJS', available: false },
   ] satisfies Option<Orm>[],
   database: [
-    { value: 'postgres', label: 'PostgreSQL', available: true },
-    { value: 'mysql', label: 'MySQL', available: false },
+    {
+      value: 'postgres',
+      label: 'PostgreSQL',
+      description: 'Roda localmente pelo docker compose',
+      available: true,
+    },
+    {
+      value: 'mysql',
+      label: 'MySQL',
+      description: 'Para projetos que já dependem de MySQL',
+      available: false,
+    },
   ] satisfies Option<Database>[],
   frontend: [
-    { value: 'next', label: 'Next.js', available: true },
-    { value: 'none', label: 'Sem frontend', available: true },
+    {
+      value: 'next',
+      label: 'Next.js',
+      description: 'React com Tailwind, tokens e componentes da WEbdEX',
+      available: true,
+    },
+    { value: 'none', label: 'Sem frontend', description: 'Só a API', available: true },
   ] satisfies Option<Frontend>[],
 }
 

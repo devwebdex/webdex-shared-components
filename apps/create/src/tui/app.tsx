@@ -1,9 +1,11 @@
+import { homedir } from 'node:os'
 import { basename, resolve } from 'node:path'
 import { createCliRenderer } from '@opentui/core'
-import { createRoot, useKeyboard } from '@opentui/react'
+import { createRoot, useKeyboard, useTerminalDimensions } from '@opentui/react'
 import { useState } from 'react'
 import {
   catalog,
+  defaults,
   isIrrelevant,
   type Option,
   ormsFor,
@@ -13,6 +15,7 @@ import { lockReason } from '../core/lock.js'
 
 type Choices = Omit<ProjectOptions, 'name'>
 type ChoiceKey = keyof Choices
+type Stage = 'directory' | number | 'summary'
 export type TuiResult = { directory: string; options: ProjectOptions }
 type Props = {
   directory?: string | undefined
@@ -28,7 +31,20 @@ const steps: { key: ChoiceKey; title: string }[] = [
   { key: 'frontend', title: 'Frontend' },
 ]
 
-const colors = { accent: '#4f8cff', muted: '#6b7280', error: '#ef4444', text: '#e5e7eb' }
+// Cores da marca WEbdEX (painel WEbdEX); line, muted e faint são tons derivados do fundo ameixa.
+const palette = {
+  bg: '#0c0611',
+  panel: '#140a1c',
+  raised: '#1d1127',
+  line: '#3b2645',
+  brand: '#f5127c',
+  brandSoft: '#ff6ba8',
+  text: '#fbf5f9',
+  muted: '#a593ad',
+  faint: '#6e5a78',
+  success: '#1fc98a',
+  danger: '#ff5c40',
+}
 
 export async function runTui(input: Omit<Props, 'onDone'>): Promise<TuiResult | null> {
   let finish: (result: TuiResult | null) => void = () => {}
@@ -39,6 +55,7 @@ export async function runTui(input: Omit<Props, 'onDone'>): Promise<TuiResult | 
   const renderer = await createCliRenderer({
     exitOnCtrlC: false,
     useMouse: true,
+    backgroundColor: palette.bg,
     onDestroy: () => finish(null),
   })
   createRoot(renderer).render(
@@ -54,19 +71,19 @@ export async function runTui(input: Omit<Props, 'onDone'>): Promise<TuiResult | 
 }
 
 export function App({ directory: initialDirectory, initial, onDone }: Props) {
+  const { width, height } = useTerminalDimensions()
   const [directory, setDirectory] = useState(initialDirectory ?? '')
   const [directoryError, setDirectoryError] = useState<string | null>(null)
   const [choices, setChoices] = useState(initial)
-  const [stage, setStage] = useState<'directory' | number | 'summary'>(
-    initialDirectory ? 0 : 'directory'
-  )
+  const [stage, setStage] = useState<Stage>(initialDirectory ? 0 : 'directory')
   const [highlight, setHighlight] = useState(0)
 
   const visibleSteps = steps.filter((step) => !isIrrelevant({ ...choices, name: '' }, step.key))
   const step = typeof stage === 'number' ? visibleSteps[stage] : undefined
   const options = step ? optionsFor(step.key, choices) : []
+  const compact = width < 72 || height < 34
 
-  function goTo(next: typeof stage) {
+  function goTo(next: Stage) {
     setStage(next)
     if (typeof next === 'number') {
       const target = visibleSteps[next]
@@ -82,12 +99,14 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
 
   function submitDirectory() {
     const name = basename(resolve(directory || '.'))
-    if (!directory) return setDirectoryError('informe o diretório do projeto')
+    if (!directory) return setDirectoryError('Informe a pasta do projeto.')
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
-      return setDirectoryError(`"${name}" não serve como nome: use minúsculas, números e hífen`)
+      return setDirectoryError(
+        `"${name}" não serve como nome de projeto: use minúsculas, números e hífen.`
+      )
     }
     const reason = lockReason(resolve(directory))
-    if (reason) return setDirectoryError(reason)
+    if (reason) return setDirectoryError(`Não dá para usar esta pasta: ${reason}`)
     setDirectoryError(null)
     goTo(0)
   }
@@ -144,66 +163,296 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
     }
   })
 
+  const sidebar = [
+    ...(initialDirectory ? [] : [{ title: 'Pasta', stage: 'directory' as Stage }]),
+    ...visibleSteps.map((s, index) => ({ title: s.title, stage: index as Stage })),
+    { title: 'Resumo', stage: 'summary' as Stage },
+  ]
+  const currentIndex = sidebar.findIndex((item) => item.stage === stage)
+  const panelTitle =
+    stage === 'directory' ? 'Pasta' : stage === 'summary' ? 'Resumo' : (step?.title ?? '')
+
   return (
-    <box flexDirection="column" padding={1} gap={1}>
-      <text fg={colors.accent}>WEbdEX · novo projeto</text>
+    <box
+      flexDirection="column"
+      width="100%"
+      height="100%"
+      backgroundColor={palette.bg}
+      paddingX={2}
+      paddingY={1}
+      gap={1}
+    >
+      <Header directory={directory} compact={compact} />
 
-      {stage === 'directory' && (
-        <box flexDirection="column" gap={1}>
-          <text>Diretório do projeto (o nome do projeto vem do nome da pasta):</text>
-          <box border borderColor={colors.accent} height={3}>
-            <input
-              focused
-              placeholder="meu-projeto"
-              onInput={setDirectory}
-              onSubmit={submitDirectory}
-            />
+      <box flexDirection="row" gap={2} flexGrow={1}>
+        {!compact && (
+          <box
+            title="Etapas"
+            titleColor={palette.muted}
+            border
+            borderStyle="rounded"
+            borderColor={palette.line}
+            backgroundColor={palette.panel}
+            width={24}
+            paddingX={1}
+            flexDirection="column"
+          >
+            {sidebar.map((item, index) => {
+              const status =
+                index < currentIndex ? 'done' : index === currentIndex ? 'current' : 'pending'
+              return (
+                <text
+                  key={item.title}
+                  onMouseDown={() => {
+                    if (status === 'done') goTo(item.stage)
+                  }}
+                >
+                  <span fg={markerColor[status]}>{markers[status]}</span>
+                  <span
+                    fg={status === 'pending' ? palette.faint : palette.text}
+                  >{` ${item.title}`}</span>
+                </text>
+              )
+            })}
           </box>
-          {directoryError && <text fg={colors.error}>{directoryError}</text>}
-        </box>
-      )}
+        )}
 
-      {step && (
-        <box flexDirection="column" gap={1}>
-          <text>{`Passo ${(stage as number) + 1} de ${visibleSteps.length}: ${step.title}`}</text>
-          {options.map((option, index) => (
-            <box
-              key={option.value}
-              border
-              borderColor={index === highlight ? colors.accent : colors.muted}
-              paddingLeft={1}
-              onMouseDown={() => choose(option)}
-            >
-              <text fg={option.available ? colors.text : colors.muted}>
-                {option.available ? option.label : `${option.label} (em breve)`}
+        <box
+          title={compact ? `${panelTitle} (${currentIndex + 1} de ${sidebar.length})` : panelTitle}
+          titleColor={palette.brandSoft}
+          border
+          borderStyle="rounded"
+          borderColor={palette.line}
+          backgroundColor={palette.panel}
+          flexGrow={1}
+          padding={1}
+          flexDirection="column"
+          gap={1}
+        >
+          {stage === 'directory' && (
+            <>
+              <text fg={palette.text}>
+                Onde criar o projeto? O nome do projeto vem do nome da pasta.
               </text>
-            </box>
-          ))}
-        </box>
-      )}
+              <box
+                border
+                borderStyle="rounded"
+                borderColor={palette.brand}
+                backgroundColor={palette.raised}
+                height={3}
+                paddingX={1}
+              >
+                <input
+                  focused
+                  value={directory}
+                  placeholder="../meu-projeto"
+                  onInput={setDirectory}
+                  onSubmit={submitDirectory}
+                />
+              </box>
+              {directoryError && <text fg={palette.danger}>{`✕ ${directoryError}`}</text>}
+            </>
+          )}
 
-      {stage === 'summary' && (
-        <box flexDirection="column" gap={1}>
-          <text>{`Resumo do projeto em ${directory}:`}</text>
-          {visibleSteps.map((s) => (
-            <text key={s.key}>{`  ${s.title}: ${labelOf(s.key, choices[s.key])}`}</text>
-          ))}
-          <box flexDirection="row" gap={2}>
-            <box border borderColor={colors.accent} paddingX={1} onMouseDown={confirm}>
-              <text fg={colors.accent}>Criar projeto</text>
+          {step && (
+            <box flexDirection="column">
+              {options.map((option, index) => (
+                <OptionCard
+                  key={option.value}
+                  option={option}
+                  compact={compact}
+                  selected={choices[step.key] === option.value}
+                  focused={index === highlight}
+                  recommended={defaults[step.key] === option.value}
+                  onHover={() => option.available && setHighlight(index)}
+                  onChoose={() => choose(option)}
+                />
+              ))}
             </box>
-            <box border borderColor={colors.muted} paddingX={1} onMouseDown={back}>
-              <text>Voltar</text>
-            </box>
-            <box border borderColor={colors.muted} paddingX={1} onMouseDown={() => onDone(null)}>
-              <text>Cancelar</text>
-            </box>
-          </box>
-        </box>
-      )}
+          )}
 
-      <text fg={colors.muted}>Clique com o mouse ou use ↑↓ e Enter · ← volta · Esc sai</text>
+          {stage === 'summary' && (
+            <Summary
+              directory={directory}
+              rows={visibleSteps.map((s) => ({
+                title: s.title,
+                value: labelOf(s.key, choices[s.key]),
+              }))}
+              onConfirm={confirm}
+              onBack={back}
+              onCancel={() => onDone(null)}
+            />
+          )}
+        </box>
+      </box>
+
+      <Footer stage={stage} />
     </box>
+  )
+}
+
+const markers = { done: '✓', current: '●', pending: '○' }
+const markerColor = { done: palette.success, current: palette.brand, pending: palette.faint }
+
+/** O "bd" minúsculo é a assinatura do nome WEbdEX; a fonte só tem maiúsculas, então ele vem pela cor. */
+function Header({ directory, compact }: { directory: string; compact: boolean }) {
+  const font = compact ? 'tiny' : 'block'
+  return (
+    <box flexDirection="column" flexShrink={0}>
+      <box flexDirection="row" gap={1} height={compact ? 2 : 6}>
+        <ascii-font text="WE" font={font} color={palette.brand} />
+        <ascii-font text="BD" font={font} color={palette.text} />
+        <ascii-font text="EX" font={font} color={palette.brand} />
+      </box>
+      <text fg={palette.muted}>
+        {directory ? 'Novo projeto ' : 'Novo projeto'}
+        {directory && <span fg={palette.text}>{basename(resolve(directory))}</span>}
+      </text>
+    </box>
+  )
+}
+
+function tildify(path: string) {
+  const home = homedir()
+  return path.startsWith(home) ? `~${path.slice(home.length)}` : path
+}
+
+type OptionCardProps = {
+  option: Option<string>
+  compact: boolean
+  selected: boolean
+  focused: boolean
+  recommended: boolean
+  onHover: () => void
+  onChoose: () => void
+}
+
+function OptionCard(props: OptionCardProps) {
+  const { option, compact, selected, focused, recommended, onHover, onChoose } = props
+  const enabled = option.available
+  const badge = !enabled ? 'em breve' : recommended ? 'recomendado' : ''
+  return (
+    <box
+      border
+      borderStyle="rounded"
+      borderColor={focused && enabled ? palette.brand : palette.line}
+      backgroundColor={focused && enabled ? palette.raised : palette.panel}
+      paddingX={1}
+      flexDirection="column"
+      flexShrink={0}
+      onMouseOver={onHover}
+      onMouseDown={onChoose}
+    >
+      <box flexDirection="row" justifyContent="space-between">
+        <text>
+          <span fg={selected && enabled ? palette.brand : palette.faint}>
+            {selected ? '●' : '○'}
+          </span>
+          <span fg={enabled ? palette.text : palette.faint}>
+            <strong>{` ${option.label}`}</strong>
+          </span>
+        </text>
+        {badge && <text fg={enabled ? palette.brandSoft : palette.faint}>{badge}</text>}
+      </box>
+      {!compact && (
+        <text fg={enabled ? palette.muted : palette.faint}>{`  ${option.description}`}</text>
+      )}
+    </box>
+  )
+}
+
+type SummaryProps = {
+  directory: string
+  rows: { title: string; value: string }[]
+  onConfirm: () => void
+  onBack: () => void
+  onCancel: () => void
+}
+
+function Summary({ directory, rows, onConfirm, onBack, onCancel }: SummaryProps) {
+  return (
+    <>
+      <box flexDirection="column">
+        {[{ title: 'Pasta', value: tildify(resolve(directory)) }, ...rows].map((row) => (
+          <box key={row.title} flexDirection="row">
+            <box width={16}>
+              <text fg={palette.muted}>{row.title}</text>
+            </box>
+            <text fg={palette.text}>{row.value}</text>
+          </box>
+        ))}
+      </box>
+      <text fg={palette.muted}>
+        Depois de criado, o gerador não roda de novo nesta pasta, para não sobrescrever o projeto.
+      </text>
+      <box flexDirection="row" flexWrap="wrap" gap={2}>
+        <box
+          border
+          borderStyle="rounded"
+          borderColor={palette.brand}
+          backgroundColor={palette.brand}
+          paddingX={1}
+          flexShrink={0}
+          onMouseDown={onConfirm}
+        >
+          <text fg="#ffffff">
+            <strong>Criar projeto</strong>
+          </text>
+        </box>
+        <box
+          border
+          borderStyle="rounded"
+          borderColor={palette.line}
+          paddingX={1}
+          flexShrink={0}
+          onMouseDown={onBack}
+        >
+          <text fg={palette.text}>Voltar</text>
+        </box>
+        <box
+          border
+          borderStyle="rounded"
+          borderColor={palette.line}
+          paddingX={1}
+          flexShrink={0}
+          onMouseDown={onCancel}
+        >
+          <text fg={palette.muted}>Cancelar</text>
+        </box>
+      </box>
+    </>
+  )
+}
+
+function Footer({ stage }: { stage: Stage }) {
+  const hints: [string, string][] =
+    stage === 'directory'
+      ? [
+          ['Enter', 'confirmar'],
+          ['Esc', 'sair'],
+        ]
+      : stage === 'summary'
+        ? [
+            ['Enter', 'criar'],
+            ['←', 'voltar'],
+            ['Esc', 'sair'],
+          ]
+        : [
+            ['↑↓', 'navegar'],
+            ['Enter', 'escolher'],
+            ['←', 'voltar'],
+            ['Esc', 'sair'],
+          ]
+  return (
+    <text flexShrink={0}>
+      {hints.map(([key, action]) => (
+        <span key={key}>
+          <span fg={palette.text}>{key}</span>
+          <span fg={palette.faint}>{` ${action}   `}</span>
+        </span>
+      ))}
+      <span fg={palette.faint}>ou use o mouse</span>
+    </text>
   )
 }
 
