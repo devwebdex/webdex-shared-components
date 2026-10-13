@@ -25,6 +25,7 @@ Regras mínimas para todo código do projeto. Baseado no OWASP Top 10. O subagen
 - Segredos só em variáveis de ambiente; nunca no código, em logs ou em mensagens de erro.
 - No Next, só variáveis `NEXT_PUBLIC_*` chegam ao navegador: nunca coloque segredo nelas.
 - A aplicação falha na inicialização se uma variável obrigatória estiver ausente.
+- Serviços do `docker-compose.yml` de desenvolvimento publicam portas só em `127.0.0.1`: as senhas ali são de desenvolvimento e o Docker ignora o firewall do host.
 
 ## Erros e logs
 
