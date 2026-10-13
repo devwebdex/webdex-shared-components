@@ -101,7 +101,7 @@ Decisão:
 |---|---|---|
 | A1 | Distribuição da TUI | `bunx @devwebdex/create` (exige Bun instalado) ou binário compilado por SO |
 | A2 | Componentes de UI | Pacote npm `@devwebdex/ui` ou registry no estilo shadcn (cópia para o projeto) |
-| A3 | Pipeline Figma | Link do Figma pendente; definir o que é automatizado (tokens) e o que é assistido (componentes) |
+| A3 | Pipeline Figma | Link do Figma pendente; definir o que é automatizado (tokens) e o que é assistido (componentes). MCP oficial do Figma instalado (plugin `figma@claude-plugins-official`), mas a conta conectada é Starter/View: limite de 6 chamadas por mês. O pipeline exige assento Dev ou Full em plano Professional, Organization ou Enterprise |
 | A4 | Identidade do repositório | O nome `webdex-shared-components` não descreve um gerador |
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
 
@@ -110,3 +110,4 @@ Decisão:
 - **R1** OpenTUI ainda é jovem; mudanças de API podem afetar a TUI.
 - **R2** Cerca de 21 combinações de stack. Sem matriz de CI, as combinações pouco usadas quebram sem ninguém notar.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
+- **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 6 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma.
