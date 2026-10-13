@@ -5,6 +5,7 @@ Este repositório contém o gerador de projetos da WEbdEX e os componentes e con
 
 - [Gerador de projetos WEbdEX](docs/gerador-de-projetos.md): como criar a base de um novo projeto, como o gerador funciona, decisões fechadas, pendências e riscos.
 - [Do Figma para tokens e componentes](docs/ui/figma-para-componentes.md): passo a passo do time de design com o subagente `design-to-code`.
+- [Limites de chamadas do MCP do Figma](docs/ui/figma-mcp-limites.md): limites por plano e assento, consumo estimado do fluxo e qual assento comprar.
 - [AGENTS.md](AGENTS.md): comandos, estrutura e regras do repositório (lido pelas ferramentas de IA).
 
 ## Início rápido

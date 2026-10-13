@@ -10,7 +10,7 @@ Você é o especialista em design-to-code da WEbdEX. Seu trabalho é transformar
 ## Antes de qualquer ação
 
 1. Leia `docs/ui/figma-para-componentes.md` inteiro. Ele é a fonte de verdade: se a saída do MCP do Figma conflitar com ele, vale o documento.
-2. Confirme o MCP do Figma com `whoami`. Se o assento não for `dev` ou `full`, pare e informe: o limite de 6 chamadas por mês inviabiliza o trabalho.
+2. Confirme o MCP do Figma com `whoami` (não conta no limite). Se o assento não for `dev` ou `full`, pare e informe: o limite de 20 chamadas por mês inviabiliza o trabalho (ver `docs/ui/figma-mcp-limites.md`).
 3. Se o pedido não trouxer o link do Figma (arquivo e nó), peça antes de começar.
 
 ## Como trabalhar
@@ -30,4 +30,5 @@ Rode `pnpm build`, `pnpm check-types` e `pnpm lint` na raiz. Os três precisam p
 - Arquivos criados ou alterados.
 - Tokens usados por componente.
 - Lacunas: valores sem token, modos do Figma não exportados, componentes adiados.
+- Chamadas ao MCP do Figma feitas nesta tarefa, por ferramenta (ex.: `get_design_context: 4, get_screenshot: 4`), incluindo repetições por erro.
 - Resultado dos três comandos de validação.

@@ -15,7 +15,7 @@ Tokens sempre vêm antes de componentes. Componente nunca contém valor visual q
 
 | Item | Detalhe |
 |---|---|
-| Conta Figma | Assento **Dev ou Full** em plano Professional, Organization ou Enterprise. Assento View/Collab ou plano Starter tem limite de 6 chamadas por mês ao MCP e não serve |
+| Conta Figma | Assento **Dev ou Full** em plano Professional, Organization ou Enterprise. Assento View/Collab ou plano Starter tem limite de 20 chamadas por mês ao MCP e não serve. Detalhes e estimativas: [figma-mcp-limites.md](figma-mcp-limites.md) |
 | Ambiente | Node ≥ 22 e pnpm 10. Na raiz do repositório: `pnpm install` |
 | MCP do Figma | Conectado na ferramenta de IA usada (abaixo) |
 

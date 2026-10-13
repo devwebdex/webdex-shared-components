@@ -170,7 +170,7 @@ Validado: build, check-types e lint das três combinações (fullstack, só fron
 
 | # | Tema | Pendência |
 |---|---|---|
-| A3 | Assento Figma | O time de design precisa de assento Dev ou Full em plano Professional ou superior. A conta testada (Starter/View) tem limite de 6 chamadas por mês |
+| A3 | Assento Figma | O time de design precisa de assento Dev ou Full em plano Professional ou superior. A conta testada (Starter/View) tem limite de 20 chamadas por mês; a biblioteca inicial estimada consome ~125. Análise: [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md) |
 | A4 | Identidade do repositório | O nome `webdex-shared-components` não descreve um gerador |
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
 | A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
@@ -187,6 +187,6 @@ Validado: build, check-types e lint das três combinações (fullstack, só fron
 - **R1** OpenTUI ainda é jovem; mudanças de API podem afetar a TUI.
 - **R2** Cerca de 21 combinações de stack. Sem matriz de CI, as combinações pouco usadas quebram sem ninguém notar.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
-- **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 6 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma.
+- **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 20 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma. O README do servidor MCP no GitHub ainda diz 6 por mês; vale a página oficial de limites. Ver [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md).
 - **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3). Candidato observado, não avaliado: o Nest 12 gera projetos com oxlint + `oxlint-tsgolint` (lint com tipos).
 - **R6** O OpenTUI bloqueia o processo num pseudo-terminal sem emulador por trás (ex.: `script` sem terminal real), porque espera respostas às consultas de capacidade do terminal. Em terminal real funciona; CI e automações devem usar `--yes`. Validado num pseudo-terminal que responde às consultas: TUI desenha, gera o projeto pelo teclado e encerra em 0,05 s com SIGTERM (código 130).
