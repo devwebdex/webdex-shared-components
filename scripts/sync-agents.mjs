@@ -45,6 +45,7 @@ function parseAgent(text, file) {
   const meta = Object.fromEntries(
     match[1].split('\n').map((line) => {
       const separator = line.indexOf(':')
+      if (separator < 1) throw new Error(`${file}: linha de frontmatter inválida: "${line}"`)
       return [line.slice(0, separator).trim(), line.slice(separator + 1).trim()]
     })
   )
@@ -63,8 +64,12 @@ function renderClaude(agent) {
   return `---\nname: ${agent.name}\ndescription: ${JSON.stringify(agent.description)}\n${tools}---\n\n<!-- ${notice} -->\n\n${agent.body}\n`
 }
 
+// bash também é negado: com ele o agente escreveria arquivos e o read-only não valeria.
 function renderOpencode(agent) {
-  const permission = agent.sandbox === 'read-only' ? 'permission:\n  edit: deny\n' : ''
+  const permission =
+    agent.sandbox === 'read-only'
+      ? 'permission:\n  edit: deny\n  bash: deny\n  webfetch: deny\n'
+      : ''
   return `---\ndescription: ${JSON.stringify(agent.description)}\nmode: subagent\n${permission}---\n\n<!-- ${notice} -->\n\n${agent.body}\n`
 }
 
