@@ -1,0 +1,9 @@
+
+## Backend: `apps/api` (NestJS 12 + Prisma 7 + PostgreSQL)
+
+- Arquitetura: monólito modular. Padrões: [docs/standards/modular-monolith.md](docs/standards/modular-monolith.md) e [docs/standards/backend-nest.md](docs/standards/backend-nest.md).
+- Banco local: `docker compose up -d`. Migração: `pnpm db:migrate`.
+- Código ESM: imports relativos com extensão `.js`.
+- `src/generated/` é gerado pelo `prisma generate`: não edite nem commite.
+- Subagente `backend`: implementa no `apps/api` seguindo os padrões.
+- Subagente `architecture-reviewer`: confere fronteiras entre módulos, sem editar código.

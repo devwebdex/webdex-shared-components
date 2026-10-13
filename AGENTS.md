@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Monorepo da WEbdEX que publica os pacotes de padrão (`@devwebdex/*`) e, futuramente, o gerador de projetos. Decisões e pendências: [docs/gerador-de-projetos.md](docs/gerador-de-projetos.md).
+Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de padrão (`@devwebdex/*`). Decisões, funcionamento do gerador e pendências: [docs/gerador-de-projetos.md](docs/gerador-de-projetos.md).
 
 ## Comandos (raiz)
 
@@ -8,13 +8,16 @@ Monorepo da WEbdEX que publica os pacotes de padrão (`@devwebdex/*`) e, futuram
 - `pnpm build`: build de todos os pacotes (Turborepo)
 - `pnpm check-types`
 - `pnpm lint`: Biome no repositório inteiro + lint dos pacotes
+- `pnpm test`: testes do gerador (`bun test`)
 - `pnpm format`: aplica formatação e correções seguras do Biome
 - `pnpm agents:sync`: regenera os subagentes a partir de `ai/agents/`
+- `bun apps/create/src/cli.ts <dir> --yes --link-packages .`: gera um projeto usando os pacotes deste checkout
 
 ## Estrutura
 
 | Caminho | Conteúdo |
 |---|---|
+| `apps/create` | gerador: núcleo (`src/core`), TUI (`src/tui`), CLI e camadas de template (`templates/`) |
 | `packages/tsconfig` | tsconfigs base (`base`, `node`, `react-library`) |
 | `packages/biome-config` | config Biome compartilhada (lint e formatação) |
 | `packages/eslint-config` | ESLint mínimo para backends (promessas com informação de tipo) |
@@ -29,6 +32,8 @@ Monorepo da WEbdEX que publica os pacotes de padrão (`@devwebdex/*`) e, futuram
 - Pacotes ESM com `module: NodeNext`: imports relativos com extensão `.js`.
 - Não edite `.claude/agents`, `.opencode/agents` nem `.codex/agents` à mão: edite `ai/agents/` e rode `pnpm agents:sync`.
 - Decisão nova ou mudança relevante: atualize `docs/gerador-de-projetos.md`.
+- Mudou um template? Gere um projeto com `--yes --link-packages .` e rode `pnpm build`, `pnpm check-types` e `pnpm lint` nele: os templates não passam pelo Biome deste repositório.
+- Versão nova de um pacote `@devwebdex/*` exige atualizar a faixa nos templates (um teste confere).
 
 ## Subagentes
 

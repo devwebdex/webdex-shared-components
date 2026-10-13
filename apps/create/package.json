@@ -1,0 +1,35 @@
+{
+  "name": "@devwebdex/create",
+  "version": "0.1.0",
+  "description": "Gerador de projetos WEbdEX (TUI com mouse e modo não interativo)",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "create": "./src/cli.ts"
+  },
+  "files": [
+    "src",
+    "templates"
+  ],
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@opentui/core": "0.6.3",
+    "@opentui/react": "0.6.3",
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "@devwebdex/tsconfig": "workspace:*",
+    "@types/bun": "1.4.3",
+    "@types/react": "19.3.0",
+    "typescript": "6.0.3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

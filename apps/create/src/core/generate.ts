@@ -1,0 +1,138 @@
+import { spawnSync } from 'node:child_process'
+import {
+  appendFileSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs'
+import { dirname, join, relative, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import type { ProjectOptions } from './catalog.js'
+import { lockReason, manifestPath } from './lock.js'
+
+export const templatesDir = fileURLToPath(new URL('../../templates', import.meta.url))
+
+// Pacotes de padrão que o projeto gerado consome; --link-packages aponta todos para um checkout local.
+const devwebdexPackages = ['biome-config', 'eslint-config', 'tokens', 'tsconfig', 'ui']
+
+export type GenerateInput = {
+  targetDir: string
+  options: ProjectOptions
+  generatorVersion: string
+  /** Caminho de um checkout deste monorepo: usa os pacotes locais em vez do GitHub Packages (CI e desenvolvimento). */
+  linkPackagesFrom?: string
+}
+
+export class LockedError extends Error {}
+
+export function generate({
+  targetDir,
+  options,
+  generatorVersion,
+  linkPackagesFrom,
+}: GenerateInput) {
+  const reason = lockReason(targetDir)
+  if (reason) throw new LockedError(reason)
+
+  mkdirSync(targetDir, { recursive: true })
+  for (const layer of layersFor(options)) applyLayer(join(templatesDir, layer), targetDir, options)
+  createEnvFiles(targetDir)
+  if (linkPackagesFrom) linkPackages(targetDir, linkPackagesFrom)
+  syncAgents(targetDir)
+  writeManifest(targetDir, options, generatorVersion)
+}
+
+export function layersFor(options: ProjectOptions): string[] {
+  const layers = ['base']
+  if (options.backend !== 'none') {
+    layers.push(
+      `db-${options.database}`,
+      `backend-${options.backend}-${options.orm}-${options.database}`
+    )
+  }
+  if (options.frontend !== 'none') layers.push(`frontend-${options.frontend}`)
+  return layers
+}
+
+/**
+ * Copia a camada para o destino. Convenções de nome:
+ * - segmento iniciado por `_` vira `.` (o npm descarta `.gitignore` e similares ao publicar);
+ * - sufixo `.append` acrescenta o conteúdo ao arquivo de mesmo nome escrito por camadas anteriores;
+ * - sufixo `.merge` mescla o JSON no arquivo de mesmo nome (objetos recursivamente, o resto substitui).
+ */
+function applyLayer(layerDir: string, targetDir: string, options: ProjectOptions) {
+  for (const source of walk(layerDir)) {
+    const parts = relative(layerDir, source)
+      .split(sep)
+      .map((part) => (part.startsWith('_') ? `.${part.slice(1)}` : part))
+    const target = join(targetDir, ...parts)
+    const content = readFileSync(source, 'utf8').replaceAll('{{name}}', options.name)
+    mkdirSync(dirname(target), { recursive: true })
+    if (target.endsWith('.append')) {
+      appendFileSync(target.slice(0, -'.append'.length), content)
+    } else if (target.endsWith('.merge')) {
+      const base = target.slice(0, -'.merge'.length)
+      const merged = mergeJson(JSON.parse(readFileSync(base, 'utf8')), JSON.parse(content))
+      writeFileSync(base, `${JSON.stringify(merged, null, 2)}\n`)
+    } else {
+      writeFileSync(target, content)
+    }
+  }
+}
+
+function mergeJson(base: unknown, patch: unknown): unknown {
+  if (!isObject(base) || !isObject(patch)) return patch
+  const result: Record<string, unknown> = { ...base }
+  for (const [key, value] of Object.entries(patch)) result[key] = mergeJson(base[key], value)
+  return result
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function walk(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name)
+    return entry.isDirectory() ? walk(path) : [path]
+  })
+}
+
+// Os valores dos .env.example são só para desenvolvimento local, então o projeto já nasce rodando.
+function createEnvFiles(targetDir: string) {
+  for (const example of walk(targetDir).filter((file) => file.endsWith(`${sep}.env.example`))) {
+    const env = example.slice(0, -'.example'.length)
+    if (!existsSync(env)) copyFileSync(example, env)
+  }
+}
+
+// `file:` copia o pacote para dentro do projeto: com `link:` o Turbopack recusa arquivos fora da raiz.
+function linkPackages(targetDir: string, monorepo: string) {
+  const overrides = devwebdexPackages
+    .map((pkg) => `  '@devwebdex/${pkg}': file:${join(monorepo, 'packages', pkg)}\n`)
+    .join('')
+  appendFileSync(join(targetDir, 'pnpm-workspace.yaml'), `\noverrides:\n${overrides}`)
+}
+
+function syncAgents(targetDir: string) {
+  const result = spawnSync(process.execPath, ['scripts/sync-agents.mjs'], {
+    cwd: targetDir,
+    encoding: 'utf8',
+  })
+  if (result.status !== 0) throw new Error(`falha ao gerar os agentes de IA:\n${result.stderr}`)
+}
+
+function writeManifest(targetDir: string, options: ProjectOptions, generatorVersion: string) {
+  const target = join(targetDir, manifestPath)
+  mkdirSync(dirname(target), { recursive: true })
+  const manifest = {
+    generator: '@devwebdex/create',
+    generatorVersion,
+    createdAt: new Date().toISOString(),
+    options,
+  }
+  writeFileSync(target, `${JSON.stringify(manifest, null, 2)}\n`)
+}

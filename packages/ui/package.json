@@ -24,7 +24,7 @@
     "tailwind-merge": "3.7.0"
   },
   "peerDependencies": {
-    "@devwebdex/tokens": "workspace:^",
+    "@devwebdex/tokens": "^0.1.0",
     "react": ">=19.0.0"
   },
   "devDependencies": {

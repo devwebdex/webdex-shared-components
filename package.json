@@ -11,8 +11,9 @@
     "check-types": "turbo run check-types",
     "lint": "biome check . && turbo run lint",
     "format": "biome check --write .",
-    "agents:sync": "node scripts/sync-agents.mjs",
-    "agents:check": "node scripts/sync-agents.mjs --check"
+    "test": "turbo run test",
+    "agents:sync": "node apps/create/templates/base/scripts/sync-agents.mjs",
+    "agents:check": "node apps/create/templates/base/scripts/sync-agents.mjs --check"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

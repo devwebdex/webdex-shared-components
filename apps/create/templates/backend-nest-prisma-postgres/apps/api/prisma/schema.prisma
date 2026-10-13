@@ -1,0 +1,12 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Cada model pertence a um módulo de src/modules: indique o dono num comentário acima do model.

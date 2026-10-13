@@ -1,10 +1,10 @@
 // Gera os subagentes de cada ferramenta de IA a partir da fonte única em ai/agents/*.md.
-// Uso: node scripts/sync-agents.mjs [--check]
+// Uso, na raiz do repositório: node scripts/sync-agents.mjs [--check]
+// O mesmo arquivo serve o monorepo do gerador e os projetos gerados, por isso a raiz é o diretório atual.
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const root = process.cwd()
 const sourceDir = join(root, 'ai/agents')
 const checkOnly = process.argv.includes('--check')
 const notice =

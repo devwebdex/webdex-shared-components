@@ -1,0 +1,8 @@
+
+## Backend (`apps/api`)
+
+```bash
+docker compose up -d   # PostgreSQL local
+pnpm db:migrate        # aplica as migrações
+pnpm dev               # API em http://localhost:3333 (GET /health)
+```

@@ -1,0 +1,11 @@
+{
+  "extends": "@devwebdex/tsconfig/base.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "lib": ["ES2023", "DOM"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "@opentui/react",
+    "noEmit": true
+  },
+  "include": ["src", "test"]
+}
