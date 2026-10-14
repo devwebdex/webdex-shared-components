@@ -13,10 +13,14 @@
     "format": "biome check --write .",
     "test": "turbo run test",
     "agents:sync": "node apps/create/templates/base/scripts/sync-agents.mjs",
-    "agents:check": "node apps/create/templates/base/scripts/sync-agents.mjs --check"
+    "agents:check": "node apps/create/templates/base/scripts/sync-agents.mjs --check",
+    "changeset": "changeset",
+    "version-packages": "changeset version && node scripts/sync-template-versions.mjs",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "@changesets/cli": "3.0.3",
     "@devwebdex/biome-config": "workspace:*",
     "turbo": "2.11.7"
   }

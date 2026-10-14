@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Componentes React WEbdEX, criados a partir do Figma",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devwebdex/webdex-shared-components",
+    "directory": "packages/ui"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -24,11 +29,9 @@
     "tailwind-merge": "3.7.0"
   },
   "peerDependencies": {
-    "@devwebdex/tokens": "^0.1.0",
     "react": ">=19.0.0"
   },
   "devDependencies": {
-    "@devwebdex/tokens": "workspace:*",
     "@devwebdex/tsconfig": "workspace:*",
     "@types/react": "19.3.0",
     "react": "19.3.0",

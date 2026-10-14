@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "ESLint mínimo para backends WEbdEX: só regras de promessas com informação de tipo (o resto é Biome)",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devwebdex/webdex-shared-components",
+    "directory": "packages/eslint-config"
+  },
   "type": "module",
   "files": [
     "index.js"

@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Gerador de projetos WEbdEX (TUI com mouse e modo não interativo)",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devwebdex/webdex-shared-components",
+    "directory": "apps/create"
+  },
   "type": "module",
   "bin": {
     "create": "./src/cli.ts"
