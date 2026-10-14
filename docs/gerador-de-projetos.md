@@ -176,6 +176,7 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 - `@devwebdex/ui` não declara mais `@devwebdex/tokens` como peer dependency: com ela, cada `minor` dos tokens faria o changesets subir o `ui` para major.
 - **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz das três combinações de projeto gerado (build, tipos, lint; com backend, Postgres via docker compose, `db:deploy` e `GET /health`).
 - **Release** (`.github/workflows/release.yml`): publica no GitHub Packages com o `GITHUB_TOKEN` do workflow (`packages: write`), sem token pessoal.
+- **Actions fixadas por SHA de commit** (versão no comentário), porque o release roda com permissão de escrita e de publicação: uma tag movida num repositório de terceiros executaria código com esse token. O Dependabot (`.github/dependabot.yml`) abre PR semanal para atualizar os SHAs. No CI, o checkout usa `persist-credentials: false`; no release, as credenciais ficam, porque o `changesets/action` faz push do PR de versão.
 
 ## Em aberto
 
