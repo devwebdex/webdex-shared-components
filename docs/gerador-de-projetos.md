@@ -26,7 +26,7 @@ O projeto **não** nasce de um fork deste repositório. Fork vira cópia que nun
 - **Copiado para o projeto** (o projeto passa a ser dono): esqueleto das apps, `docs/standards/`, agentes de IA, CI.
 - **Instalado como pacote versionado** (governança central): configs de TypeScript, lint e formatação, design tokens e componentes de UI.
 
-**D1.a** Pacotes privados no GitHub Packages, scope `@devwebdex` (o GitHub Packages exige scope igual ao nome da organização). Cada dev e cada CI precisa de um `.npmrc` com token de leitura.
+**D1.a** Pacotes privados no GitHub Packages, scope `@devwebdex` (o GitHub Packages exige scope igual ao nome do dono do repositório). Cada dev e cada CI precisa de um `.npmrc` com token de leitura. O dono, `devwebdex` ("WEbdEX - Development"), é uma **conta de usuário**, não uma organização do GitHub: só quem tem o login dela administra o repositório e os pacotes (ver A14).
 
 **D1.b** Atualizações chegam aos projetos por PR automático do Renovate. Cada projeto decide quando aceitar.
 
@@ -193,6 +193,7 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 | A11 | Dockerfile por app | Adiado até A9 |
 | A12 | CI | Workflow deste repositório implementado (D12); falta o workflow de CI dentro do projeto gerado |
 | A13 | Stacks restantes | Adonis, Express, Drizzle, MySQL e microserviços aparecem na TUI como "(em breve)" |
+| A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
 
 ## Riscos conhecidos
 

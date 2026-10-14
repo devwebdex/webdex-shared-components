@@ -1,6 +1,6 @@
 # Publicação dos pacotes `@devwebdex/*`
 
-Publicar é enviar uma versão numerada de cada pacote (`@devwebdex/ui@0.2.0`, por exemplo) para o GitHub Packages da organização `devwebdex`, que é privado. Depois disso, qualquer projeto instala o pacote e o gerador roda com `bunx @devwebdex/create`. **Versão publicada é imutável**: uma correção sai como versão nova, nunca sobrescreve a anterior.
+Publicar é enviar uma versão numerada de cada pacote (`@devwebdex/ui@0.2.0`, por exemplo) para o GitHub Packages da conta `devwebdex` ("WEbdEX - Development"), de forma privada. `devwebdex` é uma **conta de usuário**, não uma organização do GitHub: as configurações do repositório e dos pacotes exigem o login dessa conta. Depois disso, qualquer projeto instala o pacote e o gerador roda com `bunx @devwebdex/create`. **Versão publicada é imutável**: uma correção sai como versão nova, nunca sobrescreve a anterior.
 
 Decisões (operador, 2026-10-14): versões **independentes** por pacote e publicação **só por PR de release aprovado**.
 
@@ -39,9 +39,9 @@ Os pacotes estão em `0.1.0` e nunca foram publicados. No primeiro merge na `pro
 
 | # | Onde | O quê |
 |---|---|---|
-| 1 | Repositório → Settings → Actions → General | Marcar **"Allow GitHub Actions to create and approve pull requests"**. Sem isso, o workflow de release não consegue abrir o PR de versão |
+| 1 | Repositório → Settings → Actions → General (logado como `devwebdex`; colaboradores não têm acesso) | Marcar **"Allow GitHub Actions to create and approve pull requests"**. Sem isso, o workflow de release não consegue abrir o PR de versão |
 | 2 | Cada dev | Token do GitHub com `read:packages` no `~/.npmrc`: `//npm.pkg.github.com/:_authToken=<token>` |
-| 3 | Organização → Packages → cada pacote, depois da primeira publicação | Em "Manage Actions access", dar acesso de leitura aos repositórios que vão instalar os pacotes no CI (os projetos gerados) |
+| 3 | Conta `devwebdex` → Packages → cada pacote, depois da primeira publicação | Em "Manage Actions access", dar acesso de leitura aos repositórios que vão instalar os pacotes no CI (os projetos gerados) |
 
 O item 3 segue a documentação do GitHub Packages e ainda não foi exercitado: confirme no primeiro projeto que rodar CI com os pacotes publicados.
 
