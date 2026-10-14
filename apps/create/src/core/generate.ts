@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
 import {
   appendFileSync,
-  copyFileSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -117,10 +117,16 @@ function walk(dir: string): string[] {
 }
 
 // Os valores dos .env.example são só para desenvolvimento local, então o projeto já nasce rodando.
+// Chave ou segredo vazio no exemplo (ex.: APP_KEY=) ganha valor aleatório no .env, nunca no exemplo.
 function createEnvFiles(targetDir: string) {
   for (const example of walk(targetDir).filter((file) => file.endsWith(`${sep}.env.example`))) {
     const env = example.slice(0, -'.example'.length)
-    if (!existsSync(env)) copyFileSync(example, env)
+    if (existsSync(env)) continue
+    const content = readFileSync(example, 'utf8').replace(
+      /^([A-Z0-9_]*(?:KEY|SECRET))=$/gm,
+      (_line, name: string) => `${name}=${randomBytes(32).toString('base64url')}`
+    )
+    writeFileSync(env, content)
   }
 }
 

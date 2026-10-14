@@ -1,0 +1,15 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "root": false,
+  "extends": "//",
+  "files": {
+    "includes": ["**", "!!build", "!!tmp"]
+  },
+  "linter": {
+    "rules": {
+      "style": {
+        "useImportType": "off"
+      }
+    }
+  }
+}

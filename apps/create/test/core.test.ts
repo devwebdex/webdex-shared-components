@@ -176,6 +176,19 @@ describe('generate', () => {
     expect(existsSync(join(dir, 'ai/agents/frontend.md'))).toBe(false)
   })
 
+  test('chave vazia no .env.example ganha valor aleatório só no .env', () => {
+    const dir = join(tempDir(), 'adonis')
+    generate({
+      targetDir: dir,
+      options: options({ name: 'adonis', backend: 'adonis', orm: 'lucid', frontend: 'none' }),
+      generatorVersion: '0.0.0-test',
+    })
+    const example = readFileSync(join(dir, 'apps/api/.env.example'), 'utf8')
+    const env = readFileSync(join(dir, 'apps/api/.env'), 'utf8')
+    expect(example).toMatch(/^APP_KEY=$/m)
+    expect(env).toMatch(/^APP_KEY=[A-Za-z0-9_-]{40,}$/m)
+  })
+
   test('não sobra placeholder nos arquivos gerados', () => {
     const dir = join(tempDir(), 'acme')
     generate({ targetDir: dir, options: options(), generatorVersion: '0.0.0-test' })

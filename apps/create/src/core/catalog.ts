@@ -46,7 +46,7 @@ export const catalog = {
       value: 'adonis',
       label: 'AdonisJS',
       description: 'Framework completo, com ORM e autenticação próprios',
-      available: false,
+      available: true,
     },
     {
       value: 'express',
@@ -69,7 +69,7 @@ export const catalog = {
       description: 'Consultas próximas do SQL, tipadas em TypeScript',
       available: true,
     },
-    { value: 'lucid', label: 'Lucid', description: 'ORM nativo do AdonisJS', available: false },
+    { value: 'lucid', label: 'Lucid', description: 'ORM nativo do AdonisJS', available: true },
   ] satisfies Option<Orm>[],
   database: [
     {
