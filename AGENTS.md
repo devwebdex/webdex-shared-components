@@ -11,6 +11,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 - `pnpm test`: testes do gerador (`bun test`)
 - `pnpm format`: aplica formatação e correções seguras do Biome
 - `pnpm agents:sync`: regenera os subagentes a partir de `ai/agents/`
+- `pnpm changeset`: registra a mudança de um pacote para o próximo release
 - `bun apps/create/src/cli.ts <dir> --yes --link-packages .`: gera um projeto usando os pacotes deste checkout
 
 ## Estrutura
@@ -33,7 +34,8 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 - Não edite `.claude/agents`, `.opencode/agents` nem `.codex/agents` à mão: edite `ai/agents/` e rode `pnpm agents:sync`.
 - Decisão nova ou mudança relevante: atualize `docs/gerador-de-projetos.md`.
 - Mudou um template? Gere um projeto com `--yes --link-packages .` e rode `pnpm build`, `pnpm check-types` e `pnpm lint` nele: os templates não passam pelo Biome deste repositório.
-- Versão nova de um pacote `@devwebdex/*` exige atualizar a faixa nos templates (um teste confere).
+- Mudança em pacote publicável (`packages/*`, `apps/create`) exige um changeset no mesmo PR: `pnpm changeset`. Não edite versões nem CHANGELOGs à mão; o PR de release faz isso (ver `docs/publicacao.md`).
+- As faixas `@devwebdex/*` nos templates são atualizadas pelo `pnpm version-packages`; um teste falha se divergirem.
 
 ## Subagentes
 

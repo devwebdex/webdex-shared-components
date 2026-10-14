@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [prod]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, tipos e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm check-types
+      - run: pnpm test
+      - run: pnpm agents:check
+
+  templates:
+    name: Projeto gerado (${{ matrix.name }})
+    needs: checks
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: completo
+            flags: ''
+          - name: só frontend
+            flags: --backend none
+          - name: só backend
+            flags: --frontend none
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Gerar projeto com os pacotes deste checkout
+        run: bun apps/create/src/cli.ts "$RUNNER_TEMP/app" --yes --link-packages . ${{ matrix.flags }}
+      - name: Build, tipos e lint do projeto gerado
+        working-directory: ${{ runner.temp }}/app
+        run: pnpm build && pnpm check-types && pnpm lint
+      - name: Banco, migrações e GET /health
+        if: matrix.name != 'só frontend'
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          docker compose up -d --wait
+          pnpm db:deploy
+          (cd apps/api && node dist/main.js > "$RUNNER_TEMP/api.log" 2>&1 &)
+          curl --fail --silent --retry 20 --retry-connrefused --retry-delay 1 http://localhost:3333/health
+      - name: Log da API em caso de falha
+        if: failure() && matrix.name != 'só frontend'
+        run: cat "$RUNNER_TEMP/api.log" || true

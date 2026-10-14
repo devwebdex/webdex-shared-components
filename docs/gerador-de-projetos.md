@@ -167,6 +167,16 @@ Primeiro template, escolhido pelo operador. Versões e decisões verificadas em 
 
 Validado: build, check-types e lint das três combinações (fullstack, só frontend, só backend); no fullstack, Postgres pelo docker-compose, `db:migrate` e `GET /health` (200 com banco no ar, 500 sem detalhes com banco fora).
 
+### D12. CI e publicação
+
+Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub: [publicacao.md](publicacao.md).
+
+- **Changesets 3**, versões **independentes** por pacote, publicação **só por PR de release aprovado** ("chore: versionar pacotes", aberto pelo `changesets/action@v2`).
+- `pnpm version-packages` = `changeset version` + atualização das faixas `@devwebdex/*` nos templates + patch do `@devwebdex/create` quando um template muda.
+- `@devwebdex/ui` não declara mais `@devwebdex/tokens` como peer dependency: com ela, cada `minor` dos tokens faria o changesets subir o `ui` para major.
+- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz das três combinações de projeto gerado (build, tipos, lint; com backend, Postgres via docker compose, `db:deploy` e `GET /health`).
+- **Release** (`.github/workflows/release.yml`): publica no GitHub Packages com o `GITHUB_TOKEN` do workflow (`packages: write`), sem token pessoal.
+
 ## Em aberto
 
 | # | Tema | Pendência |
@@ -177,10 +187,10 @@ Validado: build, check-types e lint das três combinações (fullstack, só fron
 | A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
 | A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
 | A8 | Primitivos acessíveis | Biblioteca para dialog, menu, select, popover, tooltip e tabs (ex.: Radix ou Base UI). Até decidir, esses componentes não são implementados |
-| A9 | Publicação | Publicar os `@devwebdex/*` no GitHub Packages. Proposta: changesets (cada PR declara pacote e tipo de mudança: patch, minor ou major), versões independentes por pacote, e publicação quando alguém aprova o PR de release aberto pelo GitHub Actions. Aguarda confirmação. Bloqueia o uso via `bunx` e os Dockerfiles |
+| A9 | Publicação | Implementada (D12); falta a primeira execução no GitHub, que acontece no merge na `prod`, e a configuração única do repositório descrita em [publicacao.md](publicacao.md) |
 | A10 | Testes nos projetos gerados | Ferramenta e estrutura de testes do template (o Nest 12 usa vitest por padrão) |
 | A11 | Dockerfile por app | Adiado até A9 |
-| A12 | CI | Workflow deste repositório (lint, tipos, testes, matriz de combinações com `--yes --link-packages`) e workflow do projeto gerado |
+| A12 | CI | Workflow deste repositório implementado (D12); falta o workflow de CI dentro do projeto gerado |
 | A13 | Stacks restantes | Adonis, Express, Drizzle, MySQL e microserviços aparecem na TUI como "(em breve)" |
 
 ## Riscos conhecidos
