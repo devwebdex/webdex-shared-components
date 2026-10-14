@@ -42,7 +42,7 @@ test('fluxo completo pelo mouse', async () => {
   expect(s.captureCharFrame()).toContain('● Arquitetura')
   await click(s, 'Monólito modular')
   await click(s, 'NestJS')
-  expect(s.captureCharFrame()).toMatch(/○ Drizzle +em breve/)
+  expect(s.captureCharFrame()).toMatch(/○ Drizzle/)
   await click(s, 'Prisma')
   await click(s, 'PostgreSQL')
   await click(s, 'Next.js')

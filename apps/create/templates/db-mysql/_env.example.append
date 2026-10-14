@@ -1,0 +1,5 @@
+
+# MySQL local (docker compose)
+MYSQL_ROOT_PASSWORD=mysql
+MYSQL_DATABASE={{name}}
+MYSQL_PORT=3306

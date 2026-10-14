@@ -11,7 +11,7 @@ import {
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { defaults, type ProjectOptions, validate, validCombinations } from '../src/core/catalog.js'
-import { generate, LockedError, layersFor, templatesDir } from '../src/core/generate.js'
+import { generate, LockedError, layersFor, targetName, templatesDir } from '../src/core/generate.js'
 import { lockReason } from '../src/core/lock.js'
 
 const options = (overrides: Partial<ProjectOptions> = {}): ProjectOptions => ({
@@ -48,7 +48,9 @@ describe('validate', () => {
   })
 
   test('rejeita opção ainda indisponível', () => {
-    expect(validate(options({ database: 'mysql' })).join()).toContain('ainda não está disponível')
+    expect(validate(options({ architecture: 'microservices' })).join()).toContain(
+      'ainda não está disponível'
+    )
   })
 
   test('ignora ORM e banco quando não há backend', () => {
@@ -89,6 +91,12 @@ describe('layersFor', () => {
       }
     }
   })
+})
+
+test('targetName: _ vira ponto e __ vira _ literal', () => {
+  expect(targetName('_gitignore')).toBe('.gitignore')
+  expect(targetName('__journal.json')).toBe('_journal.json')
+  expect(targetName('src')).toBe('src')
 })
 
 describe('lockReason', () => {

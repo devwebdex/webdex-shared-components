@@ -67,7 +67,7 @@ export const catalog = {
       value: 'drizzle',
       label: 'Drizzle',
       description: 'Consultas próximas do SQL, tipadas em TypeScript',
-      available: false,
+      available: true,
     },
     { value: 'lucid', label: 'Lucid', description: 'ORM nativo do AdonisJS', available: false },
   ] satisfies Option<Orm>[],
@@ -82,7 +82,7 @@ export const catalog = {
       value: 'mysql',
       label: 'MySQL',
       description: 'Para projetos que já dependem de MySQL',
-      available: false,
+      available: true,
     },
   ] satisfies Option<Database>[],
   frontend: [

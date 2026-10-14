@@ -71,14 +71,13 @@ export function layersFor({ backend, orm, database, frontend }: ProjectOptions):
 /**
  * Copia a camada para o destino. Convenções de nome:
  * - segmento iniciado por `_` vira `.` (o npm descarta `.gitignore` e similares ao publicar);
+ * - segmento iniciado por `__` vira `_` literal (ex.: `__journal.json` → `_journal.json`);
  * - sufixo `.append` acrescenta o conteúdo ao arquivo de mesmo nome escrito por camadas anteriores;
  * - sufixo `.merge` mescla o JSON no arquivo de mesmo nome (objetos recursivamente, o resto substitui).
  */
 function applyLayer(layerDir: string, targetDir: string, options: ProjectOptions) {
   for (const source of walk(layerDir)) {
-    const parts = relative(layerDir, source)
-      .split(sep)
-      .map((part) => (part.startsWith('_') ? `.${part.slice(1)}` : part))
+    const parts = relative(layerDir, source).split(sep).map(targetName)
     const target = join(targetDir, ...parts)
     const content = readFileSync(source, 'utf8').replaceAll('{{name}}', options.name)
     mkdirSync(dirname(target), { recursive: true })
@@ -92,6 +91,11 @@ function applyLayer(layerDir: string, targetDir: string, options: ProjectOptions
       writeFileSync(target, content)
     }
   }
+}
+
+export function targetName(part: string) {
+  if (part.startsWith('__')) return part.slice(1)
+  return part.startsWith('_') ? `.${part.slice(1)}` : part
 }
 
 function mergeJson(base: unknown, patch: unknown): unknown {
