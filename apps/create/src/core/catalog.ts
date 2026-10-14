@@ -135,3 +135,25 @@ export function validate(options: ProjectOptions): string[] {
 export function isIrrelevant(options: ProjectOptions, key: keyof ProjectOptions): boolean {
   return options.backend === 'none' && (key === 'orm' || key === 'database')
 }
+
+/** Todas as combinações que passam na validação (sem repetir ORM e banco quando não há backend). */
+export function validCombinations(): Omit<ProjectOptions, 'name'>[] {
+  const values = <K extends keyof typeof catalog>(key: K) =>
+    (catalog[key] as Option<string>[]).filter((o) => o.available).map((o) => o.value)
+  const combinations = new Map<string, Omit<ProjectOptions, 'name'>>()
+  for (const architecture of values('architecture'))
+    for (const backend of values('backend'))
+      for (const orm of values('orm'))
+        for (const database of values('database'))
+          for (const frontend of values('frontend')) {
+            const options = { architecture, backend, orm, database, frontend } as Omit<
+              ProjectOptions,
+              'name'
+            >
+            if (validate({ ...options, name: 'x' }).length > 0) continue
+            const key =
+              backend === 'none' ? `${architecture}/none/${frontend}` : JSON.stringify(options)
+            combinations.set(key, options)
+          }
+  return [...combinations.values()]
+}

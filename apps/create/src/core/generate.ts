@@ -45,15 +45,26 @@ export function generate({
   writeManifest(targetDir, options, generatorVersion)
 }
 
-export function layersFor(options: ProjectOptions): string[] {
+/**
+ * Camadas em ordem de aplicação. Cada uma cuida de uma parte (framework, ORM, driver do banco,
+ * integração framework + ORM) e as posteriores acrescentam ou mesclam nos arquivos das anteriores.
+ */
+export function layersFor({ backend, orm, database, frontend }: ProjectOptions): string[] {
   const layers = ['base']
-  if (options.backend !== 'none') {
+  if (backend === 'adonis') {
+    layers.push('backend-common', `db-${database}`, 'backend-adonis', `backend-adonis-${database}`)
+  } else if (backend !== 'none') {
     layers.push(
-      `db-${options.database}`,
-      `backend-${options.backend}-${options.orm}-${options.database}`
+      'backend-common',
+      `db-${database}`,
+      `backend-${backend}`,
+      `orm-${orm}`,
+      `orm-${orm}-${database}`,
+      `${backend}-${orm}`,
+      `database-url-${database}`
     )
   }
-  if (options.frontend !== 'none') layers.push(`frontend-${options.frontend}`)
+  if (frontend !== 'none') layers.push(`frontend-${frontend}`)
   return layers
 }
 

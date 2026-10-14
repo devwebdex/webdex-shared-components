@@ -10,7 +10,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { defaults, type ProjectOptions, validate } from '../src/core/catalog.js'
+import { defaults, type ProjectOptions, validate, validCombinations } from '../src/core/catalog.js'
 import { generate, LockedError, layersFor, templatesDir } from '../src/core/generate.js'
 import { lockReason } from '../src/core/lock.js'
 
@@ -64,8 +64,13 @@ describe('layersFor', () => {
   test('fullstack', () => {
     expect(layersFor(options())).toEqual([
       'base',
+      'backend-common',
       'db-postgres',
-      'backend-nest-prisma-postgres',
+      'backend-nest',
+      'orm-prisma',
+      'orm-prisma-postgres',
+      'nest-prisma',
+      'database-url-postgres',
       'frontend-next',
     ])
   })
@@ -74,9 +79,15 @@ describe('layersFor', () => {
     expect(layersFor(options({ backend: 'none' }))).toEqual(['base', 'frontend-next'])
   })
 
-  test('toda camada referenciada existe', () => {
+  test('toda combinação disponível tem todas as camadas', () => {
     const layers = readdirSync(templatesDir)
-    for (const layer of layersFor(options())) expect(layers).toContain(layer)
+    for (const combination of validCombinations()) {
+      for (const layer of layersFor({ ...combination, name: 'x' })) {
+        expect(`${JSON.stringify(combination)} -> ${layer}`).toBe(
+          `${JSON.stringify(combination)} -> ${layers.includes(layer) ? layer : 'AUSENTE'}`
+        )
+      }
+    }
   })
 })
 
