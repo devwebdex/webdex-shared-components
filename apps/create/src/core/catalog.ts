@@ -52,7 +52,7 @@ export const catalog = {
       value: 'express',
       label: 'Express',
       description: 'Mínimo e flexível, com a estrutura de módulos da WEbdEX',
-      available: false,
+      available: true,
     },
     { value: 'none', label: 'Sem backend', description: 'Só o frontend', available: true },
   ] satisfies Option<Backend>[],
