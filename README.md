@@ -25,6 +25,8 @@ pnpm lint && pnpm test
 
 ## Criar um projeto
 
+Stacks disponíveis: backend NestJS, Express ou AdonisJS; ORM Prisma, Drizzle ou Lucid (Adonis); banco PostgreSQL ou MySQL; frontend Next.js. O projeto nasce com testes, CI do GitHub Actions, agentes de IA e um commit inicial.
+
 Enquanto os pacotes `@devwebdex/*` não estão publicados, o gerador roda a partir deste repositório:
 
 ```bash

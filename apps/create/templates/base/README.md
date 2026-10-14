@@ -14,8 +14,17 @@ Projeto gerado pelo `@devwebdex/create` (WEbdEX).
 
 ```bash
 pnpm install
+pnpm env:setup   # cria os .env a partir dos .env.example (o gerador já fez isso na criação)
 ```
 
-O gerador já criou cada `.env` a partir do `.env.example` com valores de desenvolvimento local. Em um clone novo, copie-os manualmente.
+## Qualidade
+
+```bash
+pnpm lint          # Biome (e ESLint de promessas no backend)
+pnpm check-types
+pnpm test          # testes unitários, sem banco
+```
+
+O CI (`.github/workflows/ci.yml`) roda esses comandos em todo PR e, se houver backend, também o banco e os testes e2e. Para instalar os pacotes `@devwebdex/*`, o repositório precisa de acesso de leitura a eles no GitHub Packages.
 
 Comandos, estrutura e regras do projeto: [AGENTS.md](AGENTS.md). Padrões de cada área: [docs/standards](docs/standards).

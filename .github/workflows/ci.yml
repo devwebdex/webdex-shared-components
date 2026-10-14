@@ -36,19 +36,46 @@ jobs:
       - run: pnpm agents:check
 
   templates:
-    name: Projeto gerado (${{ matrix.name }})
+    name: Projeto gerado ({{ matrix.name }})
     needs: checks
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: completo
-            flags: ''
-          - name: só frontend
-            flags: --backend none
-          - name: só backend
-            flags: --frontend none
+          - name: nest + prisma + postgres + next
+            flags: --backend nest --orm prisma --db postgres --frontend next
+            database: true
+          - name: nest + prisma + mysql
+            flags: --backend nest --orm prisma --db mysql --frontend none
+            database: true
+          - name: nest + drizzle + postgres
+            flags: --backend nest --orm drizzle --db postgres --frontend none
+            database: true
+          - name: nest + drizzle + mysql
+            flags: --backend nest --orm drizzle --db mysql --frontend none
+            database: true
+          - name: express + prisma + postgres
+            flags: --backend express --orm prisma --db postgres --frontend none
+            database: true
+          - name: express + prisma + mysql
+            flags: --backend express --orm prisma --db mysql --frontend none
+            database: true
+          - name: express + drizzle + postgres + next
+            flags: --backend express --orm drizzle --db postgres --frontend next
+            database: true
+          - name: express + drizzle + mysql
+            flags: --backend express --orm drizzle --db mysql --frontend none
+            database: true
+          - name: adonis + postgres
+            flags: --backend adonis --orm lucid --db postgres --frontend none
+            database: true
+          - name: adonis + mysql
+            flags: --backend adonis --orm lucid --db mysql --frontend none
+            database: true
+          - name: só frontend (next)
+            flags: --backend none --frontend next
+            database: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -64,18 +91,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Gerar projeto com os pacotes deste checkout
-        run: bun apps/create/src/cli.ts "$RUNNER_TEMP/app" --yes --link-packages . ${{ matrix.flags }}
-      - name: Build, tipos e lint do projeto gerado
+        run: bun apps/create/src/cli.ts "$RUNNER_TEMP/app" --yes --skip-git --link-packages . ${{ matrix.flags }}
+      - name: Build, tipos, lint e testes do projeto gerado
         working-directory: ${{ runner.temp }}/app
-        run: pnpm build && pnpm check-types && pnpm lint
-      - name: Banco, migrações e GET /health
-        if: matrix.name != 'só frontend'
+        run: pnpm build && pnpm check-types && pnpm lint && pnpm test
+      - name: Banco, migrações e testes e2e (inclui GET /health)
+        if: matrix.database
         working-directory: ${{ runner.temp }}/app
         run: |
           docker compose up -d --wait
           pnpm db:deploy
-          (cd apps/api && node dist/main.js > "$RUNNER_TEMP/api.log" 2>&1 &)
-          curl --fail --silent --retry 20 --retry-connrefused --retry-delay 1 http://localhost:3333/health
-      - name: Log da API em caso de falha
-        if: failure() && matrix.name != 'só frontend'
-        run: cat "$RUNNER_TEMP/api.log" || true
+          pnpm test:e2e

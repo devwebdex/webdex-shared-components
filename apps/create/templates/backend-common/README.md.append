@@ -2,7 +2,8 @@
 ## Backend (`apps/api`)
 
 ```bash
-docker compose up -d   # PostgreSQL local
-pnpm db:migrate        # aplica as migrações
+docker compose up -d   # banco local
+pnpm db:migrate        # cria e aplica migrações
 pnpm dev               # API em http://localhost:3333 (GET /health)
+pnpm test:e2e          # testes contra o banco local
 ```

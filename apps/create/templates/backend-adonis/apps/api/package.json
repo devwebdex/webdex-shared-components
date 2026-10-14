@@ -8,7 +8,8 @@
     "start": "node --env-file-if-exists=.env build/bin/server.js",
     "check-types": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node ace test",
+    "test": "node ace test unit",
+    "test:e2e": "node ace test functional",
     "db:migrate": "node ace migration:run",
     "db:deploy": "node ace migration:run --force"
   },

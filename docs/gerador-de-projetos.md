@@ -1,6 +1,6 @@
 # Gerador de projetos WEbdEX
 
-Status: **v1 funcional, ainda não publicada**. O gerador (`apps/create`) tem TUI, modo não interativo, trava de reexecução e o template Nest + Prisma + PostgreSQL + Next, validado de ponta a ponta. Os pacotes `@devwebdex/*` ainda não foram publicados (A9), então hoje o gerador só roda a partir deste repositório. Este documento registra as decisões fechadas e o que ainda está em aberto. Atualize-o a cada decisão nova.
+Status: **v1 funcional, ainda não publicada**. O gerador (`apps/create`) tem TUI, modo não interativo, trava de reexecução e templates para Nest, Express e AdonisJS (com Prisma, Drizzle ou Lucid, sobre PostgreSQL ou MySQL) e Next. O projeto gerado já vem com testes, CI e repositório git com commit inicial. Os pacotes `@devwebdex/*` ainda não foram publicados (A9), então hoje o gerador só roda a partir deste repositório. Este documento registra as decisões fechadas e o que ainda está em aberto. Atualize-o a cada decisão nova.
 
 ## Como usar (hoje, a partir deste repositório)
 
@@ -42,16 +42,16 @@ Perguntado pela TUI:
 
 | Eixo | Opções |
 |---|---|
-| Backend | nenhum, Adonis, Nest, Express |
-| ORM | Adonis: Lucid (fixo). Nest/Express: Prisma ou Drizzle |
-| Banco | Postgres, MySQL |
+| Backend | nenhum, Nest, Express, AdonisJS |
+| ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express: Prisma ou Drizzle |
+| Banco | PostgreSQL 17, MySQL 8.4 |
 | Frontend | nenhum, Next |
-| Arquitetura | monólito modular (única opção na v1) |
+| Arquitetura | monólito modular (microserviços aparecem como "em breve") |
 
 - Adonis não oferece Prisma/Drizzle porque auth, factories e validação do Adonis assumem Lucid.
-- Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (ver D8, `standards/backend/express.md`).
+- Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (`docs/standards/backend-express.md`, na camada `backend-express`).
 - Microserviços ficam fora da v1. Entram depois como comando `webdex add service`.
-- São cerca de 21 combinações válidas. Cada uma precisa de um job de CI que gera, instala, faz build e roda lint.
+- São 21 combinações válidas (10 de backend, cada uma com ou sem Next, e a só-frontend). O CI cobre 11: todas as de backend, duas delas com Next, e a só-frontend.
 
 ### D3. Lint e formatação
 
@@ -133,29 +133,47 @@ Código em `apps/create`, executado pelo Bun (sem etapa de build):
 |---|---|
 | `src/core/catalog.ts` | Opções da TUI, quais estão disponíveis, padrões e validação das combinações |
 | `src/core/lock.ts` | Trava de reexecução (D5) |
-| `src/core/generate.ts` | Escolhe e aplica as camadas, cria os `.env`, gera os agentes e grava o manifesto |
+| `src/core/generate.ts` | Escolhe e aplica as camadas, roda os scripts do projeto (`.env` e agentes) e grava o manifesto |
+| `src/core/git.ts` | `git init` e commit inicial do projeto gerado |
 | `src/tui/app.tsx` | TUI (OpenTUI + React), camada fina sobre o núcleo |
-| `src/cli.ts` | Flags, modo não interativo, chamada da TUI e `pnpm install` |
+| `src/cli.ts` | Flags, modo não interativo, chamada da TUI, `pnpm install` e git |
 | `templates/<camada>/` | Arquivos do projeto gerado |
 
-Camadas aplicadas em ordem: `base`, depois `db-<banco>` e `backend-<backend>-<orm>-<banco>` (se houver backend), depois `frontend-<frontend>` (se houver frontend). Para adicionar uma stack (ex.: MySQL, Adonis), crie a camada e marque a opção como `available` no catálogo.
+Camadas aplicadas em ordem (`layersFor` em `generate.ts`):
+
+| Camada | Conteúdo |
+|---|---|
+| `base` | Monorepo, Biome, Turborepo, CI, `AGENTS.md`, agente `security`, scripts `setup-env` e `sync-agents` |
+| `backend-common` | Monólito modular, agentes `backend` e `architecture-reviewer`, scripts `db:*` da raiz |
+| `db-<banco>` | `docker-compose.yml` e variáveis do banco |
+| `backend-<framework>` | App do framework sem ORM, módulo `health`, testes |
+| `orm-<orm>` | Config, scripts `db:*` e padrão do ORM |
+| `orm-<orm>-<banco>` | Driver ou adapter do ORM para o banco |
+| `<framework>-<orm>` | Integração: conexão e `ping()` usado pelo `health` |
+| `database-url-<banco>` | `DATABASE_URL` do `.env` da API |
+| `backend-adonis`, `backend-adonis-<banco>` | AdonisJS com Lucid (ORM nativo, sem as camadas de ORM) |
+| `frontend-next` | App Next com tokens, `@devwebdex/ui` e testes |
+
+Contrato entre camadas: toda integração framework + ORM expõe um `ping()` do banco (no Nest, `DatabaseHealth`; no Express, `connectDatabase()`), e o módulo `health` depende só dele. Para adicionar uma stack, crie as camadas dela, marque a opção como `available` no catálogo; um teste exige que toda combinação disponível tenha todas as camadas.
 
 Convenções de nome dentro das camadas:
 
 - `{{name}}` é substituído pelo nome do projeto.
-- Arquivo ou pasta iniciado por `_` vira `.` (`_gitignore` → `.gitignore`), porque o npm descarta dotfiles ao publicar.
+- Arquivo ou pasta iniciado por `_` vira `.` (`_gitignore` → `.gitignore`, `_github` → `.github`), porque o npm descarta dotfiles ao publicar.
+- Iniciado por `__` vira `_` literal (`__journal.json` → `_journal.json`).
 - Sufixo `.append`: acrescenta o conteúdo ao arquivo de mesmo nome escrito por camadas anteriores (`AGENTS.md.append`, `pnpm-workspace.yaml.append`).
 - Sufixo `.merge`: mescla JSON no arquivo de mesmo nome (`package.json.merge`).
 
 Outros comportamentos:
 
-- Cada `.env.example` gerado é copiado para `.env` com valores de desenvolvimento local, para o projeto já nascer rodando.
+- O gerador roda o `scripts/setup-env.mjs` do próprio projeto (`pnpm env:setup`): cada `.env.example` vira `.env` com valores de desenvolvimento, e chave ou segredo vazio (ex.: `APP_KEY=`) ganha valor aleatório só no `.env`. O mesmo script serve a quem clona o projeto e ao CI.
+- Depois do `pnpm install`, o gerador roda `git init -b main` e cria o commit inicial (`--skip-git` pula). Sem identidade do git configurada, só avisa.
 - `--link-packages <dir>` aponta os `@devwebdex/*` para um checkout deste monorepo via `file:` (não `link:`: o Turbopack recusa arquivos fora da raiz do projeto).
-- Testes (`pnpm test`): núcleo (validação, camadas, trava, geração das três combinações, ausência de placeholder, versões dos `@devwebdex/*` nos templates) e TUI (fluxo pelo mouse, opção indisponível, pulo de etapas, teclado).
+- Testes (`pnpm test`): núcleo (validação, camadas de todas as combinações, trava, geração, `APP_KEY`, git sem `.env`, ausência de placeholder, versões dos `@devwebdex/*` nos templates) e TUI (fluxo pelo mouse, opção indisponível, pulo de etapas, Adonis sem pergunta de ORM, teclado, layout compacto).
 
-### D11. Template Nest + Prisma + PostgreSQL + Next
+### D11. Templates
 
-Primeiro template, escolhido pelo operador. Versões e decisões verificadas em 2026-10-13:
+Nest + Prisma + PostgreSQL + Next foi o primeiro, escolhido pelo operador. Versões e decisões verificadas em 2026-10-13 e 2026-10-14:
 
 - **NestJS 12.1.3**: só ESM. Projeto com `"type": "module"`, `module: nodenext` e imports relativos com `.js`.
 - **Prisma 7.10.0**: gerador `prisma-client` com saída em `src/generated/prisma` (ignorada no git, gerada no `build`/`dev`/`check-types`), `prisma.config.ts` e adapter `@prisma/adapter-pg`. O dist-tag `latest` do CLI `prisma` aponta para `8.0.0-rc`; foi ignorado por ser release candidate. O pnpm 10 precisa liberar os scripts de build de `prisma` e `@prisma/engines` (`onlyBuiltDependencies`).
@@ -164,6 +182,10 @@ Primeiro template, escolhido pelo operador. Versões e decisões verificadas em 
 - Variáveis de ambiente obrigatórias validadas na inicialização (`src/shared/config/env.ts`). Um `.env` por app; o da raiz serve ao docker-compose.
 - A regra `useImportType` do Biome fica **desligada no `apps/api`**: ela troca imports de classes injetadas por `import type`, o que apaga a classe e quebra a injeção de dependência do Nest.
 - Módulo de exemplo `health` (`GET /health` consulta o banco), seguindo controller → service.
+- **Express 5.3** (2026-10-14): convenção de módulos da WEbdEX (`index.ts` como API pública, dependências por parâmetro, composição no `app.ts`), validação com zod 4, `HttpError` e handler central que devolve 500 sem detalhes.
+- **AdonisJS 7.6** com Lucid 22: parte do kit API oficial reduzido (sem auth, sessão, shield, Tuyau e SQLite). Módulos em `app/modules`, CORS restrito a `CORS_ORIGINS`, `useImportType` desligado pelo mesmo motivo do Nest (`@inject()`).
+- **Drizzle** 0.45 com drizzle-kit 0.31: um `<modulo>.schema.ts` por módulo, reexportado em `src/shared/database/schema.ts`; o template já traz o journal de migrações vazio, porque sem ele `drizzle-kit migrate` falha sem mensagem.
+- **MySQL 8.4**: o Prisma usa `@prisma/adapter-mariadb` (compatível com MySQL) com `allowPublicKeyRetrieval`, exigido pela autenticação padrão do MySQL 8 sem TLS; o Drizzle usa `mysql2`.
 
 Validado: build, check-types e lint das três combinações (fullstack, só frontend, só backend); no fullstack, Postgres pelo docker-compose, `db:migrate` e `GET /health` (200 com banco no ar, 500 sem detalhes com banco fora).
 
@@ -174,9 +196,20 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 - **Changesets 3**, versões **independentes** por pacote, publicação **só por PR de release aprovado** ("chore: versionar pacotes", aberto pelo `changesets/action@v2`).
 - `pnpm version-packages` = `changeset version` + atualização das faixas `@devwebdex/*` nos templates + patch do `@devwebdex/create` quando um template muda.
 - `@devwebdex/ui` não declara mais `@devwebdex/tokens` como peer dependency: com ela, cada `minor` dos tokens faria o changesets subir o `ui` para major.
-- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz das três combinações de projeto gerado (build, tipos, lint; com backend, Postgres via docker compose, `db:deploy` e `GET /health`).
+- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz de 11 combinações de projeto gerado (build, tipos, lint e testes; com backend, banco via docker compose, `db:deploy` e `test:e2e`).
 - **Release** (`.github/workflows/release.yml`): publica no GitHub Packages com o `GITHUB_TOKEN` do workflow (`packages: write`), sem token pessoal.
 - **Actions fixadas por SHA de commit** (versão no comentário), porque o release roda com permissão de escrita e de publicação: uma tag movida num repositório de terceiros executaria código com esse token. O Dependabot (`.github/dependabot.yml`) abre PR semanal para atualizar os SHAs. No CI, o checkout usa `persist-credentials: false`; no release, as credenciais ficam, porque o `changesets/action` faz push do PR de versão.
+
+### D13. Testes, CI e git no projeto gerado
+
+Pedido pelo operador em 2026-10-14.
+
+- `pnpm test` (unitários, sem banco) e `pnpm test:e2e` (com o banco do docker compose), pelo Turborepo.
+- Nest e Express: vitest 5 e supertest. O vitest 5 (Vite 8) já emite o metadata dos decorators do Nest, sem SWC. Os unitários trocam o banco por um falso; o e2e sobe a API e chama `GET /health` com o banco real.
+- AdonisJS: Japa, o runner nativo (suítes `unit` e `functional`).
+- Next: vitest com Testing Library e jsdom.
+- CI do projeto gerado (`.github/workflows/ci.yml`): instala com acesso de leitura ao GitHub Packages, roda `env:setup`, build, tipos, lint e testes; se houver `docker-compose.yml`, sobe o banco, aplica migrações e roda o e2e. Actions fixadas por SHA, como no monorepo.
+- Git: commit inicial depois do `pnpm install` (o lockfile entra), branch `main`, `.env` fora do repositório (há teste para isso).
 
 ## Em aberto
 
@@ -189,10 +222,8 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 | A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
 | A8 | Primitivos acessíveis | Biblioteca para dialog, menu, select, popover, tooltip e tabs (ex.: Radix ou Base UI). Até decidir, esses componentes não são implementados |
 | A9 | Publicação | Implementada (D12); falta a primeira execução no GitHub, que acontece no merge na `prod`, e a configuração única do repositório descrita em [publicacao.md](publicacao.md) |
-| A10 | Testes nos projetos gerados | Ferramenta e estrutura de testes do template (o Nest 12 usa vitest por padrão) |
 | A11 | Dockerfile por app | Adiado até A9 |
-| A12 | CI | Workflow deste repositório implementado (D12); falta o workflow de CI dentro do projeto gerado |
-| A13 | Stacks restantes | Adonis, Express, Drizzle, MySQL e microserviços aparecem na TUI como "(em breve)" |
+| A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
 | A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
 
 ## Riscos conhecidos

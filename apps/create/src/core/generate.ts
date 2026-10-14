@@ -1,8 +1,6 @@
 import { spawnSync } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
 import {
   appendFileSync,
-  existsSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -39,9 +37,10 @@ export function generate({
 
   mkdirSync(targetDir, { recursive: true })
   for (const layer of layersFor(options)) applyLayer(join(templatesDir, layer), targetDir, options)
-  createEnvFiles(targetDir)
+  // Os .env usam os valores de desenvolvimento dos exemplos, então o projeto já nasce rodando.
+  runProjectScript(targetDir, 'setup-env.mjs', 'criar os arquivos .env')
   if (linkPackagesFrom) linkPackages(targetDir, linkPackagesFrom)
-  syncAgents(targetDir)
+  runProjectScript(targetDir, 'sync-agents.mjs', 'gerar os agentes de IA')
   writeManifest(targetDir, options, generatorVersion)
 }
 
@@ -116,20 +115,6 @@ function walk(dir: string): string[] {
   })
 }
 
-// Os valores dos .env.example são só para desenvolvimento local, então o projeto já nasce rodando.
-// Chave ou segredo vazio no exemplo (ex.: APP_KEY=) ganha valor aleatório no .env, nunca no exemplo.
-function createEnvFiles(targetDir: string) {
-  for (const example of walk(targetDir).filter((file) => file.endsWith(`${sep}.env.example`))) {
-    const env = example.slice(0, -'.example'.length)
-    if (existsSync(env)) continue
-    const content = readFileSync(example, 'utf8').replace(
-      /^([A-Z0-9_]*(?:KEY|SECRET))=$/gm,
-      (_line, name: string) => `${name}=${randomBytes(32).toString('base64url')}`
-    )
-    writeFileSync(env, content)
-  }
-}
-
 // `file:` copia o pacote para dentro do projeto: com `link:` o Turbopack recusa arquivos fora da raiz.
 function linkPackages(targetDir: string, monorepo: string) {
   const overrides = devwebdexPackages
@@ -138,12 +123,13 @@ function linkPackages(targetDir: string, monorepo: string) {
   appendFileSync(join(targetDir, 'pnpm-workspace.yaml'), `\noverrides:\n${overrides}`)
 }
 
-function syncAgents(targetDir: string) {
-  const result = spawnSync(process.execPath, ['scripts/sync-agents.mjs'], {
+// Scripts do próprio projeto gerado (scripts/*.mjs): a mesma lógica serve ao gerador, ao dev e ao CI.
+function runProjectScript(targetDir: string, script: string, purpose: string) {
+  const result = spawnSync(process.execPath, [join('scripts', script)], {
     cwd: targetDir,
     encoding: 'utf8',
   })
-  if (result.status !== 0) throw new Error(`falha ao gerar os agentes de IA:\n${result.stderr}`)
+  if (result.status !== 0) throw new Error(`falha ao ${purpose}:\n${result.stderr}`)
 }
 
 function writeManifest(targetDir: string, options: ProjectOptions, generatorVersion: string) {

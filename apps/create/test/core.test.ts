@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from 'bun:test'
+import { spawnSync } from 'node:child_process'
 import {
   existsSync,
   mkdirSync,
@@ -12,6 +13,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { defaults, type ProjectOptions, validate, validCombinations } from '../src/core/catalog.js'
 import { generate, LockedError, layersFor, targetName, templatesDir } from '../src/core/generate.js'
+import { initGitRepository } from '../src/core/git.js'
 import { lockReason } from '../src/core/lock.js'
 
 const options = (overrides: Partial<ProjectOptions> = {}): ProjectOptions => ({
@@ -189,10 +191,36 @@ describe('generate', () => {
     expect(env).toMatch(/^APP_KEY=[A-Za-z0-9_-]{40,}$/m)
   })
 
+  test('git: commit inicial com o projeto, sem os .env', () => {
+    const dir = join(tempDir(), 'acme')
+    generate({ targetDir: dir, options: options(), generatorVersion: '0.0.0-test' })
+    const identity = {
+      GIT_AUTHOR_NAME: 'Teste',
+      GIT_AUTHOR_EMAIL: 'teste@example.com',
+      GIT_COMMITTER_NAME: 'Teste',
+      GIT_COMMITTER_EMAIL: 'teste@example.com',
+    }
+    Object.assign(process.env, identity)
+    try {
+      expect(initGitRepository(dir)).toEqual({ ok: true })
+    } finally {
+      for (const key of Object.keys(identity)) delete process.env[key]
+    }
+    const git = (...args: string[]) =>
+      spawnSync('git', args, { cwd: dir, encoding: 'utf8' }).stdout.trim().split('\n')
+    expect(git('log', '--oneline')).toHaveLength(1)
+    const tracked = git('ls-files')
+    expect(tracked).toContain('.env.example')
+    expect(tracked).toContain('.github/workflows/ci.yml')
+    expect(tracked.filter((file) => file.endsWith('.env'))).toEqual([])
+  })
+
   test('não sobra placeholder nos arquivos gerados', () => {
     const dir = join(tempDir(), 'acme')
     generate({ targetDir: dir, options: options(), generatorVersion: '0.0.0-test' })
-    const leftovers = walk(dir).filter((file) => readFileSync(file, 'utf8').includes('{{'))
+    const leftovers = walk(dir).filter((file) =>
+      /(?<!\$)\{\{[a-zA-Z]+\}\}/.test(readFileSync(file, 'utf8'))
+    )
     expect(leftovers).toEqual([])
   })
 

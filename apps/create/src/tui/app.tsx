@@ -78,7 +78,7 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
   const [stage, setStage] = useState<Stage>(initialDirectory ? 0 : 'directory')
   const [highlight, setHighlight] = useState(0)
 
-  const visibleSteps = steps.filter((step) => !isIrrelevant({ ...choices, name: '' }, step.key))
+  const visibleSteps = stepsFor(choices)
   const step = typeof stage === 'number' ? visibleSteps[stage] : undefined
   const options = step ? optionsFor(step.key, choices) : []
   const compact = width < 72 || height < 34
@@ -119,7 +119,7 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
       if (valid.length > 0 && !valid.includes(next.orm)) next.orm = valid[0] as Choices['orm']
     }
     setChoices(next)
-    const remaining = steps.filter((s) => !isIrrelevant({ ...next, name: '' }, s.key))
+    const remaining = stepsFor(next)
     const index = remaining.findIndex((s) => s.key === step.key)
     if (index + 1 < remaining.length) {
       setStage(index + 1)
@@ -274,10 +274,12 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
           {stage === 'summary' && (
             <Summary
               directory={directory}
-              rows={visibleSteps.map((s) => ({
-                title: s.title,
-                value: labelOf(s.key, choices[s.key]),
-              }))}
+              rows={steps
+                .filter((s) => !isIrrelevant({ ...choices, name: '' }, s.key))
+                .map((s) => ({
+                  title: s.title,
+                  value: labelOf(s.key, choices[s.key]),
+                }))}
               onConfirm={confirm}
               onBack={back}
               onCancel={() => onDone(null)}
@@ -453,6 +455,14 @@ function Footer({ stage }: { stage: Stage }) {
       ))}
       <span fg={palette.faint}>ou use o mouse</span>
     </text>
+  )
+}
+
+/** Etapas a perguntar: sem as irrelevantes (ORM e banco sem backend) e sem as de opção única (ORM do Adonis). */
+function stepsFor(choices: Choices) {
+  return steps.filter(
+    (step) =>
+      !isIrrelevant({ ...choices, name: '' }, step.key) && optionsFor(step.key, choices).length > 1
   )
 }
 

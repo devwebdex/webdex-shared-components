@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util'
 import pkg from '../package.json' with { type: 'json' }
 import { defaults, type ProjectOptions, validate } from './core/catalog.js'
 import { generate, LockedError } from './core/generate.js'
+import { initGitRepository } from './core/git.js'
 import { lockReason } from './core/lock.js'
 
 const usage = `Uso: bunx @devwebdex/create [diretório] [opções]
@@ -20,6 +21,7 @@ Opções:
   --frontend <valor>       next | none
   --yes                    não interativo: usa os flags e os padrões
   --skip-install           não roda pnpm install
+  --skip-git               não inicializa o git nem cria o commit inicial
   --link-packages <dir>    usa os pacotes @devwebdex/* de um checkout local (CI e desenvolvimento)
   --help                   mostra esta ajuda`
 
@@ -34,6 +36,7 @@ const { values, positionals } = parseArgs({
     frontend: { type: 'string' },
     yes: { type: 'boolean', default: false },
     'skip-install': { type: 'boolean', default: false },
+    'skip-git': { type: 'boolean', default: false },
     'link-packages': { type: 'string' },
     help: { type: 'boolean', default: false },
   },
@@ -93,6 +96,12 @@ if (!values['skip-install']) {
   const install = spawnSync('pnpm', ['install'], { cwd: targetDir, stdio: 'inherit', shell: true })
   if (install.status !== 0)
     fail('pnpm install falhou; o projeto foi gerado, rode a instalação manualmente')
+}
+
+// Depois da instalação, para o lockfile entrar no commit inicial.
+if (!values['skip-git']) {
+  const git = initGitRepository(targetDir)
+  console.log(git.ok ? 'Repositório git criado com o commit inicial' : `Aviso: ${git.message}`)
 }
 
 console.log(`

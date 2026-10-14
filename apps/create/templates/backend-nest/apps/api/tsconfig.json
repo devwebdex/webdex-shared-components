@@ -6,8 +6,8 @@
     "strictPropertyInitialization": false,
     "declaration": false,
     "declarationMap": false,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

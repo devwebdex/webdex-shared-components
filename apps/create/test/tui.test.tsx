@@ -77,6 +77,23 @@ test('sem backend pula ORM e banco', async () => {
   expect(result?.options.backend).toBe('none')
 })
 
+test('Adonis pula a etapa de ORM (só Lucid) e mantém o ORM no resumo', async () => {
+  let result: TuiResult | null | undefined
+  const s = await mount((r) => {
+    result = r
+  })
+  await click(s, 'Monólito modular')
+  await click(s, 'AdonisJS')
+  const frame = s.captureCharFrame()
+  expect(frame).toContain('● Banco de dados')
+  expect(frame).not.toContain('○ ORM')
+  await click(s, 'MySQL')
+  await click(s, 'Sem frontend')
+  expect(s.captureCharFrame()).toMatch(/ORM +Lucid/)
+  await click(s, 'Criar projeto')
+  expect(result?.options).toMatchObject({ backend: 'adonis', orm: 'lucid', database: 'mysql' })
+})
+
 test('Enter seleciona a opção destacada e Esc cancela', async () => {
   let result: TuiResult | null | undefined
   const s = await mount((r) => {
