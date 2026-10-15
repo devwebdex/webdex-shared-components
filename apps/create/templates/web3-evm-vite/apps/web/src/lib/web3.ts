@@ -45,7 +45,7 @@ export class ApiError extends Error {
     this.name = 'ApiError'
   }
 }
-//#if session=token
+//#if session=token|jwt
 
 // Token só em memória: some ao recarregar a página. localStorage seria lido por um XSS.
 let token: string | undefined
@@ -77,7 +77,7 @@ export const authApi = {
 
   /** Sessão atual, ou null sem sessão. */
   async me(): Promise<{ address: Address } | null> {
-    //#if session=token
+    //#if session=token|jwt
     if (!token) return null
     //#endif
     try {
@@ -85,7 +85,7 @@ export const authApi = {
       return (await response.json()) as { address: Address }
     } catch (error) {
       if (!(error instanceof ApiError && error.status === 401)) throw error
-      //#if session=token
+      //#if session=token|jwt
       token = undefined
       //#endif
       return null
@@ -107,7 +107,7 @@ export const authApi = {
 
 async function request(path: string, init: RequestInit = {}): Promise<Response> {
   const url = `${required('VITE_API_URL', import.meta.env.VITE_API_URL)}${path}`
-  //#if session=token
+  //#if session=token|jwt
   const headers = new Headers(init.headers)
   if (token) headers.set('Authorization', `Bearer ${token}`)
   //#endif

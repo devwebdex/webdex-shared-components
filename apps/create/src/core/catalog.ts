@@ -12,7 +12,7 @@ export type Orm = 'prisma' | 'drizzle' | 'mongoose' | 'lucid'
 export type Queue = 'none' | 'bullmq'
 export type Frontend = 'none' | 'next' | 'vite' | 'inertia'
 export type Web3 = 'none' | 'evm'
-export type Session = 'cookie' | 'token'
+export type Session = 'cookie' | 'token' | 'jwt'
 
 export type ProjectOptions = {
   name: string
@@ -162,7 +162,7 @@ export const catalog = {
   web3: [
     {
       value: 'none',
-      label: 'Sem web3',
+      label: 'Sem biblioteca/framework web3',
       description: 'Sem carteira nem blockchain',
       available: true,
     },
@@ -184,6 +184,12 @@ export const catalog = {
       value: 'token',
       label: 'Token de acesso',
       description: 'Bearer revogável; serve quando frontend e API ficam em domínios diferentes',
+      available: true,
+    },
+    {
+      value: 'jwt',
+      label: 'JWT',
+      description: 'Bearer assinado, sem consulta ao banco; só expira (validade curta), não revoga',
       available: true,
     },
   ] satisfies Option<Session>[],

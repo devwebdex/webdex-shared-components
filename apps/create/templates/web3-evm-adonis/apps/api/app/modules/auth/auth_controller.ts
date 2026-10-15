@@ -7,7 +7,8 @@ import {
   readSessionToken,
   setSessionCookie,
 } from '#modules/auth/session_transport'
-//#else
+//#endif
+//#if session=token
 import { readSessionToken } from '#modules/auth/session_transport'
 //#endif
 import { verifyValidator } from '#modules/auth/validators'
@@ -39,6 +40,13 @@ export default class AuthController {
     return { address: wallet.address }
   }
 
+  //#if session=jwt
+  // O JWT não fica no banco e não é revogável: o 204 só confirma, o frontend descarta o token e o
+  // mesmo JWT vale até o exp (docs/standards/web3.md, "Transporte da sessão").
+  logout({ response }: HttpContext) {
+    return response.noContent()
+  }
+  //#else
   async logout({ request, response }: HttpContext) {
     const token = readSessionToken(request)
     if (token) await this.auth.logout(token)
@@ -47,4 +55,5 @@ export default class AuthController {
     //#endif
     return response.noContent()
   }
+  //#endif
 }

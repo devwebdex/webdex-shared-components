@@ -1,4 +1,7 @@
 import type { ApiClient, ApiResponse } from '@japa/api-client'
+//#if session=jwt
+import { type JWTPayload, SignJWT, UnsecuredJWT } from 'jose'
+//#endif
 import { type Hex, isAddressEqual, recoverMessageAddress } from 'viem'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import {
@@ -87,3 +90,68 @@ export function sessionHeaders(login: ApiResponse): Record<string, string> {
   return { authorization: `Bearer ${login.body().token}` }
   //#endif
 }
+//#if session=jwt
+
+type JwtVariant = { claims?: JWTPayload; secret?: Uint8Array; alg?: 'HS256' | 'HS512' }
+
+/** JWT de sessão montado no teste; os parâmetros trocam claims, segredo ou algoritmo. */
+export function sessionJwt(
+  address: string,
+  { claims = {}, secret = web3Config.jwtSecret, alg = 'HS256' }: JwtVariant = {}
+) {
+  return new SignJWT({ ...validClaims(address), ...claims })
+    .setProtectedHeader({ alg })
+    .sign(secret)
+}
+
+function validClaims(address: string) {
+  const now = Math.floor(Date.now() / 1000)
+  const origin = web3Config.siwe.origin
+  return { sub: address, iat: now, exp: now + 60 * 60, iss: origin, aud: origin }
+}
+
+/** JWTs que a API precisa recusar (docs/standards/web3.md, "Transporte da sessão"). */
+export const rejectedSessionJwts = [
+  {
+    label: 'expirado',
+    forge: (address: string) => {
+      const now = Math.floor(Date.now() / 1000)
+      return sessionJwt(address, { claims: { iat: now - 7200, exp: now - 3600 } })
+    },
+  },
+  {
+    label: 'assinatura adulterada (sub trocado)',
+    forge: async (address: string) => {
+      const [header, , signature] = (await sessionJwt(address)).split('.')
+      const other = privateKeyToAccount(generatePrivateKey()).address
+      const payload = Buffer.from(JSON.stringify(validClaims(other))).toString('base64url')
+      return `${header}.${payload}.${signature}`
+    },
+  },
+  {
+    label: 'alg: none',
+    forge: async (address: string) => new UnsecuredJWT(validClaims(address)).encode(),
+  },
+  {
+    label: 'outro algoritmo (HS512)',
+    forge: (address: string) => sessionJwt(address, { alg: 'HS512' }),
+  },
+  {
+    label: 'outro segredo',
+    forge: (address: string) =>
+      sessionJwt(address, { secret: new TextEncoder().encode('x'.repeat(32)) }),
+  },
+  {
+    label: 'iss errado',
+    forge: (address: string) => sessionJwt(address, { claims: { iss: 'https://evil.example' } }),
+  },
+  {
+    label: 'aud errado',
+    forge: (address: string) => sessionJwt(address, { claims: { aud: 'https://evil.example' } }),
+  },
+  {
+    label: 'sem exp',
+    forge: (address: string) => sessionJwt(address, { claims: { exp: undefined } }),
+  },
+]
+//#endif

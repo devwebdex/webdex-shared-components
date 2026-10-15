@@ -33,7 +33,7 @@ Opções:
   --queue <valor>          none | bullmq
   --frontend <valor>       next | vite | inertia (só Adonis) | none
   --web3 <valor>           none | evm (Polygon com viem)
-  --session <valor>        cookie | token (login com carteira; padrão: token com Vite, cookie nos outros)
+  --session <valor>        cookie | token | jwt (login com carteira; padrão: token com Vite, cookie nos outros)
   --yes                    não interativo: usa os flags e os padrões
   --skip-install           não roda pnpm install
   --skip-git               não inicializa o git nem cria o commit inicial

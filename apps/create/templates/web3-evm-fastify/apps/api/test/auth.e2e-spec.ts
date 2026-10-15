@@ -3,6 +3,9 @@ import { generatePrivateKey, type PrivateKeyAccount, privateKeyToAccount } from 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createApp } from '../src/app.js'
 import { createAccessService } from '../src/modules/access/index.js'
+//#if session=jwt
+import { loadJwtConfig } from '../src/modules/auth/auth.service.js'
+//#endif
 import { createAuthRepository, createAuthService } from '../src/modules/auth/index.js'
 import { loadChainConfig } from '../src/shared/chain/chain-config.js'
 import { env } from '../src/shared/config/env.js'
@@ -10,7 +13,11 @@ import { connectDatabase } from '../src/shared/database/database.js'
 //#if queue=bullmq
 import { connectRedis } from '../src/shared/queue/redis.js'
 //#endif
+//#if session=jwt
+import { offlineChainClient, rejectedJwts, signSiweMessage } from './support/siwe.js'
+//#else
 import { offlineChainClient, signSiweMessage } from './support/siwe.js'
+//#endif
 
 describe('login SIWE (banco real)', () => {
   const config = loadChainConfig()
@@ -115,6 +122,23 @@ describe('login SIWE (banco real)', () => {
     return { session: String(token), expiresAt: String(expiresAt) }
   }
 
+//#if session=jwt
+  it('login devolve o JWT e a validade de 1 hora', async () => {
+    const { session, expiresAt } = await signIn(newAccount())
+    expect(session).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/)
+    const minutes = (new Date(expiresAt).getTime() - Date.now()) / (60 * 1000)
+    expect(minutes).toBeGreaterThan(59)
+    expect(minutes).toBeLessThanOrEqual(60)
+  })
+
+  it('JWT expirado, adulterado ou com alg none responde 401', async () => {
+    const { session } = await signIn(newAccount())
+    const { expired, tampered, none } = await rejectedJwts(session, loadJwtConfig().secret)
+    expect((await get('/auth/me', expired)).statusCode).toBe(401)
+    expect((await get('/auth/me', tampered)).statusCode).toBe(401)
+    expect((await get('/auth/me', none)).statusCode).toBe(401)
+  })
+//#else
   it('login devolve o token e a validade de 24 horas', async () => {
     const { session, expiresAt } = await signIn(newAccount())
     expect(session).toMatch(/^[\w-]{43}$/)
@@ -123,7 +147,21 @@ describe('login SIWE (banco real)', () => {
     expect(hours).toBeLessThanOrEqual(24)
   })
 //#endif
+//#endif
 
+//#if session=jwt
+  it('login, me e logout, que não revoga o JWT: ele vale até expirar', async () => {
+    const account = newAccount()
+    const { session } = await signIn(account)
+
+    const me = await get('/auth/me', session)
+    expect(me.statusCode).toBe(200)
+    expect(me.json()).toEqual({ address: account.address })
+    expect((await post('/auth/logout', session)).statusCode).toBe(204)
+    // Sem revogação (docs/standards/web3.md): quem descarta o JWT é o frontend.
+    expect((await get('/auth/me', session)).statusCode).toBe(200)
+  })
+//#else
   it('login, me e logout, que apaga a sessão no servidor', async () => {
     const account = newAccount()
     const { session } = await signIn(account)
@@ -134,6 +172,7 @@ describe('login SIWE (banco real)', () => {
     expect((await post('/auth/logout', session)).statusCode).toBe(204)
     expect((await get('/auth/me', session)).statusCode).toBe(401)
   })
+//#endif
 
   it('sem sessão, /auth/me responde 401', async () => {
     expect((await get('/auth/me')).statusCode).toBe(401)

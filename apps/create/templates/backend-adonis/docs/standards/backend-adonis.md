@@ -85,7 +85,11 @@ O projeto já nasce com o login SIWE e o acesso por contrato, sem o `@adonisjs/a
 - Cliente da rede: `ChainClient` (`app/shared/chain_client.ts`) é uma classe abstrata ligada ao cliente do viem por `providers/web3_provider.ts`, um por processo. Serviços o recebem por `@inject()`; nos testes, `app.container.swap(ChainClient, ...)` troca por um falso. `tests/helpers/siwe.ts` traz um cliente que verifica a assinatura sem RPC e o login com uma conta local.
 //#if session=cookie
 - Sessão em cookie simples (sem a assinatura do Adonis): o valor é um token aleatório de 256 bits conferido pelo hash no banco. Com `SIWE_ORIGIN` em https, o cookie é `Secure` e se chama `__Host-session`; em http, `session` (`sessionCookie` em `session_transport.ts`). Todo `POST`, `PUT`, `PATCH` e `DELETE` da app exige `Origin` igual a `SIWE_ORIGIN` (`session_transport.ts`, registrado em `start/kernel.ts`), inclusive nas rotas novas.
-//#else
+//#endif
+//#if session=token
 - Sessão por `Authorization: Bearer <token>` (`session_transport.ts`).
+//#endif
+//#if session=jwt
+- Sessão por `Authorization: Bearer <JWT>` (`session_transport.ts`): o `AuthService` assina e confere o JWT com a biblioteca `jose`, algoritmo fixo em HS256, e `JWT_SECRET` (declarada em `start/env.ts`, lida em `config/web3.ts`, que recusa segredo com menos de 32 bytes). Nada vai para `auth_sessions`, e o logout não revoga o token.
 //#endif
 //#endif

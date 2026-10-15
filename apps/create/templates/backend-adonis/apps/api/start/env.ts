@@ -26,5 +26,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   RPC_URL: Env.schema.string({ format: 'url', tld: false }),
   SIWE_ORIGIN: Env.schema.string({ format: 'url', tld: false }),
   ACCESS_CONTROL_ADDRESS: Env.schema.string.optional(),
+  //#if session=jwt
+  JWT_SECRET: Env.schema.secret(),
+  //#endif
   //#endif
 })

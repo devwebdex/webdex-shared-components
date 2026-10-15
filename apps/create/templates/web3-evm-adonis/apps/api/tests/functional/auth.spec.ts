@@ -1,6 +1,9 @@
 import app from '@adonisjs/core/services/app'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { test } from '@japa/runner'
+//#if session=jwt
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
+//#endif
 import web3Config from '#config/web3'
 //#if session=cookie
 import { SESSION_COOKIE } from '#modules/auth/session_transport'
@@ -10,6 +13,9 @@ import {
   fromFrontend,
   LOGIN_STATUS,
   offlineChainClient,
+  //#if session=jwt
+  rejectedSessionJwts,
+  //#endif
   sessionHeaders,
   signIn,
 } from '#tests/helpers/siwe'
@@ -45,7 +51,12 @@ test.group('login SIWE (banco real)', (group) => {
     const logout = await client.post('/auth/logout').headers(session)
     logout.assertStatus(204)
     const afterLogout = await client.get('/auth/me').headers(session)
+    //#if session=jwt
+    // O JWT não é revogável: depois do logout, o mesmo token vale até o exp (docs/standards/web3.md).
+    afterLogout.assertStatus(200)
+    //#else
     afterLogout.assertStatus(401)
+    //#endif
   })
 
   test('nonce já usado é recusado', async ({ client }) => {
@@ -87,6 +98,16 @@ test.group('login SIWE (banco real)', (group) => {
     const response = await client.get('/auth/me')
     response.assertStatus(401)
   })
+  //#if session=jwt
+
+  test('JWT recusado em GET /auth/me responde 401: {label}')
+    .with(rejectedSessionJwts)
+    .run(async ({ client }, { forge }) => {
+      const token = await forge(privateKeyToAccount(generatePrivateKey()).address)
+      const response = await client.get('/auth/me').header('authorization', `Bearer ${token}`)
+      response.assertStatus(401)
+    })
+  //#endif
   //#if session=cookie
 
   test('POST com Origin de outro site responde 403', async ({ client }) => {

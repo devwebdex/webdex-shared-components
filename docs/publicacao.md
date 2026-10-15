@@ -12,7 +12,7 @@ Decisões (operador, 2026-10-14): versões **independentes** por pacote e public
    - um resumo de uma linha, que vai para o CHANGELOG.
 
    Isso cria um arquivo em `.changeset/`. Commite junto com a mudança.
-2. **O CI** (`.github/workflows/ci.yml`) roda lint, tipos e testes, e gera 17 combinações de projeto com os pacotes do PR (build, tipos, lint, testes e, com backend, banco, migrações e testes e2e).
+2. **O CI** (`.github/workflows/ci.yml`) roda lint, tipos e testes, e gera 18 combinações de projeto com os pacotes do PR (build, tipos, lint, testes e, com backend, banco, migrações e testes e2e).
 3. **Depois do merge na `prod`**, o workflow de release (`.github/workflows/release.yml`) abre ou atualiza o PR **"chore: versionar pacotes"**, que:
    - sobe a versão de cada pacote com changeset;
    - escreve o `CHANGELOG.md` de cada um;
@@ -47,4 +47,4 @@ O item 3 segue a documentação do GitHub Packages e ainda não foi exercitado: 
 
 ## O que não foi verificado
 
-Os workflows foram validados com o actionlint, e cada comando deles foi executado localmente: build, lint, testes, `pnpm version-packages` com um changeset de teste e o empacotamento do `@devwebdex/create` instalado fora do monorepo. Das 17 combinações da matriz (D12), foram validadas localmente, de ponta a ponta (build, tipos, lint, testes, banco, migrações, e2e e `/health`), combinações que cobrem todas as camadas. **Os workflows ainda não rodaram no GitHub Actions, porque nada foi enviado como PR para a `prod`; a publicação real no GitHub Packages também só acontece depois disso** (CI no PR; publicação no merge na `prod`).
+Os workflows foram validados com o actionlint, e cada comando deles foi executado localmente: build, lint, testes, `pnpm version-packages` com um changeset de teste e o empacotamento do `@devwebdex/create` instalado fora do monorepo. As combinações da matriz (D12) foram validadas localmente de ponta a ponta (build, tipos, lint, testes, banco, migrações, e2e e `/health`). O CI rodou pela primeira vez no GitHub Actions no PR #1, em 2026-10-15, com todos os jobs passando (inclusive o Windows). **A publicação real no GitHub Packages só acontece no merge na `prod`.**

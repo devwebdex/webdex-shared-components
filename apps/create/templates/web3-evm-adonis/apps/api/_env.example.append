@@ -7,3 +7,7 @@ SIWE_ORIGIN=http://localhost:3333
 SIWE_ORIGIN=http://localhost:3000
 //#endif
 ACCESS_CONTROL_ADDRESS=
+//#if session=jwt
+# Vazio aqui: o pnpm env:setup gera um valor aleatório no .env.
+JWT_SECRET=
+//#endif

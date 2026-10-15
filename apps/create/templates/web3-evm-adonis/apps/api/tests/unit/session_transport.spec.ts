@@ -1,4 +1,4 @@
-//#if session=token
+//#if session=token|jwt
 import type { HttpContext } from '@adonisjs/core/http'
 //#endif
 import { test } from '@japa/runner'
@@ -17,7 +17,8 @@ test.group('cookie de sessão', () => {
     assert.deepEqual(sessionCookie('http://localhost:3000'), { name: 'session', secure: false })
   })
 })
-//#else
+//#endif
+//#if session=token|jwt
 import { readSessionToken } from '#modules/auth/session_transport'
 
 function requestWith(authorization?: string) {

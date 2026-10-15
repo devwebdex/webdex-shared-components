@@ -1,19 +1,31 @@
+//#if session!=jwt
 import { createHash } from 'node:crypto'
+//#endif
 import { test } from '@japa/runner'
+//#if session=jwt
+import { decodeJwt, decodeProtectedHeader } from 'jose'
+//#endif
 import { DateTime } from 'luxon'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import { type CreateSiweMessageParameters, createSiweMessage } from 'viem/siwe'
 import web3Config from '#config/web3'
 import AuthService from '#modules/auth/auth_service'
 import type ChainClient from '#shared/chain_client'
+//#if session=jwt
+import { rejectedSessionJwts, sessionJwt } from '#tests/helpers/siwe'
+//#endif
 
 // Repositório em memória com o mesmo contrato do AuthRepository: os testes unitários não usam banco.
 function memoryRepository() {
   const nonces = new Map<string, DateTime>()
+  //#if session!=jwt
   const sessions = new Map<string, { address: string; expiresAt: DateTime }>()
+  //#endif
   return {
     nonces,
+    //#if session!=jwt
     sessions,
+    //#endif
     async createNonce(nonce: string, expiresAt: DateTime) {
       nonces.set(nonce, expiresAt)
     },
@@ -22,6 +34,7 @@ function memoryRepository() {
       nonces.delete(nonce)
       return expiresAt !== undefined && expiresAt > DateTime.now()
     },
+    //#if session!=jwt
     async createSession({ id, ...session }: { id: string; address: string; expiresAt: DateTime }) {
       sessions.set(id, session)
     },
@@ -32,6 +45,7 @@ function memoryRepository() {
     async deleteSession(id: string) {
       sessions.delete(id)
     },
+    //#endif
   }
 }
 
@@ -74,6 +88,35 @@ test.group('AuthService', () => {
     assert.closeTo(minutes, 5, 0.1)
   })
 
+  //#if session=jwt
+  test('emite JWT HS256 com sub, iat, exp de 1 hora, iss e aud', async ({ assert }) => {
+    const { service, account, message } = await setup()
+
+    const session = await service.login(message(), '0x00')
+    if (!session) return assert.fail('login recusado')
+
+    assert.equal(decodeProtectedHeader(session.token).alg, 'HS256')
+    const claims = decodeJwt(session.token)
+    const origin = web3Config.siwe.origin
+    assert.include(claims, { sub: account.address, iss: origin, aud: origin })
+    assert.equal((claims.exp ?? 0) - (claims.iat ?? 0), 60 * 60)
+    assert.equal(session.expiresAt.toSeconds(), claims.exp)
+    assert.equal(await service.sessionAddress(session.token), account.address)
+  })
+
+  // Controle dos casos abaixo: o JWT montado no teste, sem alteração, é aceito.
+  test('aceita JWT montado com os dados certos', async ({ assert }) => {
+    const { service, account } = await setup()
+    assert.equal(await service.sessionAddress(await sessionJwt(account.address)), account.address)
+  })
+
+  test('recusa JWT: {label}')
+    .with(rejectedSessionJwts)
+    .run(async ({ assert }, { forge }) => {
+      const { service, account } = await setup()
+      assert.isNull(await service.sessionAddress(await forge(account.address)))
+    })
+  //#else
   test('abre a sessão e guarda só o hash do token', async ({ assert }) => {
     const { service, repository, account, message } = await setup()
 
@@ -88,6 +131,7 @@ test.group('AuthService', () => {
     await service.logout(session.token)
     assert.isNull(await service.sessionAddress(session.token))
   })
+  //#endif
 
   test('nonce só vale uma vez', async ({ assert }) => {
     const { service, message } = await setup()
@@ -107,10 +151,16 @@ test.group('AuthService', () => {
       },
     ])
     .run(async ({ assert }, { overrides }) => {
+      //#if session=jwt
+      const { service, chain, message } = await setup()
+      //#else
       const { service, repository, chain, message } = await setup()
+      //#endif
       assert.isNull(await service.login(message(overrides), '0x00'))
       assert.lengthOf(chain.calls, 0)
+      //#if session!=jwt
       assert.equal(repository.sessions.size, 0)
+      //#endif
     })
 
   test('recusa mensagem acima de 4096 caracteres sem ler nem consumir o nonce', async ({
@@ -123,9 +173,15 @@ test.group('AuthService', () => {
   })
 
   test('recusa assinatura inválida', async ({ assert }) => {
+    //#if session=jwt
+    const { service, chain, message } = await setup(false)
+    //#else
     const { service, repository, chain, message } = await setup(false)
+    //#endif
     assert.isNull(await service.login(message(), '0x00'))
     assert.lengthOf(chain.calls, 1)
+    //#if session!=jwt
     assert.equal(repository.sessions.size, 0)
+    //#endif
   })
 })

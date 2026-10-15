@@ -4,3 +4,7 @@ RPC_URL=https://rpc-amoy.polygon.technology
 SIWE_ORIGIN=http://localhost:3000
 # Contrato AccessControl com os papéis; vazio nega GET /access/admin.
 ACCESS_CONTROL_ADDRESS=
+//#if session=jwt
+# Segredo do HS256 do JWT de sessão, com pelo menos 32 bytes; o pnpm env:setup gera um no .env.
+JWT_SECRET=
+//#endif

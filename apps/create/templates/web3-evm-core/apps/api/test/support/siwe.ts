@@ -1,3 +1,6 @@
+//#if session=jwt
+import { decodeJwt, SignJWT } from 'jose'
+//#endif
 import { type Address, isAddressEqual, recoverMessageAddress } from 'viem'
 import type { PrivateKeyAccount } from 'viem/accounts'
 import {
@@ -55,3 +58,22 @@ export async function signSiweMessage(
   })
   return { message, signature: await account.signMessage({ message }) }
 }
+//#if session=jwt
+
+/** JWTs que a API precisa recusar: expirado (com o segredo certo), payload adulterado e `alg: none`. */
+export async function rejectedJwts(token: string, secret: Uint8Array) {
+  const [header, payload, signature] = token.split('.')
+  const claims = decodeJwt(token)
+  const now = Math.floor(Date.now() / 1000)
+  const expired = await new SignJWT({ ...claims, iat: now - 2 * 60 * 60, exp: now - 60 * 60 })
+    .setProtectedHeader({ alg: 'HS256' })
+    .sign(secret)
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url')
+  const otherAddress = '0x1111111111111111111111111111111111111111'
+  return {
+    expired,
+    tampered: `${header}.${encode({ ...claims, sub: otherAddress })}.${signature}`,
+    none: `${encode({ alg: 'none', typ: 'JWT' })}.${payload}.`,
+  }
+}
+//#endif

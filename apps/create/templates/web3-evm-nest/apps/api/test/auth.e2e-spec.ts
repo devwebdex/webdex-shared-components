@@ -5,9 +5,16 @@ import request, { type Test as HttpTest } from 'supertest'
 import { generatePrivateKey, type PrivateKeyAccount, privateKeyToAccount } from 'viem/accounts'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../src/app.module.js'
+//#if session=jwt
+import { loadJwtConfig } from '../src/modules/auth/auth.service.js'
+//#endif
 import { CHAIN_CLIENT, CHAIN_CONFIG } from '../src/shared/chain/chain.module.js'
 import { loadChainConfig } from '../src/shared/chain/chain-config.js'
+//#if session=jwt
+import { offlineChainClient, rejectedJwts, signSiweMessage } from './support/siwe.js'
+//#else
 import { offlineChainClient, signSiweMessage } from './support/siwe.js'
+//#endif
 
 describe('login SIWE (banco real)', () => {
   const config = loadChainConfig()
@@ -84,6 +91,23 @@ describe('login SIWE (banco real)', () => {
     return { session: String(response.body.token), expiresAt: String(response.body.expiresAt) }
   }
 
+//#if session=jwt
+  it('login devolve o JWT e a validade de 1 hora', async () => {
+    const { session, expiresAt } = await signIn(newAccount())
+    expect(session).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/)
+    const minutes = (new Date(expiresAt).getTime() - Date.now()) / (60 * 1000)
+    expect(minutes).toBeGreaterThan(59)
+    expect(minutes).toBeLessThanOrEqual(60)
+  })
+
+  it('JWT expirado, adulterado ou com alg none responde 401', async () => {
+    const { session } = await signIn(newAccount())
+    const { expired, tampered, none } = await rejectedJwts(session, loadJwtConfig().secret)
+    await withSession(http().get('/auth/me'), expired).expect(401)
+    await withSession(http().get('/auth/me'), tampered).expect(401)
+    await withSession(http().get('/auth/me'), none).expect(401)
+  })
+//#else
   it('login devolve o token e a validade de 24 horas', async () => {
     const { session, expiresAt } = await signIn(newAccount())
     expect(session).toMatch(/^[\w-]{43}$/)
@@ -92,7 +116,19 @@ describe('login SIWE (banco real)', () => {
     expect(hours).toBeLessThanOrEqual(24)
   })
 //#endif
+//#endif
 
+//#if session=jwt
+  it('login, me e logout, que não revoga o JWT: ele vale até expirar', async () => {
+    const account = newAccount()
+    const { session } = await signIn(account)
+
+    await withSession(http().get('/auth/me'), session).expect(200, { address: account.address })
+    await withSession(http().post('/auth/logout'), session).expect(204)
+    // Sem revogação (docs/standards/web3.md): quem descarta o JWT é o frontend.
+    await withSession(http().get('/auth/me'), session).expect(200)
+  })
+//#else
   it('login, me e logout, que apaga a sessão no servidor', async () => {
     const account = newAccount()
     const { session } = await signIn(account)
@@ -101,6 +137,7 @@ describe('login SIWE (banco real)', () => {
     await withSession(http().post('/auth/logout'), session).expect(204)
     await withSession(http().get('/auth/me'), session).expect(401)
   })
+//#endif
 
   it('sem sessão, /auth/me responde 401', async () => {
     await http().get('/auth/me').expect(401)

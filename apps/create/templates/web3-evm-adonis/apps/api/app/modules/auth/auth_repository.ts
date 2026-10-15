@@ -1,6 +1,8 @@
 import type { DateTime } from 'luxon'
 import AuthNonce from '#modules/auth/models/auth_nonce'
+//#if session!=jwt
 import AuthSession from '#modules/auth/models/auth_session'
+//#endif
 
 export default class AuthRepository {
   async createNonce(nonce: string, expiresAt: DateTime) {
@@ -15,6 +17,7 @@ export default class AuthRepository {
       .delete()
     return deleted === 1
   }
+  //#if session!=jwt
 
   async createSession(session: { id: string; address: string; expiresAt: DateTime }) {
     await AuthSession.create(session)
@@ -31,4 +34,5 @@ export default class AuthRepository {
   async deleteSession(id: string) {
     await AuthSession.query().where('id', id).delete()
   }
+  //#endif
 }

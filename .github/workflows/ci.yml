@@ -88,8 +88,8 @@ jobs:
           - name: express + prisma + postgres + bullmq
             flags: --backend express --orm prisma --db postgres --queue bullmq --frontend none --web3 none
             database: true
-          - name: express + prisma + mysql + web3 (token)
-            flags: --backend express --orm prisma --db mysql --queue none --frontend none --web3 evm --session token
+          - name: express + prisma + mysql + web3 (jwt)
+            flags: --backend express --orm prisma --db mysql --queue none --frontend none --web3 evm --session jwt
             database: true
           - name: express + drizzle + postgres + next
             flags: --backend express --orm drizzle --db postgres --queue none --frontend next --web3 none
@@ -112,8 +112,11 @@ jobs:
           - name: adonis + postgres + inertia + web3 (cookie)
             flags: --backend adonis --orm lucid --db postgres --queue none --frontend inertia --web3 evm --session cookie
             database: true
-          - name: adonis + mysql + bullmq + web3 (token)
-            flags: --backend adonis --orm lucid --db mysql --queue bullmq --frontend none --web3 evm --session token
+          - name: adonis + mysql + bullmq + web3 (jwt)
+            flags: --backend adonis --orm lucid --db mysql --queue bullmq --frontend none --web3 evm --session jwt
+            database: true
+          - name: adonis + mysql + next + web3 (token)
+            flags: --backend adonis --orm lucid --db mysql --queue none --frontend next --web3 evm --session token
             database: true
           - name: só frontend (next)
             flags: --backend none --frontend next --web3 none

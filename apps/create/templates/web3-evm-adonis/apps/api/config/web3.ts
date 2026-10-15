@@ -11,6 +11,14 @@ if (accessControlAddress && !isAddress(accessControlAddress, { strict: false }))
 }
 
 const siweOrigin = new URL(env.get('SIWE_ORIGIN'))
+//#if session=jwt
+
+// Segredo curto cai por força bruta offline a partir de qualquer JWT emitido.
+const jwtSecret = env.get('JWT_SECRET').release()
+if (Buffer.byteLength(jwtSecret) < 32) {
+  throw new Error('JWT_SECRET precisa de pelo menos 32 bytes')
+}
+//#endif
 
 const web3Config = {
   chain: chains[env.get('CHAIN')],
@@ -19,6 +27,10 @@ const web3Config = {
   siwe: { origin: siweOrigin.origin, domain: siweOrigin.host },
   // Vazio nega todo acesso por papel.
   accessControlAddress: accessControlAddress ? getAddress(accessControlAddress) : undefined,
+  //#if session=jwt
+  // Chave do HS256 dos JWTs de sessão; iss e aud dos tokens são siwe.origin.
+  jwtSecret: new TextEncoder().encode(jwtSecret),
+  //#endif
 }
 
 export default web3Config

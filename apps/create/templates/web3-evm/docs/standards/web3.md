@@ -110,15 +110,22 @@ Com o login, toda rota exige sessão por padrão (`security.md`). As exceções 
 - Cookie `HttpOnly`, `SameSite=Lax`, `Path=/` e `Max-Age=86400`, sem `Domain`. Com `SIWE_ORIGIN` em https, o cookie é `Secure` e se chama `__Host-session`: o prefixo impede que um subdomínio grave um cookie com o mesmo nome e fixe a sessão de outra pessoa. Em http (desenvolvimento), chama-se `session`. `POST /auth/verify` responde `204` com o cookie; `POST /auth/logout` o apaga.
 - CSRF: toda requisição que muda estado (`POST`, `PUT`, `PATCH`, `DELETE`) precisa do cabeçalho `Origin` igual a `SIWE_ORIGIN`, senão `403`. O CORS libera só `CORS_ORIGINS`, com `credentials`.
 - O frontend chama a API com `credentials: 'include'`. Frontend e API ficam no mesmo site (ex.: `app.exemplo.com` e `api.exemplo.com`).
-//#else
+//#endif
+//#if session=token
 - Token de acesso: `POST /auth/verify` responde `200 { "token": "...", "expiresAt": "<ISO 8601>" }`. As rotas com sessão leem `Authorization: Bearer <token>`.
 - O frontend guarda o token só em memória: some ao recarregar a página, e o usuário assina de novo. Não use `localStorage`, que um XSS leria.
+//#endif
+//#if session=jwt
+- JWT: `POST /auth/verify` responde `200 { "token": "<JWT>", "expiresAt": "<ISO 8601>" }`. As rotas com sessão leem `Authorization: Bearer <JWT>`.
+- O JWT é assinado com HS256 e `JWT_SECRET` (o `.env.example` traz a variável vazia e o `pnpm env:setup` gera um valor aleatório no `.env`). Claims: `sub` (endereço com checksum), `iat`, `exp` (1 hora), `iss` e `aud` (os dois iguais a `SIWE_ORIGIN`). A verificação fixa o algoritmo em HS256 (recusa `none` e qualquer outro) e confere assinatura, `exp`, `iss` e `aud`.
+- Nada fica no banco: nenhuma rota consulta `auth_sessions`. Por isso o JWT não é revogável: `POST /auth/logout` responde `204` e o frontend descarta o token, mas o mesmo JWT continua válido até expirar. Se o projeto precisar revogar na hora (ex.: conta comprometida), use `token` ou `cookie`, ou troque `JWT_SECRET`, o que derruba todas as sessões.
+- O frontend guarda o JWT só em memória, como o token. Não use `localStorage`, que um XSS leria.
 //#endif
 
 ### Armazenamento
 
 - `auth_nonces`: `nonce` (chave) e `expires_at`.
-- `auth_sessions`: `id` (SHA-256 do token, chave), `address`, `expires_at` e `created_at`.
+- `auth_sessions`: `id` (SHA-256 do token, chave), `address`, `expires_at` e `created_at`. Com JWT, a tabela existe mas não é usada.
 - Linhas expiradas não valem; a limpeza periódica fica a critério do projeto.
 
 ### Variáveis de ambiente da API
@@ -127,9 +134,12 @@ Com o login, toda rota exige sessão por padrão (`security.md`). As exceções 
 - `RPC_URL`: o `.env.example` traz o RPC público da Amoy, só para desenvolvimento.
 - `SIWE_ORIGIN`: origem do frontend que pede a assinatura (ex.: `http://localhost:3000`).
 - `ACCESS_CONTROL_ADDRESS`: contrato com os papéis; vazio nega `/access/admin`.
+//#if session=jwt
+- `JWT_SECRET`: segredo do HS256, com pelo menos 32 bytes; gerado no `.env` pelo `pnpm env:setup`.
+//#endif
 
 ### Testes gerados
 
 - Unitários com cliente da rede falso.
-- e2e com o banco real: uma conta local (`privateKeyToAccount(generatePrivateKey())`) assina a mensagem, e um cliente da rede de teste verifica a assinatura sem RPC (`recoverMessageAddress`). Cobrem login, `me`, logout, nonce reutilizado, domínio errado e, com cookie, `Origin` inválido.
+- e2e com o banco real: uma conta local (`privateKeyToAccount(generatePrivateKey())`) assina a mensagem, e um cliente da rede de teste verifica a assinatura sem RPC (`recoverMessageAddress`). Cobrem login, `me`, logout, nonce reutilizado, domínio errado, com cookie `Origin` inválido e, com JWT, token expirado, assinatura adulterada e `alg: none`.
 //#endif

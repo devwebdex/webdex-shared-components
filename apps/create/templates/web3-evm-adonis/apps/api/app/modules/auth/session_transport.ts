@@ -52,7 +52,8 @@ export function clearSessionCookie(response: HttpContext['response']) {
 export function readSessionToken(request: HttpContext['request']): string | undefined {
   return request.plainCookie(SESSION_COOKIE.name, { encoded: false })
 }
-//#else
+//#endif
+//#if session=token|jwt
 
 export function readSessionToken(request: HttpContext['request']): string | undefined {
   const [scheme, token] = (request.header('authorization') ?? '').split(' ')

@@ -1,4 +1,8 @@
+//#if session=jwt
+import { decodeJwt, decodeProtectedHeader, SignJWT } from 'jose'
+//#else
 import { createHash } from 'node:crypto'
+//#endif
 import type { Chain } from 'viem'
 import { type CreateSiweMessageParameters, createSiweMessage } from 'viem/siwe'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -16,6 +20,10 @@ const config = {
 }
 // Minúsculo de propósito: a sessão guarda o endereço normalizado com checksum.
 const address = '0xd2135cfb216b74109775236e36d4b433f1df507b'
+//#if session=jwt
+const checksummed = '0xd2135CfB216b74109775236E36d4b433F1DF507B'
+const jwt = { secret: new TextEncoder().encode('segredo-de-teste-com-pelo-menos-32-bytes') }
+//#endif
 
 function memoryStore() {
   const nonces = new Map<string, Date>()
@@ -48,7 +56,11 @@ function setup({ signatureValid = true } = {}) {
   const verifySiweMessage = vi.fn(async () => signatureValid)
   const client = { verifySiweMessage } as unknown as ChainClient
   return {
+//#if session=jwt
+    service: createAuthService({ store, client, config, jwt }),
+//#else
     service: createAuthService({ store, client, config }),
+//#endif
     verifySiweMessage,
     nonces,
     sessions,
@@ -85,6 +97,34 @@ describe('AuthService', () => {
     expect(expiresAt - Date.now()).toBeLessThanOrEqual(5 * 60 * 1000)
   })
 
+//#if session=jwt
+  it('login válido emite o JWT HS256 com o endereço com checksum, sem gravar no banco', async () => {
+    const { service, verifySiweMessage, sessions } = setup()
+    const nonce = await service.createNonce()
+    const message = siweMessage(nonce)
+
+    const session = await service.verify({ message, signature })
+
+    expect(verifySiweMessage).toHaveBeenCalledWith({
+      message,
+      signature,
+      domain: 'app.example.com',
+      nonce,
+    })
+    const token = session?.token ?? ''
+    expect(decodeProtectedHeader(token)).toEqual({ alg: 'HS256', typ: 'JWT' })
+    const claims = decodeJwt(token)
+    expect(claims).toMatchObject({
+      sub: checksummed,
+      iss: config.siweOrigin,
+      aud: config.siweOrigin,
+    })
+    expect((claims.exp ?? 0) - (claims.iat ?? 0)).toBe(60 * 60)
+    expect(session?.expiresAt.getTime()).toBe((claims.exp ?? 0) * 1000)
+    expect(sessions.size).toBe(0)
+    await expect(service.findSession(token)).resolves.toEqual({ address: checksummed })
+  })
+//#else
   it('login válido cria a sessão com o endereço com checksum e guarda só o hash do token', async () => {
     const { service, verifySiweMessage, sessions } = setup()
     const nonce = await service.createNonce()
@@ -113,6 +153,7 @@ describe('AuthService', () => {
       address: '0xd2135CfB216b74109775236E36d4b433F1DF507B',
     })
   })
+//#endif
 
   it('nonce desconhecido é recusado sem consultar a rede', async () => {
     const { service, verifySiweMessage } = setup()
@@ -174,6 +215,80 @@ describe('AuthService', () => {
     expect(sessions.size).toBe(0)
   })
 
+//#if session=jwt
+  async function signIn(service: ReturnType<typeof setup>['service']) {
+    const session = await service.verify({
+      message: siweMessage(await service.createNonce()),
+      signature,
+    })
+    return session?.token ?? ''
+  }
+
+  // JWT válido em tudo, menos no que o caso muda.
+  function signJwt({
+    secret = jwt.secret,
+    issuer = config.siweOrigin,
+    audience = config.siweOrigin,
+    expiresIn = '1h',
+  } = {}) {
+    return new SignJWT()
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(checksummed)
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt()
+      .setExpirationTime(expiresIn)
+      .sign(secret)
+  }
+
+  it('o JWT vale 1 hora: expirado responde 401', async () => {
+    vi.useFakeTimers()
+    const { service } = setup()
+    const token = await signIn(service)
+
+    vi.advanceTimersByTime(60 * 60 * 1000 - 1000)
+    await expect(service.findSession(token)).resolves.toBeDefined()
+    vi.advanceTimersByTime(1000)
+    await expect(service.findSession(token)).resolves.toBeUndefined()
+  })
+
+  it('JWT com a assinatura adulterada é recusado', async () => {
+    const { service } = setup()
+    const token = await signIn(service)
+    const [header, , jwtSignature] = token.split('.')
+    // Outro endereço no payload, com a assinatura original.
+    const claims = { ...decodeJwt(token), sub: '0x1111111111111111111111111111111111111111' }
+    const payload = Buffer.from(JSON.stringify(claims)).toString('base64url')
+    const forged = `${header}.${payload}.${jwtSignature}`
+    await expect(service.findSession(forged)).resolves.toBeUndefined()
+    const otherSecret = new TextEncoder().encode('outro-segredo-com-pelo-menos-32-bytes')
+    await expect(
+      service.findSession(await signJwt({ secret: otherSecret }))
+    ).resolves.toBeUndefined()
+  })
+
+  it('JWT com alg none é recusado', async () => {
+    const { service } = setup()
+    const [, payload] = (await signJwt()).split('.')
+    const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url')
+    await expect(service.findSession(`${header}.${payload}.`)).resolves.toBeUndefined()
+  })
+
+  it('JWT com iss ou aud de outra origem é recusado', async () => {
+    const { service } = setup()
+    await expect(service.findSession(await signJwt())).resolves.toEqual({ address: checksummed })
+    const evil = 'https://evil.example.com'
+    await expect(service.findSession(await signJwt({ issuer: evil }))).resolves.toBeUndefined()
+    await expect(service.findSession(await signJwt({ audience: evil }))).resolves.toBeUndefined()
+  })
+
+  it('logout não revoga o JWT: ele segue válido até expirar', async () => {
+    const { service } = setup()
+    const token = await signIn(service)
+    await service.logout(token)
+    await expect(service.findSession(token)).resolves.toEqual({ address: checksummed })
+  })
+//#else
   it('a sessão vale 24 horas', async () => {
     vi.useFakeTimers()
     const { service } = setup()
@@ -197,4 +312,5 @@ describe('AuthService', () => {
     await service.logout(token)
     await expect(service.findSession(token)).resolves.toBeUndefined()
   })
+//#endif
 })

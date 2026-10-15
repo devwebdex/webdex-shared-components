@@ -59,7 +59,11 @@ export class SessionTransport {
     return { token, expiresAt: expiresAt.toISOString() }
   }
 
+//#if session=jwt
+  /** Resposta do logout: 204; o JWT segue válido até expirar, e o frontend o descarta. */
+//#else
   /** Resposta do logout: 204; a sessão já foi apagada no servidor. */
+//#endif
   clear(_response: Response) {}
 }
 //#endif

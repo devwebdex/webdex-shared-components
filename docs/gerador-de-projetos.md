@@ -48,13 +48,13 @@ Perguntado pela TUI:
 | ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express/Fastify: Prisma ou Drizzle (SQL), Mongoose (MongoDB, fixo) |
 | Filas | nenhuma, BullMQ + Redis 8 (só com backend) |
 | Frontend | nenhum, Next, Vite + React, Inertia + React (só com Adonis) |
-| Web3 | nenhum, EVM com viem (Polygon), com ou sem backend (D15) |
-| Sessão do login | cookie ou token; só com web3 e backend; sugestão: token com Vite, cookie nos outros; com Inertia, só cookie (D15) |
+| Web3 | sem biblioteca/framework web3, EVM com viem (Polygon), com ou sem backend (D15) |
+| Sessão do login | cookie, token ou JWT; só com web3 e backend; sugestão: token com Vite, cookie nos outros; com Inertia, só cookie (D15) |
 
 - Adonis não oferece Prisma/Drizzle porque auth, factories e validação do Adonis assumem Lucid.
 - Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (`docs/standards/backend-express.md`, na camada `backend-express`).
 - Microserviços ficam fora da v1. Entram depois como comando `webdex add service`.
-- São 318 combinações válidas. Sem web3, as 108 de stack: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next e Vite). Com web3, 210: as 2 só-frontend e as 106 com backend, cada uma com cookie ou token, menos as 4 com Inertia, que só têm cookie. O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
+- São 420 combinações válidas. Sem web3, as 108 de stack: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next e Vite). Com web3, 312: as 2 só-frontend e as 106 com backend, cada uma com cookie, token ou JWT, menos as 4 com Inertia, que só têm cookie. O CI cobre 18, escolhidas para que toda camada de template rode ao menos uma vez (D12).
 - A TUI só oferece combinações que existem: opção incompatível com as escolhas anteriores some, e etapa com uma opção só é pulada (ex.: Mongoose depois de MongoDB, filas sem backend).
 
 ### D3. Lint e formatação
@@ -213,7 +213,7 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 - **Changesets 3**, versões **independentes** por pacote, publicação **só por PR de release aprovado** ("chore: versionar pacotes", aberto pelo `changesets/action@v2`).
 - `pnpm version-packages` = `changeset version` + atualização das faixas `@devwebdex/*` nos templates + patch do `@devwebdex/create` quando um template muda.
 - `@devwebdex/ui` não declara mais `@devwebdex/tokens` como peer dependency: com ela, cada `minor` dos tokens faria o changesets subir o `ui` para major.
-- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz de 17 combinações de projeto gerado (build, tipos, lint e testes; com backend, banco via docker compose, `db:deploy` e `test:e2e`). Um job em Windows roda os testes do gerador e um projeto gerado, sem docker (R7).
+- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz de 18 combinações de projeto gerado (build, tipos, lint e testes; com backend, banco via docker compose, `db:deploy` e `test:e2e`). Um job em Windows roda os testes do gerador e um projeto gerado, sem docker (R7).
 - **Release** (`.github/workflows/release.yml`): publica no GitHub Packages com o `GITHUB_TOKEN` do workflow (`packages: write`), sem token pessoal.
 - **Actions fixadas por SHA de commit** (versão no comentário), porque o release roda com permissão de escrita e de publicação: uma tag movida num repositório de terceiros executaria código com esse token. O Dependabot (`.github/dependabot.yml`) abre PR semanal para atualizar os SHAs. No CI, o checkout usa `persist-credentials: false`; no release, as credenciais ficam, porque o `changesets/action` faz push do PR de versão.
 
@@ -257,6 +257,7 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
   - A `uri` da mensagem SIWE é aceita só com origem igual a `SIWE_ORIGIN`; comparar o começo do texto aceitaria `https://app.com.evil`.
   - O acesso por papel lê o contrato com `blockTag: 'finalized'` e nega se o RPC falha.
   - Revisão de segurança de 2026-10-15: o corpo de `POST /auth/verify` tem limite (mensagem até 4096 caracteres, assinatura até 16384), porque o `parseSiweMessage` do viem tem custo quadrático no tamanho da mensagem (100 KB levaram cerca de 2 s, medido); o cookie se chama `__Host-session` quando é `Secure`, para um subdomínio não fixar a sessão de outra pessoa; e, com o login, toda rota exige sessão por padrão, com as exceções numa lista explícita (`/health`, `/auth/nonce`, `/auth/verify`), como manda o `security.md`.
+  - Sessão JWT (pedido do operador em 2026-10-15), terceira opção ao lado de cookie e token opaco: HS256 com `JWT_SECRET` gerado no `.env`, claims `sub`, `iat`, `exp` (1 hora), `iss` e `aud`, algoritmo fixo na verificação e nada no banco. Não é revogável: o logout só descarta o token no frontend, e ele vale até expirar. Para revogar na hora, cookie ou token opaco; trocar `JWT_SECRET` derruba todas as sessões. A opção "Sem web3" passou a se chamar "Sem biblioteca/framework web3".
   - Uma flag de eixo que não se aplica às outras escolhas (ex.: `--session` sem `--web3 evm`) é recusada pelo CLI, em vez de ir para o manifesto sem efeito.
   - Verificado em 2026-10-15: contra a API rodando, com o cliente real da rede (RPC da Amoy) e uma conta local assinando, o fluxo nonce, verify, `me`, `/access/admin` (403 sem contrato), logout e repetição da assinatura (401) passou no Nest com cookie, no Fastify com token e no Adonis com cookie. No navegador foram conferidos o carregamento, o CORS com credenciais e a recusa de assinatura inválida. Falta conectar uma carteira de verdade no navegador (R8).
 
@@ -279,7 +280,7 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 ## Riscos conhecidos
 
 - **R1** OpenTUI ainda é jovem; mudanças de API podem afetar a TUI.
-- **R2** São 318 combinações e o CI roda 17. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
+- **R2** São 420 combinações e o CI roda 18. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
 - **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 20 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma. O README do servidor MCP no GitHub ainda diz 6 por mês; vale a página oficial de limites. Ver [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md).
 - **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3). Candidato observado, não avaliado: o Nest 12 gera projetos com oxlint + `oxlint-tsgolint` (lint com tipos).
