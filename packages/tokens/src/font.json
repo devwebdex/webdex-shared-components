@@ -1,0 +1,8 @@
+{
+  "font": {
+    "$type": "fontFamily",
+    "sans": { "$value": "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif" },
+    "mono": { "$value": "JetBrains Mono, ui-monospace, monospace" },
+    "pixel": { "$value": "Pixelify Sans, ui-sans-serif, sans-serif" }
+  }
+}
