@@ -16,7 +16,7 @@ export function createApp({ database, corsOrigins }: AppDependencies) {
   app.use(cors({ origin: corsOrigins }))
   app.use(express.json())
 
-  app.use('/health', createHealthModule({ database }).router)
+  app.use('/health', createHealthModule({ checks: [database] }).router)
 
   app.use(notFoundHandler)
   app.use(errorHandler)

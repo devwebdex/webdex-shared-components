@@ -18,7 +18,7 @@ export async function createApp(
   await app.register(cors, { origin: corsOrigins })
   registerErrorHandlers(app)
 
-  await app.register(createHealthModule({ database }).routes, { prefix: '/health' })
+  await app.register(createHealthModule({ checks: [database] }).routes, { prefix: '/health' })
 
   return app
 }

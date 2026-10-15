@@ -5,7 +5,7 @@ import { DatabaseHealth } from '../../shared/database/database-health.js'
 export class HealthService {
   constructor(private readonly database: DatabaseHealth) {}
 
-  async checkDatabase() {
+  async check() {
     await this.database.ping()
   }
 }

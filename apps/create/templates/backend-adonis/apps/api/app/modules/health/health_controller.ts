@@ -6,7 +6,7 @@ export default class HealthController {
   constructor(private readonly health: HealthService) {}
 
   async show() {
-    await this.health.checkDatabase()
+    await this.health.check()
     return { status: 'ok' }
   }
 }

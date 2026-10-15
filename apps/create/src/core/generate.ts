@@ -44,11 +44,11 @@ export function generate({
  */
 export function layersFor({ backend, orm, database, queue, frontend }: ProjectOptions): string[] {
   const layers = ['base']
+  // Express e Fastify compartilham estrutura e integrações (connectDatabase); o Nest usa as próprias (DI).
+  const node = backend === 'express' || backend === 'fastify'
   if (backend === 'adonis') {
     layers.push('backend-common', `db-${database}`, 'backend-adonis', `backend-adonis-${database}`)
   } else if (backend !== 'none') {
-    // Express e Fastify compartilham estrutura e integrações (connectDatabase); o Nest usa as próprias (DI).
-    const node = backend === 'express' || backend === 'fastify'
     layers.push(
       'backend-common',
       `db-${database}`,
@@ -60,7 +60,9 @@ export function layersFor({ backend, orm, database, queue, frontend }: ProjectOp
       `database-url-${database}`
     )
   }
-  if (backend !== 'none' && queue !== 'none') layers.push(`queue-${queue}`, `${backend}-${queue}`)
+  if (backend !== 'none' && queue !== 'none') {
+    layers.push(`queue-${queue}`, ...(node ? [`node-${queue}`] : []), `${backend}-${queue}`)
+  }
   if (frontend !== 'none') layers.push(`frontend-${frontend}`)
   return layers
 }

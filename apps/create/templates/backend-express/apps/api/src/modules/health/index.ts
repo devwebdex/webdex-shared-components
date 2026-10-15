@@ -1,8 +1,9 @@
-import type { DatabaseHealth } from '../../shared/database/database-health.js'
 import { createHealthRouter } from './health.routes.js'
-import { HealthService } from './health.service.js'
+import { type HealthCheck, HealthService } from './health.service.js'
+
+export type { HealthCheck }
 
 // API pública do módulo: outros módulos e o app.ts só importam deste arquivo.
-export function createHealthModule({ database }: { database: DatabaseHealth }) {
-  return { router: createHealthRouter(new HealthService(database)) }
+export function createHealthModule({ checks }: { checks: HealthCheck[] }) {
+  return { router: createHealthRouter(new HealthService(checks)) }
 }

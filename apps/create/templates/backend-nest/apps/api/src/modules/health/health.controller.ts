@@ -7,7 +7,7 @@ export class HealthController {
 
   @Get()
   async check() {
-    await this.health.checkDatabase()
+    await this.health.check()
     return { status: 'ok' }
   }
 }

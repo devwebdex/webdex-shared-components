@@ -4,7 +4,7 @@ import type { HealthService } from './health.service.js'
 export function healthRoutes(service: HealthService): FastifyPluginAsync {
   return async (app) => {
     app.get('/', async () => {
-      await service.checkDatabase()
+      await service.check()
       return { status: 'ok' }
     })
   }

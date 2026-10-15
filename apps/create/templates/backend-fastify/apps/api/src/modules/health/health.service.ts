@@ -1,9 +1,12 @@
-import type { DatabaseHealth } from '../../shared/database/database-health.js'
+/** Dependência que o /health confere (banco, Redis...). */
+export type HealthCheck = {
+  ping(): Promise<void>
+}
 
 export class HealthService {
-  constructor(private readonly database: DatabaseHealth) {}
+  constructor(private readonly checks: HealthCheck[]) {}
 
-  async checkDatabase() {
-    await this.database.ping()
+  async check() {
+    await Promise.all(this.checks.map((dependency) => dependency.ping()))
   }
 }

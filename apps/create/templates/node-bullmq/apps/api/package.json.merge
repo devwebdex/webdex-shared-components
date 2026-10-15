@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev:worker": "pnpm run --if-present db:generate && tsx watch src/worker.ts",
+    "worker": "node dist/worker.js"
+  },
+  "dependencies": {
+    "bullmq": "6.3.15",
+    "ioredis": "6.0.0"
+  }
+}

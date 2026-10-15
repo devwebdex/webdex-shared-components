@@ -1,0 +1,2 @@
+# Redis local (docker compose), usado pelas filas
+REDIS_PORT=6379
