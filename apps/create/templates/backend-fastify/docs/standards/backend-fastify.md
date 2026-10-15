@@ -15,7 +15,7 @@ apps/api/src/
     <modulo>.repository.ts   # único lugar que acessa o banco para as tabelas do módulo
     <modulo>.schemas.ts      # schemas zod da entrada das rotas
   shared/
-    config/env.ts            # variáveis de ambiente obrigatórias, lidas uma vez
+    config/env.ts            # variáveis de ambiente, lidas uma vez (obrigatórias ou com padrão)
     database/database.ts     # connectDatabase(): cliente do ORM, ping() e close()
     http/                    # HttpError, parseInput (zod) e handlers de 404 e erro
 ```

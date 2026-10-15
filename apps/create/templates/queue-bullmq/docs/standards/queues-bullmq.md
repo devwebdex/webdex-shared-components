@@ -19,7 +19,7 @@ O projeto nasce com a fila de exemplo `mail` (job `send-mail`). O processador s√
 | Produtor (enfileira) | `createMailQueue(redis.connection)` | `MailService.send()` (importe o `MailModule`) | `MailService.send()` (injete com `@inject()`) |
 | Processador | `src/modules/mail/mail.processor.ts` | `MailProcessor` em `mail.processor.ts` | `app/modules/mail/mail_processor.ts` |
 | Entrada do worker | `src/worker.ts` | `src/worker.ts` + `WorkerModule` | `commands/queue_work.ts` (`node ace queue:work`) |
-| Teste com Redis real | `test/mail.e2e-spec.ts` | `test/mail.e2e-spec.ts` | `tests/functional/mail_queue.spec.ts` |
+| Teste com Redis real | `test/mail.e2e-spec.ts` | `test/mail.e2e-spec.ts` | `tests/functional/mail_service.spec.ts` |
 
 ## Regras
 
