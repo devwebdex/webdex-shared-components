@@ -94,8 +94,8 @@ jobs:
           - name: express + drizzle + postgres + next
             flags: --backend express --orm drizzle --db postgres --queue none --frontend next
             database: true
-          - name: express + drizzle + mysql + vite
-            flags: --backend express --orm drizzle --db mysql --queue none --frontend vite
+          - name: express + drizzle + mysql + vite + web3
+            flags: --backend express --orm drizzle --db mysql --queue none --frontend vite --web3 evm
             database: true
           - name: express + mongoose + mongodb
             flags: --backend express --orm mongoose --db mongodb --queue none --frontend none
@@ -118,8 +118,8 @@ jobs:
           - name: só frontend (next)
             flags: --backend none --frontend next
             database: false
-          - name: só frontend (vite)
-            flags: --backend none --frontend vite
+          - name: só frontend (vite) + web3
+            flags: --backend none --frontend vite --web3 evm
             database: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

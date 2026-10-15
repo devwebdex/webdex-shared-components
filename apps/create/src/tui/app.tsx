@@ -36,6 +36,7 @@ const steps: { key: ChoiceKey; title: string; note?: string }[] = [
   { key: 'orm', title: 'ORM' },
   { key: 'queue', title: 'Filas' },
   { key: 'frontend', title: 'Frontend' },
+  { key: 'web3', title: 'Web3' },
 ]
 
 // Cores da marca WEbdEX (painel WEbdEX); line, muted e faint são tons derivados do fundo ameixa.

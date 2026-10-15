@@ -76,7 +76,14 @@ export function generate({
  * Camadas em ordem de aplicação. Cada uma cuida de uma parte (framework, ORM, driver do banco,
  * integração framework + ORM) e as posteriores acrescentam ou mesclam nos arquivos das anteriores.
  */
-export function layersFor({ backend, orm, database, queue, frontend }: ProjectOptions): string[] {
+export function layersFor({
+  backend,
+  orm,
+  database,
+  queue,
+  frontend,
+  web3,
+}: ProjectOptions): string[] {
   const layers = ['base']
   // Express e Fastify compartilham estrutura e integrações (connectDatabase); o Nest usa as próprias (DI).
   const node = backend === 'express' || backend === 'fastify'
@@ -98,6 +105,7 @@ export function layersFor({ backend, orm, database, queue, frontend }: ProjectOp
     layers.push(`queue-${queue}`, ...(node ? [`node-${queue}`] : []), `${backend}-${queue}`)
   }
   if (frontend !== 'none') layers.push(`frontend-${frontend}`)
+  if (web3 !== 'none') layers.push(`web3-${web3}`)
   return layers
 }
 

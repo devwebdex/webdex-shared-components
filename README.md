@@ -25,7 +25,7 @@ pnpm lint && pnpm test
 
 ## Criar um projeto
 
-Stacks disponíveis: backend NestJS, Express, Fastify ou AdonisJS; banco PostgreSQL, MySQL ou MongoDB; ORM Prisma, Drizzle, Mongoose (MongoDB) ou Lucid (Adonis); filas com BullMQ + Redis; frontend Next.js, Vite + React ou Inertia + React (Adonis). Detalhes e decisões em [docs/gerador-de-projetos.md](docs/gerador-de-projetos.md). O projeto nasce com testes, CI do GitHub Actions, agentes de IA e um commit inicial.
+Stacks disponíveis: backend NestJS, Express, Fastify ou AdonisJS; banco PostgreSQL, MySQL ou MongoDB; ORM Prisma, Drizzle, Mongoose (MongoDB) ou Lucid (Adonis); filas com BullMQ + Redis; frontend Next.js, Vite + React ou Inertia + React (Adonis); web3 EVM com viem (Polygon). Detalhes e decisões em [docs/gerador-de-projetos.md](docs/gerador-de-projetos.md). O projeto nasce com testes, CI do GitHub Actions, agentes de IA e um commit inicial.
 
 Enquanto os pacotes `@devwebdex/*` não estão publicados, o gerador roda a partir deste repositório:
 

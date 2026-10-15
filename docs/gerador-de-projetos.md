@@ -48,11 +48,12 @@ Perguntado pela TUI:
 | ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express/Fastify: Prisma ou Drizzle (SQL), Mongoose (MongoDB, fixo) |
 | Filas | nenhuma, BullMQ + Redis 8 (só com backend) |
 | Frontend | nenhum, Next, Vite + React, Inertia + React (só com Adonis) |
+| Web3 | nenhum, EVM com viem (Polygon), com ou sem backend (D15) |
 
 - Adonis não oferece Prisma/Drizzle porque auth, factories e validação do Adonis assumem Lucid.
 - Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (`docs/standards/backend-express.md`, na camada `backend-express`).
 - Microserviços ficam fora da v1. Entram depois como comando `webdex add service`.
-- São 108 combinações válidas: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next, Vite). O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
+- São 216 combinações válidas: as 108 de stack (30 para cada backend Node, ou seja, 5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend; 16 do Adonis, 2 bancos × fila × 4 frontends; e 2 só-frontend, Next e Vite), cada uma com ou sem web3. O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
 - A TUI só oferece combinações que existem: opção incompatível com as escolhas anteriores some, e etapa com uma opção só é pulada (ex.: Mongoose depois de MongoDB, filas sem backend).
 
 ### D3. Lint e formatação
@@ -235,6 +236,18 @@ Pedido pelo operador em 2026-10-14 ("1; 2; 3; 4; 5"). Versões e comportamentos 
   - AdonisJS: `bullmq` direto, com o worker como comando `node ace queue:work`. O `@adonisjs/queue` oficial foi descartado: está na 0.x e usa outro motor (`@boringnode/queue`), o que faria o Adonis destoar dos outros backends.
   - Redis só em `127.0.0.1` e sem senha em desenvolvimento, como os bancos. Em produção: senha, TLS e `maxmemory-policy noeviction`.
 
+### D15. Web3 (EVM com viem)
+
+Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede Polygon, com login SIWE e controle de acesso por contrato; os usuários conectam a carteira que quiserem (a mais usada é a MetaMask).
+
+- Biblioteca padrão: **viem**, no backend e no frontend (pelo wagmi). Tipagem a partir da ABI, base do wagmi e SIWE próprio (`viem/siwe`), que também verifica carteiras de contrato. O ethers.js fica só em projeto legado que já o usa.
+- Redes: Polygon (137) em produção e Polygon Amoy (80002) em desenvolvimento.
+- Carteiras: conector `injected` do wagmi com a descoberta EIP-6963 (qualquer carteira instalada no navegador) e `walletConnect` para carteiras de celular.
+- Acesso: login SIWE com nonce de uso único verificado no servidor, e papéis lidos do contrato no backend. O frontend nunca decide acesso. O nonce sai de `node:crypto`: o `generateSiweNonce` do viem usa `Math.random`, que não é criptograficamente seguro (conferido no viem 2.57.7).
+- Em duas etapas:
+  - **E1 (feita)**: eixo `--web3 none|evm` na TUI e no CLI; a camada `web3-evm` traz o padrão `docs/standards/web3.md` e o subagente `web3` (revisão, sem editar código).
+  - **E2 (a fazer)**: configuração do wagmi no frontend (Next e Vite), cliente viem na API, módulo de login SIWE e guarda de acesso por contrato. Depende de decidir a sessão emitida depois do SIWE (cookie de sessão ou token), porque os backends ainda não têm autenticação (A15).
+
 ## Em aberto
 
 | # | Tema | Pendência |
@@ -249,11 +262,12 @@ Pedido pelo operador em 2026-10-14 ("1; 2; 3; 4; 5"). Versões e comportamentos 
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
 | A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
+| A15 | Sessão do login SIWE (E2 da D15) | Os backends gerados não têm autenticação. Decidir o que o SIWE emite (cookie de sessão ou token) e se vale para os quatro backends ou começa por um |
 
 ## Riscos conhecidos
 
 - **R1** OpenTUI ainda é jovem; mudanças de API podem afetar a TUI.
-- **R2** São 108 combinações de stack e o CI roda 17. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
+- **R2** São 216 combinações e o CI roda 17. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
 - **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 20 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma. O README do servidor MCP no GitHub ainda diz 6 por mês; vale a página oficial de limites. Ver [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md).
 - **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3). Candidato observado, não avaliado: o Nest 12 gera projetos com oxlint + `oxlint-tsgolint` (lint com tipos).

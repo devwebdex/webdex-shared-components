@@ -11,6 +11,7 @@ export type Database = 'postgres' | 'mysql' | 'mongodb'
 export type Orm = 'prisma' | 'drizzle' | 'mongoose' | 'lucid'
 export type Queue = 'none' | 'bullmq'
 export type Frontend = 'none' | 'next' | 'vite' | 'inertia'
+export type Web3 = 'none' | 'evm'
 
 export type ProjectOptions = {
   name: string
@@ -20,10 +21,22 @@ export type ProjectOptions = {
   orm: Orm
   queue: Queue
   frontend: Frontend
+  web3: Web3
 }
 
 export type Choices = Omit<ProjectOptions, 'name'>
 export type ChoiceKey = keyof Choices
+
+/** Eixos na ordem em que a TUI pergunta; validação e combinações percorrem esta lista. */
+export const choiceKeys = [
+  'architecture',
+  'backend',
+  'database',
+  'orm',
+  'queue',
+  'frontend',
+  'web3',
+] as const satisfies readonly ChoiceKey[]
 
 export const catalog = {
   architecture: [
@@ -143,6 +156,20 @@ export const catalog = {
     },
     { value: 'none', label: 'Sem frontend', description: 'Só a API', available: true },
   ] satisfies Option<Frontend>[],
+  web3: [
+    {
+      value: 'none',
+      label: 'Sem web3',
+      description: 'Sem carteira nem blockchain',
+      available: true,
+    },
+    {
+      value: 'evm',
+      label: 'EVM com viem',
+      description: 'Polygon: padrões de carteira, login SIWE e contratos, com agente de IA',
+      available: true,
+    },
+  ] satisfies Option<Web3>[],
 }
 
 export const defaults: Choices = {
@@ -152,6 +179,7 @@ export const defaults: Choices = {
   orm: 'prisma',
   queue: 'none',
   frontend: 'next',
+  web3: 'none',
 }
 
 /**
@@ -206,7 +234,7 @@ export function validate(options: ProjectOptions): string[] {
   if (options.backend === 'none' && options.frontend === 'none') {
     errors.push('escolha ao menos um backend ou um frontend')
   }
-  for (const key of ['architecture', 'backend', 'database', 'orm', 'queue', 'frontend'] as const) {
+  for (const key of choiceKeys) {
     if (isIrrelevant(options, key)) continue
     const flag = `--${flagNames[key]}`
     const option = (catalog[key] as Option<string>[]).find((o) => o.value === options[key])
@@ -235,28 +263,24 @@ export const flagNames: Record<ChoiceKey, string> = {
   orm: 'orm',
   queue: 'queue',
   frontend: 'frontend',
+  web3: 'web3',
 }
 
 /** Todas as combinações válidas (eixos irrelevantes fixados no padrão, para não repetir). */
 export function validCombinations(): Choices[] {
-  const values = (key: ChoiceKey) =>
-    (catalog[key] as Option<string>[]).filter((o) => o.available).map((o) => o.value)
+  let candidates: Partial<Choices>[] = [{}]
+  for (const key of choiceKeys) {
+    const values = (catalog[key] as Option<string>[]).filter((o) => o.available).map((o) => o.value)
+    candidates = candidates.flatMap((partial) =>
+      values.map((value) => ({ ...partial, [key]: value }))
+    )
+  }
   const combinations = new Map<string, Choices>()
-  for (const architecture of values('architecture'))
-    for (const backend of values('backend'))
-      for (const database of values('database'))
-        for (const orm of values('orm'))
-          for (const queue of values('queue'))
-            for (const frontend of values('frontend')) {
-              const options = { architecture, backend, database, orm, queue, frontend } as Choices
-              if (validate({ ...options, name: 'x' }).length > 0) continue
-              const key = (
-                ['architecture', 'backend', 'database', 'orm', 'queue', 'frontend'] as const
-              )
-                .map((k) => (isIrrelevant(options, k) ? '-' : options[k]))
-                .join('/')
-              combinations.set(key, options)
-            }
+  for (const options of candidates as Choices[]) {
+    if (validate({ ...options, name: 'x' }).length > 0) continue
+    const key = choiceKeys.map((k) => (isIrrelevant(options, k) ? '-' : options[k])).join('/')
+    combinations.set(key, options)
+  }
   return [...combinations.values()]
 }
 

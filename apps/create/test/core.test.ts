@@ -159,6 +159,15 @@ describe('layersFor', () => {
     expect(layersFor(options({ backend: 'none' }))).toEqual(['base', 'frontend-next'])
   })
 
+  test('web3 vem por último, com ou sem backend', () => {
+    expect(layersFor(options({ web3: 'evm' })).at(-1)).toBe('web3-evm')
+    expect(layersFor(options({ backend: 'none', web3: 'evm' }))).toEqual([
+      'base',
+      'frontend-next',
+      'web3-evm',
+    ])
+  })
+
   test('toda combinação disponível tem todas as camadas', () => {
     const layers = readdirSync(templatesDir)
     for (const combination of validCombinations()) {
@@ -255,6 +264,24 @@ describe('generate', () => {
     expect(existsSync(join(dir, 'apps/api'))).toBe(true)
     expect(existsSync(join(dir, 'apps/web'))).toBe(false)
     expect(existsSync(join(dir, 'ai/agents/frontend.md'))).toBe(false)
+  })
+
+  test('web3 leva o padrão e o agente web3 às três ferramentas de IA', () => {
+    const dir = join(tempDir(), 'dapp')
+    generate({
+      targetDir: dir,
+      options: options({ name: 'dapp', web3: 'evm' }),
+      generatorVersion: '0.0.0-test',
+    })
+    for (const path of [
+      'docs/standards/web3.md',
+      '.claude/agents/web3.md',
+      '.opencode/agents/web3.md',
+      '.codex/agents/web3.toml',
+    ]) {
+      expect(existsSync(join(dir, path))).toBe(true)
+    }
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf8')).toContain('docs/standards/web3.md')
   })
 
   test('chave vazia no .env.example ganha valor aleatório só no .env', () => {

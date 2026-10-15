@@ -22,6 +22,7 @@ Opções:
   --orm <valor>            prisma | drizzle (SQL) · mongoose (MongoDB) · lucid (Adonis)
   --queue <valor>          none | bullmq
   --frontend <valor>       next | vite | inertia (só Adonis) | none
+  --web3 <valor>           none | evm (Polygon com viem)
   --yes                    não interativo: usa os flags e os padrões
   --skip-install           não roda pnpm install
   --skip-git               não inicializa o git nem cria o commit inicial
@@ -39,6 +40,7 @@ const optionsConfig = {
   db: { type: 'string' },
   queue: { type: 'string' },
   frontend: { type: 'string' },
+  web3: { type: 'string' },
   yes: { type: 'boolean', default: false },
   'skip-install': { type: 'boolean', default: false },
   'skip-git': { type: 'boolean', default: false },
@@ -55,6 +57,7 @@ const examples: Record<string, string> = {
   db: 'postgres',
   queue: 'bullmq',
   frontend: 'next',
+  web3: 'evm',
   'link-packages': '.',
 }
 
@@ -87,6 +90,7 @@ const flags = Object.fromEntries(
     database: values.db,
     queue: values.queue,
     frontend: values.frontend,
+    web3: values.web3,
   }).filter(([, value]) => value !== undefined)
 ) as Partial<ProjectOptions>
 
