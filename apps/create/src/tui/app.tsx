@@ -29,7 +29,7 @@ const steps: { key: ChoiceKey; title: string; note?: string }[] = [
   {
     key: 'architecture',
     title: 'Arquitetura',
-    note: 'Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só: API em apps/api, frontend em apps/web.',
+    note: 'Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só: API em apps/api e frontend em apps/web. Com Inertia, as páginas ficam no apps/api.',
   },
   { key: 'backend', title: 'Backend' },
   { key: 'database', title: 'Banco de dados' },

@@ -201,6 +201,7 @@ describe('generate', () => {
     for (const file of [
       '.webdex/manifest.json',
       '.gitignore',
+      '.github/renovate.json',
       '.env',
       'apps/api/.env',
       'apps/api/src/main.ts',
@@ -219,6 +220,8 @@ describe('generate', () => {
     expect(pkg.scripts['db:migrate']).toBeDefined()
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf8')).toContain('apps/api')
     expect(readFileSync(join(dir, '.env.example'), 'utf8')).toContain('POSTGRES_DB=acme')
+    const renovate = JSON.parse(readFileSync(join(dir, '.github/renovate.json'), 'utf8'))
+    expect(renovate.packageRules[0].matchPackageNames).toEqual(['@devwebdex/**'])
 
     expect(() =>
       generate({ targetDir: dir, options: options(), generatorVersion: '0.0.0-test' })

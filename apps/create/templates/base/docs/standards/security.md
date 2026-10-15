@@ -35,7 +35,9 @@ Regras mínimas para todo código do projeto. Baseado no OWASP Top 10. O subagen
 ## Dependências
 
 - Dependência nova precisa de justificativa; prefira o que já existe no projeto.
-- Versões fixadas pelo lockfile; atualizações chegam por PR do Renovate e passam pelo CI.
+- Versões fixadas pelo lockfile; atualizações chegam por PR do Renovate (`.github/renovate.json`) e passam pelo CI.
+- Os pacotes `@devwebdex/*` vêm num PR só. Em 0.x, um `minor` muda a faixa (`^0.1.0` → `^0.2.0`) e pode quebrar: revise antes de aceitar.
+- O Renovate lê os `@devwebdex/*` no GitHub Packages com o segredo `DEVWEBDEX_PACKAGES_TOKEN`: um token clássico com `read:packages`, cadastrado em Credentials da organização em developer.mend.io. Nunca coloque o token no repositório.
 
 ## Navegador
 

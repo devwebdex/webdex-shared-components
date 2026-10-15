@@ -8,7 +8,7 @@ const database = connectDatabase(env.databaseUrl)
 const redis = connectRedis(env.redisUrl)
 const app = await createApp(
   { database, redis, corsOrigins: env.corsOrigins },
-  { logger: { level: process.env.LOG_LEVEL ?? 'info' } }
+  { logger: { level: env.logLevel } }
 )
 app.addHook('onClose', async () => {
   await Promise.all([database.close(), redis.close()])

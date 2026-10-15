@@ -34,7 +34,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 - Não edite `.claude/agents`, `.opencode/agents` nem `.codex/agents` à mão: edite `ai/agents/` e rode `pnpm agents:sync`.
 - Decisão nova ou mudança relevante: atualize `docs/gerador-de-projetos.md`.
 - Mudou um template? Gere um projeto com `--yes --link-packages .` e rode `pnpm build`, `pnpm check-types` e `pnpm lint` nele: os templates não passam pelo Biome deste repositório.
-- Mudança em pacote publicável (`packages/*`, `apps/create`) exige um changeset no mesmo PR: `pnpm changeset`. Não edite versões nem CHANGELOGs à mão; o PR de release faz isso (ver `docs/publicacao.md`).
+- Mudança em pacote publicável (`packages/*`, `apps/create`) exige um changeset no mesmo PR: `pnpm changeset` (exceção: a primeira publicação, a 0.1.0, sai sem changeset; ver `docs/publicacao.md`). Não edite versões nem CHANGELOGs à mão; o PR de release faz isso (ver `docs/publicacao.md`).
 - As faixas `@devwebdex/*` nos templates são atualizadas pelo `pnpm version-packages`; um teste falha se divergirem.
 
 ## Subagentes

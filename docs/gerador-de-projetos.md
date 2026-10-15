@@ -28,7 +28,7 @@ O projeto **não** nasce de um fork deste repositório. Fork vira cópia que nun
 
 **D1.a** Pacotes privados no GitHub Packages, scope `@devwebdex` (o GitHub Packages exige scope igual ao nome do dono do repositório). Cada dev e cada CI precisa de um `.npmrc` com token de leitura. O dono, `devwebdex` ("WEbdEX - Development"), é uma **conta de usuário**, não uma organização do GitHub: só quem tem o login dela administra o repositório e os pacotes (ver A14).
 
-**D1.b** Atualizações chegam aos projetos por PR automático do Renovate. Cada projeto decide quando aceitar.
+**D1.b** Atualizações chegam aos projetos por PR automático do Renovate. Cada projeto decide quando aceitar. Todo projeto gerado traz `.github/renovate.json`, que agrupa os `@devwebdex/*` num PR só e troca a faixa quando sai um minor em 0.x. O Renovate lê o GitHub Packages pelo segredo `DEVWEBDEX_PACKAGES_TOKEN` (PAT clássico com `read:packages`), cadastrado em developer.mend.io nas credenciais da conta ou organização dona do projeto; o app do Renovate precisa estar instalado no repositório.
 
 ### D2. Estrutura e stacks
 
@@ -70,7 +70,7 @@ Escolha fixa, não é opção na TUI.
 - Ink foi descartado porque descarta eventos de mouse. Bubble Tea (Go) foi descartado por exigir uma linguagem que o time não usa.
 - **Risco:** OpenTUI se declara "em desenvolvimento". Mitigação: versão fixada e TUI como camada fina sobre um núcleo de geração que não depende dela.
 - **Visual** (escolhido pelo operador): painel com etapas. Logo "WEbdEX" em fonte ASCII (`block`) com "BD" em cor clara para lembrar o "bd" minúsculo da marca; barra lateral com ✓ feito, ● atual e ○ próximo (etapas feitas são clicáveis para voltar); cartões com descrição e selos "recomendado" / "em breve"; cores da marca tiradas do painel WEbdEX (magenta `#f5127c`, fundo ameixa `#0c0611`). Em terminal menor que 72×34, entra o modo compacto: logo pequeno, sem barra lateral e cartões sem descrição.
-- **Modo não interativo** com o mesmo núcleo, por exemplo `webdex create --backend nest --orm drizzle --db postgres --frontend next --yes`. Necessário para o CI das combinações, para agentes de IA e para terminais sem suporte a mouse.
+- **Modo não interativo** com o mesmo núcleo, por exemplo `bunx @devwebdex/create ../meu-projeto --backend nest --orm drizzle --db postgres --frontend next --yes` (antes da publicação, `bun apps/create/src/cli.ts ../meu-projeto ... --link-packages .`). Necessário para o CI das combinações, para agentes de IA e para terminais sem suporte a mouse.
 
 ### D5. Trava contra reexecução
 
@@ -153,7 +153,7 @@ Camadas aplicadas em ordem (`layersFor` em `generate.ts`):
 | `backend-<framework>` | App do framework sem ORM, módulo `health`, testes |
 | `orm-<orm>` | Config, scripts `db:*` e padrão do ORM |
 | `orm-<orm>-<banco>` | Driver ou adapter do ORM para o banco |
-| `<framework>-<orm>` | Integração: conexão e `ping()` usado pelo `health` |
+| `<framework>-<orm>` | Integração: conexão e `ping()` usado pelo `health` (Express e Fastify usam `node-<orm>`) |
 | `database-url-<banco>` | `DATABASE_URL` do `.env` da API |
 | `backend-node-common` | Base comum de Express e Fastify (env, erros HTTP, validação, tsconfig, vitest), aplicada antes de `backend-<framework>` |
 | `backend-adonis`, `backend-adonis-<banco>` | AdonisJS com Lucid (ORM nativo, sem as camadas de ORM) |
@@ -258,3 +258,4 @@ Pedido pelo operador em 2026-10-14 ("1; 2; 3; 4; 5"). Versões e comportamentos 
 - **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 20 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma. O README do servidor MCP no GitHub ainda diz 6 por mês; vale a página oficial de limites. Ver [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md).
 - **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3). Candidato observado, não avaliado: o Nest 12 gera projetos com oxlint + `oxlint-tsgolint` (lint com tipos).
 - **R6** O OpenTUI bloqueia o processo num pseudo-terminal sem emulador por trás (ex.: `script` sem terminal real), porque espera respostas às consultas de capacidade do terminal. Em terminal real funciona; CI e automações devem usar `--yes`. Validado num pseudo-terminal que responde às consultas: TUI desenha, gera o projeto pelo teclado e encerra em 0,05 s com SIGTERM (código 130).
+- **R7** O CI roda o gerador e um projeto gerado (Nest + Prisma + Next) em Windows, mas sem docker nem e2e: os runners Windows do GitHub não rodam containers Linux. Banco, migrações, e2e e a TUI em terminal do Windows não são verificados.

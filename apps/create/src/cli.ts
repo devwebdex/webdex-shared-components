@@ -12,7 +12,7 @@ const usage = `Uso: bunx @devwebdex/create [diretório] [opções]
 
 Sem --yes, abre a interface interativa (mouse e teclado).
 Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só:
-a API fica em apps/api e o frontend em apps/web.
+a API fica em apps/api e o frontend em apps/web (com Inertia, em apps/api/inertia).
 
 Opções:
   --name <nome>            nome do projeto (padrão: nome do diretório)

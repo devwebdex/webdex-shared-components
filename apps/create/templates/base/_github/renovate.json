@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "hostRules": [
+    {
+      "matchHost": "npm.pkg.github.com",
+      "hostType": "npm",
+      "token": "{{ secrets.DEVWEBDEX_PACKAGES_TOKEN }}"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["@devwebdex/**"],
+      "groupName": "pacotes @devwebdex"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { connectDatabase } from './shared/database/database.js'
 const database = connectDatabase(env.databaseUrl)
 const app = await createApp(
   { database, corsOrigins: env.corsOrigins },
-  { logger: { level: process.env.LOG_LEVEL ?? 'info' } }
+  { logger: { level: env.logLevel } }
 )
 app.addHook('onClose', () => database.close())
 await app.listen({ port: env.port, host: '0.0.0.0' })
