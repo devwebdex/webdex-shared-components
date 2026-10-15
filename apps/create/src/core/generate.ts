@@ -1,14 +1,48 @@
 import { spawnSync } from 'node:child_process'
-import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { ProjectOptions } from './catalog.js'
+import type { Choices, ProjectOptions } from './catalog.js'
 import { lockReason, manifestPath } from './lock.js'
 
 export const templatesDir = fileURLToPath(new URL('../../templates', import.meta.url))
 
 // Pacotes de padrão que o projeto gerado consome; --link-packages aponta todos para um checkout local.
 const devwebdexPackages = ['biome-config', 'eslint-config', 'tokens', 'tsconfig', 'ui']
+// Os que têm build: sem o dist, o projeto gerado instala mas não compila.
+const builtPackages = ['tokens', 'ui']
+
+/** Apps do monorepo gerado. Com Inertia, as páginas React ficam dentro do apps/api. */
+export function appsFor({ backend, frontend }: Choices): string[] {
+  return [
+    ...(backend !== 'none' ? ['apps/api'] : []),
+    ...(frontend === 'next' || frontend === 'vite' ? ['apps/web'] : []),
+  ]
+}
+
+/** Motivo pelo qual o diretório não serve para --link-packages, ou null se serve. */
+export function linkPackagesProblem(monorepo: string): string | null {
+  const missing = devwebdexPackages.filter(
+    (pkg) => !existsSync(join(monorepo, 'packages', pkg, 'package.json'))
+  )
+  if (missing.length > 0) {
+    return `${monorepo} não é a raiz de um checkout do webdex-shared-components (faltam packages/${missing.join(', packages/')}). Rode o gerador da raiz do repositório com --link-packages .`
+  }
+  const unbuilt = builtPackages.filter(
+    (pkg) => !existsSync(join(monorepo, 'packages', pkg, 'dist'))
+  )
+  if (unbuilt.length > 0) {
+    return `os pacotes ${unbuilt.map((pkg) => `@devwebdex/${pkg}`).join(' e ')} ainda não foram compilados em ${monorepo}. Rode lá: pnpm install && pnpm build`
+  }
+  return null
+}
 
 export type GenerateInput = {
   targetDir: string

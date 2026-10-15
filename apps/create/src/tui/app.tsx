@@ -14,6 +14,7 @@ import {
   type Option,
   type ProjectOptions,
 } from '../core/catalog.js'
+import { appsFor } from '../core/generate.js'
 import { lockReason } from '../core/lock.js'
 
 type Stage = 'directory' | number | 'summary'
@@ -24,8 +25,12 @@ type Props = {
   onDone: (result: TuiResult | null) => void
 }
 
-const steps: { key: ChoiceKey; title: string }[] = [
-  { key: 'architecture', title: 'Arquitetura' },
+const steps: { key: ChoiceKey; title: string; note?: string }[] = [
+  {
+    key: 'architecture',
+    title: 'Arquitetura',
+    note: 'Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só: API em apps/api, frontend em apps/web.',
+  },
   { key: 'backend', title: 'Backend' },
   { key: 'database', title: 'Banco de dados' },
   { key: 'orm', title: 'ORM' },
@@ -252,6 +257,8 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
             </>
           )}
 
+          {step?.note && <text fg={palette.muted}>{step.note}</text>}
+
           {step && (
             <box flexDirection="column">
               {options.map((option, index) => (
@@ -272,12 +279,18 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
           {stage === 'summary' && (
             <Summary
               directory={directory}
-              rows={steps
-                .filter((s) => !isIrrelevant(choices, s.key))
-                .map((s) => ({
-                  title: s.title,
-                  value: labelOf(s.key, choices[s.key]),
-                }))}
+              rows={[
+                {
+                  title: 'Estrutura',
+                  value: `Monorepo (pnpm + Turborepo): ${appsFor(choices).join(', ')}`,
+                },
+                ...steps
+                  .filter((s) => !isIrrelevant(choices, s.key))
+                  .map((s) => ({
+                    title: s.title,
+                    value: labelOf(s.key, choices[s.key]),
+                  })),
+              ]}
               onConfirm={confirm}
               onBack={back}
               onCancel={() => onDone(null)}

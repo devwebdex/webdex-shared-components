@@ -175,8 +175,10 @@ Outros comportamentos:
 
 - O gerador roda o `scripts/setup-env.mjs` do próprio projeto (`pnpm env:setup`): cada `.env.example` vira `.env` com valores de desenvolvimento, e chave ou segredo vazio (ex.: `APP_KEY=`) ganha valor aleatório só no `.env`. O mesmo script serve a quem clona o projeto e ao CI.
 - Depois do `pnpm install`, o gerador roda `git init -b main` e cria o commit inicial (`--skip-git` pula). Sem identidade do git configurada, só avisa.
-- `--link-packages <dir>` aponta os `@devwebdex/*` para um checkout deste monorepo via `file:` (não `link:`: o Turbopack recusa arquivos fora da raiz do projeto).
-- Testes (`pnpm test`): núcleo (validação, camadas de todas as combinações, trava, geração, `APP_KEY`, git sem `.env`, ausência de placeholder, versões dos `@devwebdex/*` nos templates) e TUI (fluxo pelo mouse, opção indisponível, pulo de etapas, Adonis sem pergunta de ORM, teclado, layout compacto).
+- `--link-packages <dir>` aponta os `@devwebdex/*` para um checkout deste monorepo via `file:` (não `link:`: o Turbopack recusa arquivos fora da raiz do projeto). Antes de gerar, o CLI confere se o diretório é a raiz do checkout e se `tokens` e `ui` já foram compilados.
+- O monorepo é dito explicitamente (pedido do operador em 2026-10-15): na etapa Arquitetura da TUI, no Resumo (linha "Estrutura", com as apps), no `--help` e na mensagem final do CLI.
+- Erros de uso do CLI saem em uma ou duas linhas, com código 1 e sem stack trace: opção sem valor mostra um exemplo, opção desconhecida lista as aceitas, valor inválido ou incompatível cita o flag e os valores que servem, e um segundo diretório solto vira erro em vez de ser ignorado.
+- Testes (`pnpm test`): núcleo (validação e mensagens, camadas de todas as combinações, apps do monorepo, `--link-packages`, trava, geração, `APP_KEY`, git sem `.env`, ausência de placeholder, versões dos `@devwebdex/*` nos templates), CLI (erros de uso, rodando o processo) e TUI (fluxo pelo mouse, aviso de monorepo, opção indisponível, pulo de etapas, Adonis sem pergunta de ORM, teclado, layout compacto).
 
 ### D11. Templates
 

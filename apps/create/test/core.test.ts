@@ -18,7 +18,15 @@ import {
   validate,
   validCombinations,
 } from '../src/core/catalog.js'
-import { generate, LockedError, layersFor, targetName, templatesDir } from '../src/core/generate.js'
+import {
+  appsFor,
+  generate,
+  LockedError,
+  layersFor,
+  linkPackagesProblem,
+  targetName,
+  templatesDir,
+} from '../src/core/generate.js'
 import { initGitRepository } from '../src/core/git.js'
 import { lockReason } from '../src/core/lock.js'
 
@@ -89,6 +97,46 @@ describe('validate', () => {
 
   test('rejeita nome inválido', () => {
     expect(validate(options({ name: 'Meu Projeto' })).join()).toContain('inválido')
+  })
+
+  test('mensagens citam o flag do CLI e os valores aceitos', () => {
+    expect(validate(options({ backend: 'foo' as never }))).toEqual([
+      '--backend: "foo" não existe. Use: nest, express, fastify, adonis, none',
+    ])
+    expect(validate(options({ database: 'mongodb', orm: 'prisma' }))).toEqual([
+      '--orm: "Prisma" não é compatível com as outras escolhas. Com elas, use: mongoose',
+    ])
+    expect(validate(options({ backend: 'adonis', orm: 'lucid', database: 'mongodb' }))).toEqual([
+      '--db: "MongoDB" não é compatível com as outras escolhas. Com elas, use: postgres, mysql',
+    ])
+  })
+})
+
+test('appsFor: apps do monorepo gerado', () => {
+  expect(appsFor(options())).toEqual(['apps/api', 'apps/web'])
+  expect(appsFor(options({ frontend: 'none' }))).toEqual(['apps/api'])
+  expect(appsFor(options({ backend: 'none', frontend: 'vite' }))).toEqual(['apps/web'])
+  expect(appsFor(options({ backend: 'adonis', orm: 'lucid', frontend: 'inertia' }))).toEqual([
+    'apps/api',
+  ])
+})
+
+describe('linkPackagesProblem', () => {
+  test('aceita este checkout, com os pacotes compilados', () => {
+    expect(linkPackagesProblem(join(import.meta.dir, '../../..'))).toBeNull()
+  })
+
+  test('recusa diretório que não é o checkout', () => {
+    expect(linkPackagesProblem(tempDir())).toContain('não é a raiz de um checkout')
+  })
+
+  test('recusa checkout sem build', () => {
+    const repo = tempDir()
+    for (const pkg of ['biome-config', 'eslint-config', 'tokens', 'tsconfig', 'ui']) {
+      mkdirSync(join(repo, 'packages', pkg), { recursive: true })
+      writeFileSync(join(repo, 'packages', pkg, 'package.json'), '{}')
+    }
+    expect(linkPackagesProblem(repo)).toContain('pnpm install && pnpm build')
   })
 })
 

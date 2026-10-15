@@ -40,6 +40,7 @@ test('fluxo completo pelo mouse', async () => {
   })
 
   expect(s.captureCharFrame()).toContain('● Arquitetura')
+  expect(s.captureCharFrame()).toContain('nasce como monorepo')
   await click(s, 'Monólito modular')
   await click(s, 'NestJS')
   await click(s, 'PostgreSQL')
@@ -50,6 +51,7 @@ test('fluxo completo pelo mouse', async () => {
   expect(s.captureCharFrame()).not.toContain('Inertia')
   await click(s, 'Next.js')
   expect(s.captureCharFrame()).toContain('● Resumo')
+  expect(s.captureCharFrame()).toContain('Monorepo (pnpm + Turborepo):')
   await click(s, 'Criar projeto')
 
   expect(result).toEqual({

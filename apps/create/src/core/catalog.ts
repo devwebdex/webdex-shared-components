@@ -208,14 +208,33 @@ export function validate(options: ProjectOptions): string[] {
   }
   for (const key of ['architecture', 'backend', 'database', 'orm', 'queue', 'frontend'] as const) {
     if (isIrrelevant(options, key)) continue
+    const flag = `--${flagNames[key]}`
     const option = (catalog[key] as Option<string>[]).find((o) => o.value === options[key])
-    if (!option) errors.push(`${key}: valor "${options[key]}" desconhecido`)
-    else if (!option.available) errors.push(`${key}: "${option.label}" ainda não está disponível`)
-    else if (!compatibleValues(key, options).includes(option.value)) {
-      errors.push(`${key}: "${option.label}" não é compatível com as outras escolhas`)
+    if (!option) {
+      const known = (catalog[key] as Option<string>[]).filter((o) => o.available)
+      errors.push(
+        `${flag}: "${options[key]}" não existe. Use: ${known.map((o) => o.value).join(', ')}`
+      )
+    } else if (!option.available) {
+      errors.push(`${flag}: "${option.label}" ainda não está disponível`)
+    } else if (!compatibleValues(key, options).includes(option.value)) {
+      const usable = compatibleValues(key, options).filter((value) => isAvailable(key, value))
+      errors.push(
+        `${flag}: "${option.label}" não é compatível com as outras escolhas. Com elas, use: ${usable.join(', ')}`
+      )
     }
   }
   return errors
+}
+
+/** Nome do flag do CLI de cada eixo (o banco é --db). */
+export const flagNames: Record<ChoiceKey, string> = {
+  architecture: 'architecture',
+  backend: 'backend',
+  database: 'db',
+  orm: 'orm',
+  queue: 'queue',
+  frontend: 'frontend',
 }
 
 /** Todas as combinações válidas (eixos irrelevantes fixados no padrão, para não repetir). */

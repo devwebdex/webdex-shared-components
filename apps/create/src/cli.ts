@@ -1,16 +1,18 @@
 #!/usr/bin/env bun
 import { spawnSync } from 'node:child_process'
 import { basename, resolve } from 'node:path'
-import { parseArgs } from 'node:util'
+import { type ParseArgsConfig, parseArgs } from 'node:util'
 import pkg from '../package.json' with { type: 'json' }
 import { defaults, normalize, type ProjectOptions, validate } from './core/catalog.js'
-import { generate, LockedError } from './core/generate.js'
+import { appsFor, generate, LockedError, linkPackagesProblem } from './core/generate.js'
 import { initGitRepository } from './core/git.js'
 import { lockReason } from './core/lock.js'
 
 const usage = `Uso: bunx @devwebdex/create [diretório] [opções]
 
 Sem --yes, abre a interface interativa (mouse e teclado).
+Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só:
+a API fica em apps/api e o frontend em apps/web.
 
 Opções:
   --name <nome>            nome do projeto (padrão: nome do diretório)
@@ -24,29 +26,56 @@ Opções:
   --skip-install           não roda pnpm install
   --skip-git               não inicializa o git nem cria o commit inicial
   --link-packages <dir>    usa os pacotes @devwebdex/* de um checkout local (CI e desenvolvimento)
-  --help                   mostra esta ajuda`
+  --help                   mostra esta ajuda
 
-const { values, positionals } = parseArgs({
-  allowPositionals: true,
-  options: {
-    name: { type: 'string' },
-    architecture: { type: 'string' },
-    backend: { type: 'string' },
-    orm: { type: 'string' },
-    db: { type: 'string' },
-    queue: { type: 'string' },
-    frontend: { type: 'string' },
-    yes: { type: 'boolean', default: false },
-    'skip-install': { type: 'boolean', default: false },
-    'skip-git': { type: 'boolean', default: false },
-    'link-packages': { type: 'string' },
-    help: { type: 'boolean', default: false },
-  },
-})
+Exemplo:
+  bunx @devwebdex/create ../meu-projeto --yes --backend nest --db postgres --frontend next`
+
+const optionsConfig = {
+  name: { type: 'string' },
+  architecture: { type: 'string' },
+  backend: { type: 'string' },
+  orm: { type: 'string' },
+  db: { type: 'string' },
+  queue: { type: 'string' },
+  frontend: { type: 'string' },
+  yes: { type: 'boolean', default: false },
+  'skip-install': { type: 'boolean', default: false },
+  'skip-git': { type: 'boolean', default: false },
+  'link-packages': { type: 'string' },
+  help: { type: 'boolean', default: false },
+} satisfies ParseArgsConfig['options']
+
+// Valor de exemplo de cada opção com valor, usado na mensagem de "falta o valor".
+const examples: Record<string, string> = {
+  name: 'meu-projeto',
+  architecture: 'modular-monolith',
+  backend: 'nest',
+  orm: 'prisma',
+  db: 'postgres',
+  queue: 'bullmq',
+  frontend: 'next',
+  'link-packages': '.',
+}
+
+const { values, positionals } = parseCliArgs()
 
 if (values.help) {
   console.log(usage)
   process.exit(0)
+}
+
+if (positionals.length > 1) {
+  fail(
+    `informe um diretório de destino só; recebi ${positionals.length}: ${positionals.join(', ')}`,
+    'Se um deles era o valor de uma opção, confira se a opção está escrita certo (ex.: --db postgres).'
+  )
+}
+
+const linkPackagesFrom = values['link-packages'] ? resolve(values['link-packages']) : undefined
+if (linkPackagesFrom) {
+  const problem = linkPackagesProblem(linkPackagesFrom)
+  if (problem) fail(`--link-packages: ${problem}`)
 }
 
 const flags = Object.fromEntries(
@@ -66,7 +95,12 @@ if (directory) failIfLocked(resolve(directory))
 
 let options: ProjectOptions
 if (values.yes) {
-  if (!directory) fail('o modo não interativo exige o diretório de destino')
+  if (!directory) {
+    fail(
+      'o modo não interativo (--yes) exige o diretório de destino',
+      `Exemplo: bunx @devwebdex/create ../meu-projeto --yes`
+    )
+  }
   options = {
     ...normalize({ ...defaults, ...flags }),
     name: basename(resolve(directory)),
@@ -83,7 +117,7 @@ if (values.yes) {
 }
 
 const errors = validate(options)
-if (errors.length > 0) fail(errors.join('\n'))
+if (errors.length > 0) fail(errors.join('\n  '), 'Veja os valores aceitos com --help.')
 
 const targetDir = resolve(directory)
 try {
@@ -91,13 +125,14 @@ try {
     targetDir,
     options,
     generatorVersion: pkg.version,
-    ...(values['link-packages'] ? { linkPackagesFrom: resolve(values['link-packages']) } : {}),
+    ...(linkPackagesFrom ? { linkPackagesFrom } : {}),
   })
 } catch (error) {
   if (error instanceof LockedError) fail(error.message)
-  throw error
+  fail(`não foi possível gerar o projeto: ${error instanceof Error ? error.message : error}`)
 }
 console.log(`Projeto criado em ${targetDir}`)
+console.log(`Monorepo (pnpm workspaces + Turborepo) com ${appsFor(options).join(' e ')}`)
 
 if (!values['skip-install']) {
   const install = spawnSync('pnpm', ['install'], { cwd: targetDir, stdio: 'inherit', shell: true })
@@ -116,12 +151,40 @@ Próximos passos:
   cd ${directory}${options.backend !== 'none' ? '\n  docker compose up -d' : ''}
   pnpm dev`)
 
+/** parseArgs lança erro técnico em inglês; aqui ele vira uma mensagem curta, sem stack trace. */
+function parseCliArgs() {
+  try {
+    return parseArgs({ allowPositionals: true, options: optionsConfig })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    const flag = /'(-{1,2}[\w-]+)/.exec(message)?.[1] ?? ''
+    const name = flag.replace(/^-+/, '') as keyof typeof optionsConfig
+    const code = (error as { code?: string }).code
+    if (code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION') {
+      // O eixo se chama "banco de dados" na TUI, mas o flag é --db.
+      const suggestion = name === ('database' as string) ? ' (o banco é --db)' : ''
+      fail(
+        `opção desconhecida: ${flag}${suggestion}`,
+        `Opções aceitas: ${Object.keys(optionsConfig)
+          .map((option) => `--${option}`)
+          .join(', ')}`
+      )
+    }
+    if (code === 'ERR_PARSE_ARGS_INVALID_OPTION_VALUE' && name in optionsConfig) {
+      if (optionsConfig[name].type === 'boolean') fail(`${flag} não recebe valor`)
+      fail(`${flag} precisa de um valor`, `Exemplo: ${flag} ${examples[name]}`)
+    }
+    fail(message, 'Veja as opções com --help.')
+  }
+}
+
 function failIfLocked(dir: string) {
   const reason = lockReason(dir)
   if (reason) fail(reason)
 }
 
-function fail(message: string): never {
+function fail(message: string, hint?: string): never {
   console.error(`Erro: ${message}`)
+  if (hint) console.error(hint)
   process.exit(1)
 }
