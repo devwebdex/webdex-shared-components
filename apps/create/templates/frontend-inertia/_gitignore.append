@@ -1,0 +1,3 @@
+apps/api/public/assets/
+# Gerado pelos hooks do AdonisJS (registro tipado das páginas)
+apps/api/.adonisjs/
