@@ -187,9 +187,14 @@ function walk(dir: string): string[] {
 }
 
 // `file:` copia o pacote para dentro do projeto: com `link:` o Turbopack recusa arquivos fora da raiz.
+// Barras normais também no Windows: o caminho vai para um YAML e para o pnpm, que as aceita em
+// qualquer sistema; com `\`, o mesmo projeto teria overrides diferentes por máquina.
 function linkPackages(targetDir: string, monorepo: string) {
   const overrides = devwebdexPackages
-    .map((pkg) => `  '@devwebdex/${pkg}': file:${join(monorepo, 'packages', pkg)}\n`)
+    .map((pkg) => {
+      const path = join(monorepo, 'packages', pkg).replaceAll('\\', '/')
+      return `  '@devwebdex/${pkg}': file:${path}\n`
+    })
     .join('')
   appendFileSync(join(targetDir, 'pnpm-workspace.yaml'), `\noverrides:\n${overrides}`)
 }
