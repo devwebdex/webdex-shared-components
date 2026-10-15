@@ -313,20 +313,14 @@ describe('generate', () => {
   test('git: commit inicial com o projeto, sem os .env', () => {
     const dir = join(tempDir(), 'acme')
     generate({ targetDir: dir, options: options(), generatorVersion: '0.0.0-test' })
-    const identity = {
-      GIT_AUTHOR_NAME: 'Teste',
-      GIT_AUTHOR_EMAIL: 'teste@example.com',
-      GIT_COMMITTER_NAME: 'Teste',
-      GIT_COMMITTER_EMAIL: 'teste@example.com',
-    }
-    Object.assign(process.env, identity)
-    try {
-      expect(initGitRepository(dir)).toEqual({ ok: true })
-    } finally {
-      for (const key of Object.keys(identity)) delete process.env[key]
-    }
     const git = (...args: string[]) =>
       spawnSync('git', args, { cwd: dir, encoding: 'utf8' }).stdout.trim().split('\n')
+    // Identidade no próprio repositório: o CI não tem user.name/user.email globais, e variável de
+    // ambiente alterada no processo do Bun não chega ao git que o gerador executa.
+    git('init', '-b', 'main')
+    git('config', 'user.name', 'Teste')
+    git('config', 'user.email', 'teste@example.com')
+    expect(initGitRepository(dir)).toEqual({ ok: true })
     expect(git('log', '--oneline')).toHaveLength(1)
     const tracked = git('ls-files')
     expect(tracked).toContain('.env.example')
