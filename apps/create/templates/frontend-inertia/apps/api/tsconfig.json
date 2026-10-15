@@ -4,5 +4,5 @@
     "rootDir": "./",
     "outDir": "./build"
   },
-  "exclude": ["inertia", "build", "public"]
+  "exclude": ["inertia", "build", "public", "database/schema.ts"]
 }

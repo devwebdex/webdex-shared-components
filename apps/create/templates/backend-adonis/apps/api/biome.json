@@ -3,7 +3,7 @@
   "root": false,
   "extends": "//",
   "files": {
-    "includes": ["**", "!!build", "!!tmp"]
+    "includes": ["**", "!!build", "!!tmp", "!database/schema.ts"]
   },
   "linter": {
     "rules": {
