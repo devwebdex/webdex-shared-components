@@ -36,7 +36,7 @@ jobs:
       - run: pnpm agents:check
 
   templates:
-    name: Projeto gerado ({{ matrix.name }})
+    name: Projeto gerado (${{ matrix.name }})
     needs: checks
     runs-on: ubuntu-latest
     strategy:
@@ -44,37 +44,55 @@ jobs:
       matrix:
         include:
           - name: nest + prisma + postgres + next
-            flags: --backend nest --orm prisma --db postgres --frontend next
+            flags: --backend nest --orm prisma --db postgres --queue none --frontend next
             database: true
           - name: nest + prisma + mysql
-            flags: --backend nest --orm prisma --db mysql --frontend none
+            flags: --backend nest --orm prisma --db mysql --queue none --frontend none
             database: true
           - name: nest + drizzle + postgres
-            flags: --backend nest --orm drizzle --db postgres --frontend none
+            flags: --backend nest --orm drizzle --db postgres --queue none --frontend none
             database: true
           - name: nest + drizzle + mysql
-            flags: --backend nest --orm drizzle --db mysql --frontend none
+            flags: --backend nest --orm drizzle --db mysql --queue none --frontend none
             database: true
-          - name: express + prisma + postgres
-            flags: --backend express --orm prisma --db postgres --frontend none
+          - name: nest + mongoose + mongodb + bullmq
+            flags: --backend nest --orm mongoose --db mongodb --queue bullmq --frontend none
+            database: true
+          - name: express + prisma + postgres + bullmq
+            flags: --backend express --orm prisma --db postgres --queue bullmq --frontend none
             database: true
           - name: express + prisma + mysql
-            flags: --backend express --orm prisma --db mysql --frontend none
+            flags: --backend express --orm prisma --db mysql --queue none --frontend none
             database: true
           - name: express + drizzle + postgres + next
-            flags: --backend express --orm drizzle --db postgres --frontend next
+            flags: --backend express --orm drizzle --db postgres --queue none --frontend next
             database: true
-          - name: express + drizzle + mysql
-            flags: --backend express --orm drizzle --db mysql --frontend none
+          - name: express + drizzle + mysql + vite
+            flags: --backend express --orm drizzle --db mysql --queue none --frontend vite
             database: true
-          - name: adonis + postgres
-            flags: --backend adonis --orm lucid --db postgres --frontend none
+          - name: express + mongoose + mongodb
+            flags: --backend express --orm mongoose --db mongodb --queue none --frontend none
             database: true
-          - name: adonis + mysql
-            flags: --backend adonis --orm lucid --db mysql --frontend none
+          - name: fastify + prisma + postgres
+            flags: --backend fastify --orm prisma --db postgres --queue none --frontend none
+            database: true
+          - name: fastify + drizzle + mysql
+            flags: --backend fastify --orm drizzle --db mysql --queue none --frontend none
+            database: true
+          - name: fastify + mongoose + mongodb + bullmq
+            flags: --backend fastify --orm mongoose --db mongodb --queue bullmq --frontend none
+            database: true
+          - name: adonis + postgres + inertia
+            flags: --backend adonis --orm lucid --db postgres --queue none --frontend inertia
+            database: true
+          - name: adonis + mysql + bullmq
+            flags: --backend adonis --orm lucid --db mysql --queue bullmq --frontend none
             database: true
           - name: só frontend (next)
             flags: --backend none --frontend next
+            database: false
+          - name: só frontend (vite)
+            flags: --backend none --frontend vite
             database: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

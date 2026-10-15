@@ -1,6 +1,6 @@
 # Gerador de projetos WEbdEX
 
-Status: **v1 funcional, ainda não publicada**. O gerador (`apps/create`) tem TUI, modo não interativo, trava de reexecução e templates para Nest, Express e AdonisJS (com Prisma, Drizzle ou Lucid, sobre PostgreSQL ou MySQL) e Next. O projeto gerado já vem com testes, CI e repositório git com commit inicial. Os pacotes `@devwebdex/*` ainda não foram publicados (A9), então hoje o gerador só roda a partir deste repositório. Este documento registra as decisões fechadas e o que ainda está em aberto. Atualize-o a cada decisão nova.
+Status: **v1 funcional, ainda não publicada**. O gerador (`apps/create`) tem TUI, modo não interativo, trava de reexecução e templates para Nest, Express, Fastify e AdonisJS (com Prisma, Drizzle, Mongoose ou Lucid, sobre PostgreSQL, MySQL ou MongoDB), filas com BullMQ + Redis e frontends Next, Vite + React e Inertia + React. O projeto gerado já vem com testes, CI e repositório git com commit inicial. Os pacotes `@devwebdex/*` ainda não foram publicados (A9), então hoje o gerador só roda a partir deste repositório. Este documento registra as decisões fechadas e o que ainda está em aberto. Atualize-o a cada decisão nova.
 
 ## Como usar (hoje, a partir deste repositório)
 
@@ -42,16 +42,18 @@ Perguntado pela TUI:
 
 | Eixo | Opções |
 |---|---|
-| Backend | nenhum, Nest, Express, AdonisJS |
-| ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express: Prisma ou Drizzle |
-| Banco | PostgreSQL 17, MySQL 8.4 |
-| Frontend | nenhum, Next |
 | Arquitetura | monólito modular (microserviços aparecem como "em breve") |
+| Backend | nenhum, Nest, Express, Fastify, AdonisJS |
+| Banco | PostgreSQL 17, MySQL 8.4, MongoDB 8 (MongoDB não vale para o Adonis) |
+| ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express/Fastify: Prisma ou Drizzle (SQL), Mongoose (MongoDB, fixo) |
+| Filas | nenhuma, BullMQ + Redis 8 (só com backend) |
+| Frontend | nenhum, Next, Vite + React, Inertia + React (só com Adonis) |
 
 - Adonis não oferece Prisma/Drizzle porque auth, factories e validação do Adonis assumem Lucid.
 - Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (`docs/standards/backend-express.md`, na camada `backend-express`).
 - Microserviços ficam fora da v1. Entram depois como comando `webdex add service`.
-- São 21 combinações válidas (10 de backend, cada uma com ou sem Next, e a só-frontend). O CI cobre 11: todas as de backend, duas delas com Next, e a só-frontend.
+- São 108 combinações válidas: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next, Vite). O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
+- A TUI só oferece combinações que existem: opção incompatível com as escolhas anteriores some, e etapa com uma opção só é pulada (ex.: Mongoose depois de MongoDB, filas sem backend).
 
 ### D3. Lint e formatação
 
@@ -102,8 +104,10 @@ Decisão:
   - `architecture-reviewer`: confere se o código respeita as fronteiras entre módulos. Esse é o principal ponto de degradação de um monólito modular.
 - **Documentação de arquitetura** fica dentro das camadas de template (`apps/create/templates/<camada>/docs/standards/`) e chega ao `docs/standards/` do projeto gerado só para a stack escolhida:
   - `security.md` (camada `base`, sempre)
-  - `modular-monolith.md` e `backend-nest.md` (camada de backend)
-  - `frontend-next.md` (camada de frontend)
+  - `modular-monolith.md` e `backend-<framework>.md` (camadas de backend)
+  - `orm-<orm>.md` (camada do ORM)
+  - `queues-bullmq.md` (camada de filas)
+  - `frontend-<frontend>.md` (camada de frontend)
 - Os agentes ficam no mesmo esquema (`<camada>/ai/agents/`), e o gerador roda o `scripts/sync-agents.mjs` no projeto para produzir as versões de cada ferramenta. O mesmo script é usado por este monorepo (`pnpm agents:sync`).
 - Os agentes apontam para esses `.md` em vez de repetir o conteúdo, e a mesma documentação serve humanos e LLMs.
 - Os docs são copiados, não instalados como pacote, porque ferramentas de IA costumam ignorar `node_modules`. Por isso o Renovate não os atualiza; um `webdex sync` fica para a v2.
@@ -151,10 +155,13 @@ Camadas aplicadas em ordem (`layersFor` em `generate.ts`):
 | `orm-<orm>-<banco>` | Driver ou adapter do ORM para o banco |
 | `<framework>-<orm>` | Integração: conexão e `ping()` usado pelo `health` |
 | `database-url-<banco>` | `DATABASE_URL` do `.env` da API |
+| `backend-node-common` | Base comum de Express e Fastify (env, erros HTTP, validação, tsconfig, vitest), aplicada antes de `backend-<framework>` |
 | `backend-adonis`, `backend-adonis-<banco>` | AdonisJS com Lucid (ORM nativo, sem as camadas de ORM) |
-| `frontend-next` | App Next com tokens, `@devwebdex/ui` e testes |
+| `queue-bullmq` | Redis no `docker-compose.yml`, `REDIS_URL`, `pnpm dev:worker` e o padrão `queues-bullmq.md` |
+| `node-bullmq`, `<framework>-bullmq` | Fila de exemplo `mail`, worker separado, Redis no `/health` e teste com Redis real |
+| `frontend-<frontend>` | Next ou Vite (`apps/web`, com tokens, `@devwebdex/ui` e testes) ou Inertia (páginas React dentro do `apps/api` do Adonis) |
 
-Contrato entre camadas: toda integração framework + ORM expõe um `ping()` do banco (no Nest, `DatabaseHealth`; no Express, `connectDatabase()`), e o módulo `health` depende só dele. Para adicionar uma stack, crie as camadas dela, marque a opção como `available` no catálogo; um teste exige que toda combinação disponível tenha todas as camadas.
+Contrato entre camadas: toda integração framework + ORM expõe um `ping()` do banco (no Nest, `DatabaseHealth`; no Express e no Fastify, `connectDatabase()`), e o módulo `health` depende só dele. No Express e no Fastify, o `health` recebe uma lista de dependências com `ping()` (`checks`), então a fila só acrescenta o Redis à lista. A ordem das camadas importa quando duas escrevem o mesmo arquivo: a última vence. Por isso a fila do Adonis registra o worker como comando do Ace (descoberto sozinho na pasta `commands/`) e não mexe no `adonisrc.ts`, que a camada Inertia substitui. Para adicionar uma stack, crie as camadas dela, marque a opção como `available` no catálogo; um teste exige que toda combinação disponível tenha todas as camadas.
 
 Convenções de nome dentro das camadas:
 
@@ -186,6 +193,7 @@ Nest + Prisma + PostgreSQL + Next foi o primeiro, escolhido pelo operador. Vers�
 - **AdonisJS 7.6** com Lucid 22: parte do kit API oficial reduzido (sem auth, sessão, shield, Tuyau e SQLite). Módulos em `app/modules`, CORS restrito a `CORS_ORIGINS`, `useImportType` desligado pelo mesmo motivo do Nest (`@inject()`).
 - **Drizzle** 0.45 com drizzle-kit 0.31: um `<modulo>.schema.ts` por módulo, reexportado em `src/shared/database/schema.ts`; o template já traz o journal de migrações vazio, porque sem ele `drizzle-kit migrate` falha sem mensagem.
 - **MySQL 8.4**: o Prisma usa `@prisma/adapter-mariadb` (compatível com MySQL) com `allowPublicKeyRetrieval`, exigido pela autenticação padrão do MySQL 8 sem TLS; o Drizzle usa `mysql2`.
+- Rodada de 2026-10-14 (Fastify, MongoDB, Vite, Inertia, filas): ver D14.
 
 Validado: build, check-types e lint das três combinações (fullstack, só frontend, só backend); no fullstack, Postgres pelo docker-compose, `db:migrate` e `GET /health` (200 com banco no ar, 500 sem detalhes com banco fora).
 
@@ -196,7 +204,7 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 - **Changesets 3**, versões **independentes** por pacote, publicação **só por PR de release aprovado** ("chore: versionar pacotes", aberto pelo `changesets/action@v2`).
 - `pnpm version-packages` = `changeset version` + atualização das faixas `@devwebdex/*` nos templates + patch do `@devwebdex/create` quando um template muda.
 - `@devwebdex/ui` não declara mais `@devwebdex/tokens` como peer dependency: com ela, cada `minor` dos tokens faria o changesets subir o `ui` para major.
-- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz de 11 combinações de projeto gerado (build, tipos, lint e testes; com backend, banco via docker compose, `db:deploy` e `test:e2e`).
+- **CI** (`.github/workflows/ci.yml`), em todo PR e push na `prod`: lint, tipos, testes, `agents:check` e a matriz de 17 combinações de projeto gerado (build, tipos, lint e testes; com backend, banco via docker compose, `db:deploy` e `test:e2e`).
 - **Release** (`.github/workflows/release.yml`): publica no GitHub Packages com o `GITHUB_TOKEN` do workflow (`packages: write`), sem token pessoal.
 - **Actions fixadas por SHA de commit** (versão no comentário), porque o release roda com permissão de escrita e de publicação: uma tag movida num repositório de terceiros executaria código com esse token. O Dependabot (`.github/dependabot.yml`) abre PR semanal para atualizar os SHAs. No CI, o checkout usa `persist-credentials: false`; no release, as credenciais ficam, porque o `changesets/action` faz push do PR de versão.
 
@@ -205,11 +213,25 @@ Decidido pelo operador em 2026-10-14. Fluxo completo e configuração do GitHub:
 Pedido pelo operador em 2026-10-14.
 
 - `pnpm test` (unitários, sem banco) e `pnpm test:e2e` (com o banco do docker compose), pelo Turborepo.
-- Nest e Express: vitest 5 e supertest. O vitest 5 (Vite 8) já emite o metadata dos decorators do Nest, sem SWC. Os unitários trocam o banco por um falso; o e2e sobe a API e chama `GET /health` com o banco real.
+- Nest, Express e Fastify: vitest 5 (Fastify usa `app.inject()` em vez do supertest). O vitest 5 (Vite 8) já emite o metadata dos decorators do Nest, sem SWC. Os unitários trocam o banco por um falso; o e2e sobe a API e chama `GET /health` com o banco real.
 - AdonisJS: Japa, o runner nativo (suítes `unit` e `functional`).
-- Next: vitest com Testing Library e jsdom.
+- Next e Vite: vitest com Testing Library e jsdom. Inertia: teste funcional do Japa com o plugin do Inertia (`withInertia()`, `assertInertiaComponent`).
+- Com fila: um teste e2e enfileira um job e espera o worker terminar, contra o Redis do docker compose.
 - CI do projeto gerado (`.github/workflows/ci.yml`): instala com acesso de leitura ao GitHub Packages, roda `env:setup`, build, tipos, lint e testes; se houver `docker-compose.yml`, sobe o banco, aplica migrações e roda o e2e. Actions fixadas por SHA, como no monorepo.
 - Git: commit inicial depois do `pnpm install` (o lockfile entra), branch `main`, `.env` fora do repositório (há teste para isso).
+
+### D14. Fastify, MongoDB, Vite, Inertia e filas
+
+Pedido pelo operador em 2026-10-14 ("1; 2; 3; 4; 5"). Versões e comportamentos verificados nessa data:
+
+- **Fastify 5.12** com `@fastify/cors`: mesma convenção de módulos do Express (D11), com cada módulo virando plugin com prefixo; testes por `app.inject()`. Express e Fastify compartilham a camada `backend-node-common` e as integrações `node-<orm>`.
+- **MongoDB 8 + Mongoose 9**: o Prisma 7 não suporta MongoDB (a linha 6 ficaria sem caminho de upgrade), por isso Mongoose é o ORM fixo para MongoDB. MongoDB não é oferecido no Adonis, cujo Lucid é só SQL. Sem migrações: `pnpm db:migrate` e `pnpm db:deploy` não fazem nada (os scripts da raiz usam `--if-present`).
+- **Vite 8 + React 19** em `apps/web`, porta 3000 (a origem que os backends liberam no CORS), Tailwind 4 por `@tailwindcss/vite`, tokens e `@devwebdex/ui`.
+- **Inertia 3 + React** só com AdonisJS: o Inertia precisa de um backend que renderize as páginas, e o adaptador oficial (`@adonisjs/inertia` 5) é do Adonis. As páginas ficam em `apps/api/inertia/`; o kernel não força JSON e o registro tipado das páginas é gerado pelos hooks do Adonis, por isso o `check-types` do `apps/api` depende do build.
+- **BullMQ 6 + Redis 8**: a API enfileira e um worker, processo separado, processa (`pnpm dev:worker` em desenvolvimento; `pnpm --filter api worker` a partir do build). Fila de exemplo `mail`; `GET /health` passa a conferir o Redis. Padrão do projeto gerado: `docs/standards/queues-bullmq.md`.
+  - Nest: `@nestjs/bullmq` 12; o processador fica num módulo que só o `WorkerModule` importa. Em desenvolvimento o worker compila para `dist-worker`, porque o `deleteOutDir` de dois `nest start --watch` no mesmo `dist` apagaria a saída um do outro.
+  - AdonisJS: `bullmq` direto, com o worker como comando `node ace queue:work`. O `@adonisjs/queue` oficial foi descartado: está na 0.x e usa outro motor (`@boringnode/queue`), o que faria o Adonis destoar dos outros backends.
+  - Redis só em `127.0.0.1` e sem senha em desenvolvimento, como os bancos. Em produção: senha, TLS e `maxmemory-policy noeviction`.
 
 ## Em aberto
 
@@ -229,7 +251,7 @@ Pedido pelo operador em 2026-10-14.
 ## Riscos conhecidos
 
 - **R1** OpenTUI ainda é jovem; mudanças de API podem afetar a TUI.
-- **R2** Cerca de 21 combinações de stack. Sem matriz de CI, as combinações pouco usadas quebram sem ninguém notar.
+- **R2** São 108 combinações de stack e o CI roda 17. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
 - **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 20 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma. O README do servidor MCP no GitHub ainda diz 6 por mês; vale a página oficial de limites. Ver [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md).
 - **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3). Candidato observado, não avaliado: o Nest 12 gera projetos com oxlint + `oxlint-tsgolint` (lint com tipos).

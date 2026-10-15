@@ -12,7 +12,7 @@ Decisões (operador, 2026-10-14): versões **independentes** por pacote e public
    - um resumo de uma linha, que vai para o CHANGELOG.
 
    Isso cria um arquivo em `.changeset/`. Commite junto com a mudança.
-2. **O CI** (`.github/workflows/ci.yml`) roda lint, tipos e testes, e gera as três combinações de projeto com os pacotes do PR (build, tipos, lint e, com backend, banco e `GET /health`).
+2. **O CI** (`.github/workflows/ci.yml`) roda lint, tipos e testes, e gera 17 combinações de projeto com os pacotes do PR (build, tipos, lint, testes e, com backend, banco, migrações e testes e2e).
 3. **Depois do merge na `prod`**, o workflow de release (`.github/workflows/release.yml`) abre ou atualiza o PR **"chore: versionar pacotes"**, que:
    - sobe a versão de cada pacote com changeset;
    - escreve o `CHANGELOG.md` de cada um;
