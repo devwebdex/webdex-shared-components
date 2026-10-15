@@ -56,6 +56,18 @@ export function createApp(deps: AppDependencies) {
 //#else
   app.use(cors({ origin: deps.corsOrigins }))
 //#endif
+//#if web3=evm
+//#if session=cookie
+  const auth = createAuthModule({ authService: deps.authService, siweOrigin: deps.siweOrigin })
+//#else
+  const auth = createAuthModule({ authService: deps.authService })
+//#endif
+  // Toda rota exige sessão (docs/standards/security.md). Rota nova sem sessão entra nesta lista de
+  // propósito, nunca por esquecimento.
+  app.use(auth.requireSession(['GET /health', 'GET /auth/nonce', 'POST /auth/verify']))
+  // O login só recebe uma mensagem SIWE curta; o resto da API mantém o limite padrão (100 KB).
+  app.use('/auth', express.json({ limit: '32kb' }))
+//#endif
   app.use(express.json())
 
 //#if queue=bullmq
@@ -64,17 +76,8 @@ export function createApp(deps: AppDependencies) {
   app.use('/health', createHealthModule({ checks: [deps.database] }).router)
 //#endif
 //#if web3=evm
-//#if session=cookie
-  const auth = createAuthModule({ authService: deps.authService, siweOrigin: deps.siweOrigin })
-//#else
-  const auth = createAuthModule({ authService: deps.authService })
-//#endif
   app.use('/auth', auth.router)
-  const access = createAccessModule({
-    accessService: deps.accessService,
-    authenticate: auth.authenticate,
-  })
-  app.use('/access', access.router)
+  app.use('/access', createAccessModule({ accessService: deps.accessService }).router)
 //#endif
 
   app.use(notFoundHandler)

@@ -22,6 +22,8 @@ export default class AccessService {
         abi: accessControlAbi,
         functionName: 'hasRole',
         args: [ADMIN_ROLE, address],
+        // Decisão de acesso: um bloco recente pode ser reorganizado e devolver um papel já revogado.
+        blockTag: 'finalized',
       })
     } catch (error) {
       logger.warn({ err: error }, 'leitura de hasRole falhou; acesso negado')

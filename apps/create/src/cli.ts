@@ -5,7 +5,10 @@ import { type ParseArgsConfig, parseArgs } from 'node:util'
 import pkg from '../package.json' with { type: 'json' }
 import {
   type Choices,
+  choiceKeys,
   defaults,
+  flagNames,
+  isIrrelevant,
   normalize,
   type ProjectOptions,
   recommendedValue,
@@ -92,17 +95,10 @@ if (linkPackagesFrom) {
 }
 
 const flags = Object.fromEntries(
-  Object.entries({
-    name: values.name,
-    architecture: values.architecture,
-    backend: values.backend,
-    orm: values.orm,
-    database: values.db,
-    queue: values.queue,
-    frontend: values.frontend,
-    web3: values.web3,
-    session: values.session,
-  }).filter(([, value]) => value !== undefined)
+  [
+    ['name', values.name],
+    ...choiceKeys.map((key) => [key, values[flagNames[key] as keyof typeof values]]),
+  ].filter(([, value]) => value !== undefined)
 ) as Partial<ProjectOptions>
 
 let directory = positionals[0]
@@ -121,6 +117,7 @@ if (values.yes) {
     name: basename(resolve(directory)),
     ...flags,
   }
+  failOnIgnoredFlags(flags, options)
 } else {
   if (!process.stdin.isTTY) fail('terminal não interativo: use --yes com os flags desejados')
   const { runTui } = await import('./tui/app.js')
@@ -198,6 +195,17 @@ function parseCliArgs() {
     }
     fail(message, 'Veja as opções com --help.')
   }
+}
+
+// Flag de um eixo que as outras escolhas tornam irrelevante (ex.: --session sem --web3 evm) seria
+// gravado no manifesto sem efeito nenhum no projeto: melhor avisar quem digitou.
+function failOnIgnoredFlags(flags: Partial<ProjectOptions>, options: ProjectOptions) {
+  const ignored = choiceKeys.filter((key) => flags[key] !== undefined && isIrrelevant(options, key))
+  if (ignored.length === 0) return
+  fail(
+    `${ignored.map((key) => `--${flagNames[key]}`).join(', ')} não se aplica a estas escolhas`,
+    'Banco, ORM e filas só existem com backend; a sessão do login, só com --web3 evm e backend.'
+  )
 }
 
 function failIfLocked(dir: string) {

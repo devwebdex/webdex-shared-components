@@ -3,7 +3,11 @@ import type { Chain } from 'viem'
 import { type CreateSiweMessageParameters, createSiweMessage } from 'viem/siwe'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ChainClient } from '../../shared/chain/chain-client.js'
-import { createAuthService } from './auth.service.js'
+import {
+  createAuthService,
+  SIWE_MESSAGE_MAX_LENGTH,
+  SIWE_SIGNATURE_MAX_LENGTH,
+} from './auth.service.js'
 import type { AuthStore, StoredSession } from './auth.store.js'
 
 const config = {
@@ -149,6 +153,18 @@ describe('AuthService', () => {
     ).resolves.toBeUndefined()
     expect(verifySiweMessage).not.toHaveBeenCalled()
     expect(nonces.has(nonce)).toBe(false)
+  })
+
+  it('mensagem ou assinatura acima do limite é recusada antes da leitura da mensagem', async () => {
+    const { service, verifySiweMessage, nonces } = setup()
+    const nonce = await service.createNonce()
+    const message = siweMessage(nonce)
+    const tooLong = `${message}\n${'x'.repeat(SIWE_MESSAGE_MAX_LENGTH)}`
+    await expect(service.verify({ message: tooLong, signature })).resolves.toBeUndefined()
+    const longSignature = `0x${'a'.repeat(SIWE_SIGNATURE_MAX_LENGTH)}` as const
+    await expect(service.verify({ message, signature: longSignature })).resolves.toBeUndefined()
+    expect(verifySiweMessage).not.toHaveBeenCalled()
+    expect(nonces.has(nonce)).toBe(true)
   })
 
   it('assinatura inválida não cria sessão', async () => {

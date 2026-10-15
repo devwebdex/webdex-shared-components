@@ -7,10 +7,12 @@ import type ChainClient from '#shared/chain_client'
 const user = privateKeyToAccount(generatePrivateKey()).address
 const contract = privateKeyToAccount(generatePrivateKey()).address
 
-function serviceWith(readContract: (params: { args: unknown[] }) => Promise<boolean>) {
-  const calls: { args: unknown[] }[] = []
+type ReadParams = { args: unknown[]; blockTag?: string }
+
+function serviceWith(readContract: (params: ReadParams) => Promise<boolean>) {
+  const calls: ReadParams[] = []
   const client = {
-    readContract(params: { args: unknown[] }) {
+    readContract(params: ReadParams) {
       calls.push(params)
       return readContract(params)
     },
@@ -31,6 +33,7 @@ test.group('AccessService', (group) => {
     const { service, calls } = serviceWith(async () => true)
     assert.isTrue(await service.isAdmin(user))
     assert.deepEqual(calls[0]?.args, [ADMIN_ROLE, user])
+    assert.equal(calls[0]?.blockTag, 'finalized')
   })
 
   test('nega quem não tem o papel', async ({ assert }) => {

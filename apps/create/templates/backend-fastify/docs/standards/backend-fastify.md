@@ -35,4 +35,4 @@ Arquivos e pastas em kebab-case.
 - Entrada de rota sempre por `parseInput(schema, request.body)` (zod). Campo não declarado no schema é descartado.
 - Erro esperado: `throw new HttpError(status, mensagem)`. Erro inesperado é registrado no log e vira 500 sem detalhes.
 - Testes usam `app.inject()`, sem subir servidor.
-- Variável de ambiente nova: adicione em `shared/config/env.ts` e no `.env.example`.
+- Variável de ambiente nova: adicione em `shared/config/env.ts` e no `.env.example`. Recurso opcional com arquivo de configuração próprio, lido sob demanda (como a rede do web3), mantém as variáveis nesse arquivo, não no `env.ts`.

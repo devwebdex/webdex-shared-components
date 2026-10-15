@@ -60,7 +60,14 @@ describe('app', () => {
   })
 //#endif
 
+//#if web3=evm
+  // Nega por padrão: sem sessão, o Express responde 401 antes de saber se a rota existe.
+  it('rota inexistente sem sessão responde 401', async () => {
+    await request(appWith({})).get('/nao-existe').expect(401)
+  })
+//#else
   it('rota inexistente responde 404', async () => {
     await request(appWith({})).get('/nao-existe').expect(404)
   })
+//#endif
 })

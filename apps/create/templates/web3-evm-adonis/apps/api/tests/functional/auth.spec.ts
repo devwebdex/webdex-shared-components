@@ -1,6 +1,10 @@
 import app from '@adonisjs/core/services/app'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { test } from '@japa/runner'
+import web3Config from '#config/web3'
+//#if session=cookie
+import { SESSION_COOKIE } from '#modules/auth/session_transport'
+//#endif
 import ChainClient from '#shared/chain_client'
 import {
   fromFrontend,
@@ -27,7 +31,7 @@ test.group('login SIWE (banco real)', (group) => {
     const { account, response } = await signIn(client)
     response.assertStatus(LOGIN_STATUS)
     //#if session=cookie
-    const cookie = response.cookie('session')
+    const cookie = response.cookie(SESSION_COOKIE.name)
     assert.include(cookie, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 86400 })
     //#else
     assert.properties(response.body(), ['token', 'expiresAt'])
@@ -60,13 +64,24 @@ test.group('login SIWE (banco real)', (group) => {
     response.assertStatus(401)
   })
 
-  test('corpo inválido responde 400', async ({ client }) => {
-    const response = await client
-      .post('/auth/verify')
-      .headers(fromFrontend)
-      .json({ message: 'oi', signature: 'abc' })
-    response.assertStatus(400)
+  // Comparar o começo do texto aceitaria esta URI: só a origem inteira vale.
+  test('URI com origem parecida é recusada', async ({ client }) => {
+    const { response } = await signIn(client, { uri: `${web3Config.siwe.origin}1` })
+    response.assertStatus(401)
   })
+
+  test('corpo inválido responde 400: {label}')
+    .with([
+      { label: 'mensagem acima de 4096 caracteres', message: 'a'.repeat(5000), signature: '0x00' },
+      { label: 'assinatura que não é hex', message: 'oi', signature: '0xzz' },
+    ])
+    .run(async ({ client }, { message, signature }) => {
+      const response = await client
+        .post('/auth/verify')
+        .headers(fromFrontend)
+        .json({ message, signature })
+      response.assertStatus(400)
+    })
 
   test('sem sessão, GET /auth/me responde 401', async ({ client }) => {
     const response = await client.get('/auth/me')
@@ -79,6 +94,11 @@ test.group('login SIWE (banco real)', (group) => {
       .post('/auth/verify')
       .header('origin', 'https://evil.example')
       .json({ message: 'oi', signature: '0x00' })
+    response.assertStatus(403)
+  })
+
+  test('POST sem Origin responde 403', async ({ client }) => {
+    const response = await client.post('/auth/verify').json({ message: 'oi', signature: '0x00' })
     response.assertStatus(403)
   })
   //#endif

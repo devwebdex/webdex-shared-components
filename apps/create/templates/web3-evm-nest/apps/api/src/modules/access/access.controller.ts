@@ -1,11 +1,10 @@
-import { Controller, ForbiddenException, Get, Inject, UseGuards } from '@nestjs/common'
+import { Controller, ForbiddenException, Get, Inject } from '@nestjs/common'
 import type { Address } from 'viem'
-import { SessionAddress, SessionGuard } from '../auth/session.guard.js'
+import { SessionAddress } from '../auth/session.guard.js'
 import { ACCESS_SERVICE } from './access.providers.js'
 import { type AccessService, ADMIN_ROLE } from './access.service.js'
 
 @Controller('access')
-@UseGuards(SessionGuard)
 export class AccessController {
   constructor(@Inject(ACCESS_SERVICE) private readonly access: AccessService) {}
 

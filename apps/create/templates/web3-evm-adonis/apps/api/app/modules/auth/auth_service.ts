@@ -11,6 +11,9 @@ export const SESSION_TTL_SECONDS = 24 * 60 * 60
 const NONCE_TTL_MINUTES = 5
 // Uma mensagem assinada que vaze só serve enquanto não expira: a validade aceita é curta.
 const MAX_MESSAGE_LIFETIME_MS = 10 * 60 * 1000
+// O parseSiweMessage do viem tem custo quadrático no tamanho: sem teto, uma mensagem grande trava a API.
+export const MAX_MESSAGE_LENGTH = 4096
+export const MAX_SIGNATURE_LENGTH = 16384
 
 export type Session = { token: string; expiresAt: DateTime }
 type SiweFields = ReturnType<typeof parseSiweMessage>
@@ -32,6 +35,7 @@ export default class AuthService {
 
   /** Confere a mensagem na ordem de docs/standards/web3.md e abre a sessão; null se algo não confere. */
   async login(message: string, signature: Hex): Promise<Session | null> {
+    if (message.length > MAX_MESSAGE_LENGTH || signature.length > MAX_SIGNATURE_LENGTH) return null
     const fields = parseSiweMessage(message)
     if (!fields.nonce || !(await this.repository.consumeNonce(fields.nonce))) return null
     if (!fields.address || !isForThisApp(fields)) return null

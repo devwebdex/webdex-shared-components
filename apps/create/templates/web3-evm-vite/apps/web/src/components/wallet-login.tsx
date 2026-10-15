@@ -41,7 +41,11 @@ const sessionKey = ['auth', 'session'] as const
 const SIGN_IN_TTL_MS = 5 * 60 * 1000
 //#endif
 
+//#if backend!=none
 /** Conexão de carteira (wagmi) e login SIWE, com o estado anunciado a leitores de tela. */
+//#else
+/** Conexão de carteira (wagmi), com o estado anunciado a leitores de tela. */
+//#endif
 export function WalletLogin() {
   const hydrated = useHydrated()
   const connection = useConnection()

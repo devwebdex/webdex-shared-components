@@ -75,12 +75,16 @@ Revise o diff antes de commitar (`adonisrc.ts`, `start/kernel.ts`, `start/env.ts
 O projeto já nasce com o login SIWE e o acesso por contrato, sem o `@adonisjs/auth`. Rotas, ordem da verificação e variáveis: [web3.md](web3.md), seção "Login gerado com o projeto".
 
 - `app/modules/auth`: nonce, verificação e sessões (tabelas `auth_nonces` e `auth_sessions`). O `AuthService` é a API pública do módulo.
-- Rota com sessão: `.use(middleware.auth())` em `start/routes.ts`. O middleware (`app/modules/auth/auth_middleware.ts`) devolve `401` sem sessão válida e expõe o endereço em `ctx.wallet.address`.
+- Toda rota exige sessão por padrão: o `AuthMiddleware` (`app/modules/auth/auth_middleware.ts`) está no `router.use` de `start/kernel.ts`, antes do bodyparser. Sem sessão válida responde `401`; com ela, expõe o endereço em `ctx.wallet.address`. Rota nova não precisa de `.use(...)`.
+- Rota pública: acrescente `MÉTODO /padrão` (o padrão como em `start/routes.ts`, com o prefixo do grupo, ex.: `GET /auth/nonce`) em `PUBLIC_ROUTES`, no topo do mesmo arquivo. A lista começa com `GET /health`, `GET /auth/nonce` e `POST /auth/verify`. Rota pública nova pede a revisão do subagente `security`.
+//#if frontend=inertia
+- Páginas do Inertia também exigem sessão; `GET /` é pública. Os assets saem pelos middlewares de servidor (static e Vite), antes do router, e não passam pelo `AuthMiddleware`.
+//#endif
 - `app/modules/access`: exemplo de acesso por contrato (`GET /access/admin`), com a ABI `as const` no módulo e falha fechada.
 - `config/web3.ts`: rede ativa, RPC, `SIWE_ORIGIN` e endereço do contrato; é o único arquivo que importa a chain.
 - Cliente da rede: `ChainClient` (`app/shared/chain_client.ts`) é uma classe abstrata ligada ao cliente do viem por `providers/web3_provider.ts`, um por processo. Serviços o recebem por `@inject()`; nos testes, `app.container.swap(ChainClient, ...)` troca por um falso. `tests/helpers/siwe.ts` traz um cliente que verifica a assinatura sem RPC e o login com uma conta local.
 //#if session=cookie
-- Sessão no cookie `session`, simples (sem a assinatura do Adonis): o valor é um token aleatório de 256 bits conferido pelo hash no banco. Todo `POST`, `PUT`, `PATCH` e `DELETE` da app exige `Origin` igual a `SIWE_ORIGIN` (`session_transport.ts`, registrado em `start/kernel.ts`), inclusive nas rotas novas.
+- Sessão em cookie simples (sem a assinatura do Adonis): o valor é um token aleatório de 256 bits conferido pelo hash no banco. Com `SIWE_ORIGIN` em https, o cookie é `Secure` e se chama `__Host-session`; em http, `session` (`sessionCookie` em `session_transport.ts`). Todo `POST`, `PUT`, `PATCH` e `DELETE` da app exige `Origin` igual a `SIWE_ORIGIN` (`session_transport.ts`, registrado em `start/kernel.ts`), inclusive nas rotas novas.
 //#else
 - Sessão por `Authorization: Bearer <token>` (`session_transport.ts`).
 //#endif

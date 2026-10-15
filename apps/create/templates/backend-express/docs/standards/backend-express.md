@@ -35,4 +35,4 @@ Arquivos e pastas em kebab-case.
 - Entrada de rota sempre por `parseInput(schema, req.body)` (zod). Campo não declarado no schema é descartado.
 - Erro esperado: `throw new HttpError(status, mensagem)`. Erro inesperado sobe e vira 500 sem detalhes.
 - Toda promessa é aguardada ou tratada; o ESLint (`no-floating-promises`, `no-misused-promises`) bloqueia o contrário.
-- Variável de ambiente nova: adicione em `shared/config/env.ts` (falha na inicialização se ausente) e no `.env.example`.
+- Variável de ambiente nova: adicione em `shared/config/env.ts` (falha na inicialização se ausente) e no `.env.example`. Recurso opcional com arquivo de configuração próprio, lido sob demanda (como a rede do web3), mantém as variáveis nesse arquivo, não no `env.ts`.

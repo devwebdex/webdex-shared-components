@@ -1,4 +1,4 @@
-import { type ChoiceKey, choiceKeys, type ProjectOptions } from './catalog.js'
+import { type ChoiceKey, catalog, choiceKeys, type Option, type ProjectOptions } from './catalog.js'
 
 /**
  * Blocos condicionais nos templates, linha a linha. Um arquivo serve todas as combinações, em vez de
@@ -15,20 +15,23 @@ import { type ChoiceKey, choiceKeys, type ProjectOptions } from './catalog.js'
 export function renderDirectives(content: string, options: ProjectOptions, file: string): string {
   if (!content.includes('//#')) return content
   const output: string[] = []
-  const stack: boolean[] = []
+  const stack: { active: boolean; inElse: boolean }[] = []
   for (const line of content.split('\n')) {
     const directive = /^\s*\/\/#(if|else|endif)\b\s*(.*)$/.exec(line)
     if (!directive) {
-      if (stack.every(Boolean)) output.push(line)
+      if (stack.every((block) => block.active)) output.push(line)
       continue
     }
     const [, kind, condition] = directive as unknown as [string, string, string]
+    const block = stack.at(-1)
     if (kind === 'if') {
-      stack.push(evaluate(condition.trim(), options, file))
-    } else if (stack.length === 0) {
+      stack.push({ active: evaluate(condition.trim(), options, file), inElse: false })
+    } else if (!block) {
       throw new Error(`${file}: //#${kind} sem //#if`)
     } else if (kind === 'else') {
-      stack.push(!(stack.pop() as boolean))
+      if (block.inElse) throw new Error(`${file}: //#else repetido no mesmo //#if`)
+      block.active = !block.active
+      block.inElse = true
     } else {
       stack.pop()
     }
@@ -37,12 +40,20 @@ export function renderDirectives(content: string, options: ProjectOptions, file:
   return output.join('\n')
 }
 
+// Chave e valores conferidos contra o catálogo: um erro de digitação (`session=cokie`) seria
+// sempre falso e sumiria com o bloco sem aviso.
 function evaluate(condition: string, options: ProjectOptions, file: string): boolean {
   const match = /^(\w+)(!=|=)([\w|-]+)$/.exec(condition)
   const key = match?.[1] as ChoiceKey | undefined
   if (!match || !key || !(choiceKeys as readonly string[]).includes(key)) {
     throw new Error(`${file}: condição inválida em //#if: "${condition}"`)
   }
-  const matches = (match[3] as string).split('|').includes(options[key])
+  const values = (match[3] as string).split('|')
+  const known = (catalog[key] as Option<string>[]).map((option) => option.value)
+  const unknown = values.filter((value) => !known.includes(value))
+  if (unknown.length > 0) {
+    throw new Error(`${file}: valor desconhecido em //#if ${key}: ${unknown.join(', ')}`)
+  }
+  const matches = values.includes(options[key])
   return match[2] === '=' ? matches : !matches
 }

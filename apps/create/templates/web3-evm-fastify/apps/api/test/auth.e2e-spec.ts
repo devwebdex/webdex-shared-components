@@ -156,8 +156,17 @@ describe('login SIWE (banco real)', () => {
     expect((await verify(credentials)).statusCode).toBe(401)
   })
 
-  it('corpo inválido responde 400', async () => {
-    expect((await verify({ message: 'x', signature: 'nao-hex' })).statusCode).toBe(400)
+  it('mensagem acima de 4096 caracteres ou assinatura não hexadecimal responde 400', async () => {
+    const { message, signature } = await credentialsFor(newAccount())
+    expect((await verify({ message: 'x'.repeat(5000), signature })).statusCode).toBe(400)
+    expect((await verify({ message, signature: '0xnao-hex' })).statusCode).toBe(400)
+  })
+
+  it('toda rota exige sessão, menos /health, /auth/nonce e /auth/verify', async () => {
+    expect((await get('/health')).statusCode).toBe(200)
+    expect((await get('/auth/nonce')).statusCode).toBe(200)
+    expect((await get('/access/admin')).statusCode).toBe(401)
+    expect((await get('/nao-existe')).statusCode).toBe(404)
   })
 
   it('/access/admin: 200 com o papel no contrato, 403 sem ele e 401 sem sessão', async () => {

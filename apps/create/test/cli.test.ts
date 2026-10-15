@@ -55,3 +55,9 @@ test('valor inválido lista os aceitos', () => {
 test('--link-packages fora do checkout', () => {
   expectUsageError(run('--yes', '--link-packages', tmpdir()), '--link-packages:')
 })
+
+test('flag de eixo que não se aplica é recusado', () => {
+  const result = run('--yes', '--session', 'token', '--skip-install', '--skip-git')
+  expectUsageError(result, '--session não se aplica a estas escolhas')
+  expect(result.stderr).toContain('só com --web3 evm e backend')
+})

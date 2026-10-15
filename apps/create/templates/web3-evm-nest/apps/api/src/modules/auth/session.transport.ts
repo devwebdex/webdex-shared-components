@@ -5,40 +5,41 @@ import { CHAIN_CONFIG } from '../../shared/chain/chain.module.js'
 import type { ChainConfig } from '../../shared/chain/chain-config.js'
 import { type NewSession, SESSION_TTL_SECONDS } from './auth.service.js'
 
-const COOKIE = 'session'
-
 /** Como a sessão viaja entre o frontend e a API: cookie HttpOnly (escolhido na criação do projeto). */
 @Injectable()
 export class SessionTransport {
+  private readonly cookieName: string
   private readonly options: CookieOptions
 
   constructor(@Inject(CHAIN_CONFIG) config: ChainConfig) {
     // Secure com o frontend em https (produção); em http://localhost o navegador recusaria o cookie.
-    this.options = {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      secure: new URL(config.siweOrigin).protocol === 'https:',
-    }
+    const secure = new URL(config.siweOrigin).protocol === 'https:'
+    // O prefixo __Host- (exige Secure, Path=/ e nenhum Domain) impede que um subdomínio grave um
+    // cookie com o mesmo nome e fixe a sessão de outra pessoa.
+    this.cookieName = secure ? '__Host-session' : 'session'
+    this.options = { httpOnly: true, sameSite: 'lax', path: '/', secure }
   }
 
   read(request: Request) {
     // O token é base64url: o valor do cookie não precisa de decodificação.
     for (const pair of request.headers.cookie?.split(';') ?? []) {
       const [name, value] = pair.trim().split('=', 2)
-      if (name === COOKIE && value) return value
+      if (name === this.cookieName && value) return value
     }
     return undefined
   }
 
   /** Resposta do login: 204 com o cookie. */
   issue(response: Response, { token }: NewSession) {
-    response.cookie(COOKIE, token, { ...this.options, maxAge: SESSION_TTL_SECONDS * 1000 })
+    response.cookie(this.cookieName, token, {
+      ...this.options,
+      maxAge: SESSION_TTL_SECONDS * 1000,
+    })
   }
 
   /** Resposta do logout: 204 apagando o cookie. */
   clear(response: Response) {
-    response.clearCookie(COOKIE, this.options)
+    response.clearCookie(this.cookieName, this.options)
   }
 }
 //#else

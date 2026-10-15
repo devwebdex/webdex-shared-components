@@ -4,6 +4,7 @@ import server from '@adonisjs/core/services/server'
 server.errorHandler(() => import('#exceptions/handler'))
 
 // Sem o middleware que força JSON: as páginas do Inertia respondem HTML.
+// Os assets saem pelos middlewares de static e Vite, antes do router: não passam pela sessão.
 server.use([
   () => import('#middleware/container_bindings_middleware'),
   () => import('@adonisjs/static/static_middleware'),
@@ -16,12 +17,15 @@ server.use([
   () => import('#middleware/inertia_middleware'),
 ])
 
-router.use([() => import('@adonisjs/core/bodyparser_middleware')])
-
 //#if web3=evm
-export const middleware = router.named({
-  auth: () => import('#modules/auth/auth_middleware'),
-})
+router.use([
+  // Toda rota exige sessão, exceto PUBLIC_ROUTES (app/modules/auth/auth_middleware.ts). Antes do
+  // bodyparser: requisição sem sessão é recusada sem ler o corpo.
+  () => import('#modules/auth/auth_middleware'),
+  () => import('@adonisjs/core/bodyparser_middleware'),
+])
 //#else
-export const middleware = router.named({})
+router.use([() => import('@adonisjs/core/bodyparser_middleware')])
 //#endif
+
+export const middleware = router.named({})

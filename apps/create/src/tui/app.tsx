@@ -7,6 +7,7 @@ import {
   type ChoiceKey,
   type Choices,
   catalog,
+  choiceKeys,
   compatibleValues,
   isIrrelevant,
   normalize,
@@ -25,20 +26,24 @@ type Props = {
   onDone: (result: TuiResult | null) => void
 }
 
-const steps: { key: ChoiceKey; title: string; note?: string }[] = [
-  {
-    key: 'architecture',
-    title: 'Arquitetura',
-    note: 'Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só: API em apps/api e frontend em apps/web. Com Inertia, as páginas ficam no apps/api.',
-  },
-  { key: 'backend', title: 'Backend' },
-  { key: 'database', title: 'Banco de dados' },
-  { key: 'orm', title: 'ORM' },
-  { key: 'queue', title: 'Filas' },
-  { key: 'frontend', title: 'Frontend' },
-  { key: 'web3', title: 'Web3' },
-  { key: 'session', title: 'Sessão do login' },
-]
+const titles: Record<ChoiceKey, string> = {
+  architecture: 'Arquitetura',
+  backend: 'Backend',
+  database: 'Banco de dados',
+  orm: 'ORM',
+  queue: 'Filas',
+  frontend: 'Frontend',
+  web3: 'Web3',
+  session: 'Sessão do login',
+}
+
+const notes: Partial<Record<ChoiceKey, string>> = {
+  architecture:
+    'Todo projeto nasce como monorepo (pnpm workspaces + Turborepo), mesmo com uma app só: API em apps/api e frontend em apps/web. Com Inertia, as páginas ficam no apps/api.',
+}
+
+// A ordem das etapas é a do catálogo (choiceKeys).
+const steps = choiceKeys.map((key) => ({ key, title: titles[key], note: notes[key] }))
 
 // Cores da marca WEbdEX (painel WEbdEX); line, muted e faint são tons derivados do fundo ameixa.
 const palette = {

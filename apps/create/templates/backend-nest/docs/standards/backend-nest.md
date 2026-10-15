@@ -29,4 +29,4 @@ Arquivos e pastas em kebab-case. Para criar um módulo: `pnpm --filter api exec 
 - Controller não tem regra de negócio nem acessa o banco.
 - Entrada de rota sempre por DTO com `class-validator`. O `ValidationPipe` global descarta e rejeita campos não declarados; ele fica no `AppModule` (`APP_PIPE`), não no `main.ts`, para valer também nos testes e2e.
 - Erro esperado vira exceção HTTP do Nest (`NotFoundException`, `ConflictException`...). Erro inesperado sobe e vira 500 sem detalhes.
-- Variável de ambiente nova: adicione em `shared/config/env.ts` (falha na inicialização se ausente) e no `.env.example`.
+- Variável de ambiente nova: adicione em `shared/config/env.ts` (falha na inicialização se ausente) e no `.env.example`. Recurso opcional com arquivo de configuração próprio, lido sob demanda (como a rede do web3), mantém as variáveis nesse arquivo, não no `env.ts`.

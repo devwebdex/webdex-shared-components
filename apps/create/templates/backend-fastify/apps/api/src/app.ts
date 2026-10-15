@@ -56,6 +56,15 @@ export async function createApp(deps: AppDependencies, options: FastifyServerOpt
   await app.register(cors, { origin: deps.corsOrigins })
 //#endif
   registerErrorHandlers(app)
+//#if web3=evm
+//#if session=cookie
+  const auth = createAuthModule({ authService: deps.authService, siweOrigin: deps.siweOrigin })
+//#else
+  const auth = createAuthModule({ authService: deps.authService })
+//#endif
+  // Toda rota exige sessão (docs/standards/security.md); rota pública declara config: { public: true }.
+  auth.requireSession(app)
+//#endif
 
 //#if queue=bullmq
   const health = createHealthModule({ checks: [deps.database, deps.redis] })
@@ -64,17 +73,10 @@ export async function createApp(deps: AppDependencies, options: FastifyServerOpt
 //#endif
   await app.register(health.routes, { prefix: '/health' })
 //#if web3=evm
-//#if session=cookie
-  const auth = createAuthModule({ authService: deps.authService, siweOrigin: deps.siweOrigin })
-//#else
-  const auth = createAuthModule({ authService: deps.authService })
-//#endif
   await app.register(auth.routes, { prefix: '/auth' })
-  const access = createAccessModule({
-    accessService: deps.accessService,
-    authenticate: auth.authenticate,
+  await app.register(createAccessModule({ accessService: deps.accessService }).routes, {
+    prefix: '/access',
   })
-  await app.register(access.routes, { prefix: '/access' })
 //#endif
 
   return app

@@ -113,6 +113,15 @@ test.group('AuthService', () => {
       assert.equal(repository.sessions.size, 0)
     })
 
+  test('recusa mensagem acima de 4096 caracteres sem ler nem consumir o nonce', async ({
+    assert,
+  }) => {
+    const { service, repository, chain, nonce, message } = await setup()
+    assert.isNull(await service.login(message({ statement: 'a'.repeat(5000) }), '0x00'))
+    assert.isTrue(repository.nonces.has(nonce))
+    assert.lengthOf(chain.calls, 0)
+  })
+
   test('recusa assinatura inválida', async ({ assert }) => {
     const { service, repository, chain, message } = await setup(false)
     assert.isNull(await service.login(message(), '0x00'))

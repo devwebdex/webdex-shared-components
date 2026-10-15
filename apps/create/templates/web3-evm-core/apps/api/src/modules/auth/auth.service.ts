@@ -8,6 +8,10 @@ import type { AuthStore } from './auth.store.js'
 export const SESSION_TTL_SECONDS = 24 * 60 * 60
 const NONCE_TTL_MS = 5 * 60 * 1000
 const MAX_MESSAGE_TTL_MS = 10 * 60 * 1000
+// O parseSiweMessage do viem tem custo quadrático no tamanho da mensagem (100 KB levam cerca de 2 s):
+// as rotas recusam com 400 acima destes limites, antes de qualquer leitura.
+export const SIWE_MESSAGE_MAX_LENGTH = 4096
+export const SIWE_SIGNATURE_MAX_LENGTH = 16_384
 
 export type AuthServiceDependencies = {
   store: AuthStore
@@ -38,6 +42,13 @@ export function createAuthService({ store, client, config }: AuthServiceDependen
 
     /** undefined vira 401, sem dizer ao cliente qual verificação falhou. */
     async verify({ message, signature }: SiweCredentials): Promise<NewSession | undefined> {
+      // Mesmo limite das rotas, para quem chamar o serviço sem passar por elas.
+      if (
+        message.length > SIWE_MESSAGE_MAX_LENGTH ||
+        signature.length > SIWE_SIGNATURE_MAX_LENGTH
+      ) {
+        return undefined
+      }
       const fields = parseSiweMessage(message)
       // O nonce é consumido antes das outras verificações: mensagem recusada não pode ser reenviada.
       if (!fields.nonce || !(await store.consumeNonce(fields.nonce))) return undefined

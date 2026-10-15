@@ -7,8 +7,10 @@ import {
 //#endif
   Inject,
   Injectable,
+  SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import type { Request } from 'express'
 import type { Address } from 'viem'
 //#if session=cookie
@@ -21,15 +23,26 @@ import { SessionTransport } from './session.transport.js'
 
 type AuthenticatedRequest = Request & { sessionAddress?: Address }
 
-/** Rota com sessão: sem sessão válida responde 401; com ela, @SessionAddress() entrega o endereço. */
+const IS_PUBLIC = Symbol('public')
+
+/** Rota sem sessão: exceção explícita à negação por padrão do SessionGuard. */
+export const Public = () => SetMetadata(IS_PUBLIC, true)
+
+/**
+ * Global (APP_GUARD): toda rota exige sessão válida, menos as marcadas com @Public()
+ * (docs/standards/security.md). Com a sessão, @SessionAddress() entrega o endereço.
+ */
 @Injectable()
 export class SessionGuard implements CanActivate {
   constructor(
     @Inject(AUTH_SERVICE) private readonly auth: AuthService,
-    private readonly transport: SessionTransport
+    private readonly transport: SessionTransport,
+    private readonly reflector: Reflector
   ) {}
 
   async canActivate(context: ExecutionContext) {
+    const targets = [context.getHandler(), context.getClass()]
+    if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) return true
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
     const token = this.transport.read(request)
     const session = token ? await this.auth.findSession(token) : undefined
@@ -39,10 +52,10 @@ export class SessionGuard implements CanActivate {
   }
 }
 
-/** Endereço da sessão (com checksum), nunca o enviado pelo cliente. Só em rotas com SessionGuard. */
+/** Endereço da sessão (com checksum), nunca o enviado pelo cliente. Não existe em rota @Public(). */
 export const SessionAddress = createParamDecorator((_data: unknown, context: ExecutionContext) => {
   const address = context.switchToHttp().getRequest<AuthenticatedRequest>().sessionAddress
-  if (!address) throw new Error('@SessionAddress() exige @UseGuards(SessionGuard) na rota')
+  if (!address) throw new Error('@SessionAddress() não funciona em rota @Public()')
   return address
 })
 //#if session=cookie

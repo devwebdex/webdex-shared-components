@@ -3,15 +3,14 @@ import { HttpError } from '../../shared/http/http-error.js'
 import { parseInput } from '../../shared/http/validation.js'
 import { verifySchema } from './auth.schemas.js'
 import type { AuthService } from './auth.service.js'
-import type { Authenticate, SessionTransport } from './session.js'
+import { type SessionTransport, sessionOf } from './session.js'
 
 type AuthRouterDependencies = {
   authService: AuthService
   transport: SessionTransport
-  authenticate: Authenticate
 }
 
-export function createAuthRouter({ authService, transport, authenticate }: AuthRouterDependencies) {
+export function createAuthRouter({ authService, transport }: AuthRouterDependencies) {
   const router = Router()
 
   router.get('/nonce', async (_req, res) => {
@@ -24,9 +23,8 @@ export function createAuthRouter({ authService, transport, authenticate }: AuthR
     transport.issue(res, session)
   })
 
-  router.get('/me', async (req, res) => {
-    const { address } = await authenticate(req)
-    res.json({ address })
+  router.get('/me', (_req, res) => {
+    res.json({ address: sessionOf(res).address })
   })
 
   router.post('/logout', async (req, res) => {

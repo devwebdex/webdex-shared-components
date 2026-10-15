@@ -1,6 +1,16 @@
 import { describe, expect, test } from 'bun:test'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { defaults, type ProjectOptions } from '../src/core/catalog.js'
 import { renderDirectives } from '../src/core/directives.js'
+import { templatesDir } from '../src/core/generate.js'
+
+function templateFiles(dir = templatesDir): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name)
+    return entry.isDirectory() ? templateFiles(path) : [path]
+  })
+}
 
 const options = (overrides: Partial<ProjectOptions> = {}): ProjectOptions => ({
   ...defaults,
@@ -40,5 +50,17 @@ describe('renderDirectives', () => {
     expect(() => render('//#if banco=postgres\n//#endif')).toThrow('teste.ts: condição inválida')
     expect(() => render('//#if queue=bullmq\nx')).toThrow('teste.ts: //#if sem //#endif')
     expect(() => render('//#endif')).toThrow('teste.ts: //#endif sem //#if')
+    expect(() => render('//#if session=cokie\n//#endif')).toThrow(
+      'teste.ts: valor desconhecido em //#if session: cokie'
+    )
+    expect(() => render('//#if web3=evm\n//#else\n//#else\n//#endif')).toThrow(
+      'teste.ts: //#else repetido'
+    )
+  })
+
+  test('todos os templates usam só chaves e valores do catálogo', () => {
+    for (const file of templateFiles()) {
+      expect(() => renderDirectives(readFileSync(file, 'utf8'), options(), file)).not.toThrow()
+    }
   })
 })

@@ -8,14 +8,13 @@ import {
   Req,
   Res,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common'
 import type { Request, Response } from 'express'
 import type { Address } from 'viem'
 import { AUTH_SERVICE } from './auth.providers.js'
 import type { AuthService } from './auth.service.js'
 import { VerifyDto } from './dto/verify.dto.js'
-import { SessionAddress, SessionGuard } from './session.guard.js'
+import { Public, SessionAddress } from './session.guard.js'
 import { SessionTransport } from './session.transport.js'
 
 // Contrato das rotas: docs/standards/web3.md, seção "Login gerado com o projeto".
@@ -27,11 +26,13 @@ export class AuthController {
   ) {}
 
   @Get('nonce')
+  @Public()
   async nonce() {
     return { nonce: await this.auth.createNonce() }
   }
 
   @Post('verify')
+  @Public()
 //#if session=cookie
   @HttpCode(204)
 //#else
@@ -44,7 +45,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(SessionGuard)
   me(@SessionAddress() address: Address) {
     return { address }
   }

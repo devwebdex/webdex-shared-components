@@ -239,7 +239,7 @@ export function isIrrelevant(options: Choices, key: ChoiceKey): boolean {
 /** Ajusta as escolhas dependentes depois de uma mudança (ex.: MongoDB troca o ORM para Mongoose). */
 export function normalize(choices: Choices): Choices {
   const next = { ...choices }
-  for (const key of ['database', 'orm', 'queue', 'frontend', 'session'] as const) {
+  for (const key of choiceKeys) {
     const values = compatibleValues(key, next).filter((value) => isAvailable(key, value))
     if (values.length > 0 && !values.includes(next[key])) {
       next[key] = (values.includes(defaults[key]) ? defaults[key] : values[0]) as never

@@ -54,7 +54,7 @@ Perguntado pela TUI:
 - Adonis não oferece Prisma/Drizzle porque auth, factories e validação do Adonis assumem Lucid.
 - Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (`docs/standards/backend-express.md`, na camada `backend-express`).
 - Microserviços ficam fora da v1. Entram depois como comando `webdex add service`.
-- São 318 combinações válidas. Sem web3, as 108 de stack: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next e Vite). Com web3: as 2 só-frontend e as 106 com backend, cada uma com cookie ou token, menos as 4 com Inertia, que só têm cookie (208). O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
+- São 318 combinações válidas. Sem web3, as 108 de stack: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next e Vite). Com web3, 210: as 2 só-frontend e as 106 com backend, cada uma com cookie ou token, menos as 4 com Inertia, que só têm cookie. O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
 - A TUI só oferece combinações que existem: opção incompatível com as escolhas anteriores some, e etapa com uma opção só é pulada (ex.: Mongoose depois de MongoDB, filas sem backend).
 
 ### D3. Lint e formatação
@@ -256,6 +256,8 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
   - **E2 (feita em 2026-10-15)**: login SIWE e acesso por contrato nos quatro backends e carteira nos três frontends, pelo contrato da seção "Login gerado com o projeto" do `web3.md` (rotas `/auth/nonce`, `/auth/verify`, `/auth/me`, `/auth/logout` e o exemplo `/access/admin`). O operador decidiu que o dev escolhe a sessão na TUI (`--session cookie|token`). As duas são revogáveis: o servidor guarda só o SHA-256 do token. Cookie: `HttpOnly`, `SameSite=Lax` e CSRF por `Origin`. Token: `Authorization: Bearer`, guardado só em memória no frontend.
   - A `uri` da mensagem SIWE é aceita só com origem igual a `SIWE_ORIGIN`; comparar o começo do texto aceitaria `https://app.com.evil`.
   - O acesso por papel lê o contrato com `blockTag: 'finalized'` e nega se o RPC falha.
+  - Revisão de segurança de 2026-10-15: o corpo de `POST /auth/verify` tem limite (mensagem até 4096 caracteres, assinatura até 16384), porque o `parseSiweMessage` do viem tem custo quadrático no tamanho da mensagem (100 KB levaram cerca de 2 s, medido); o cookie se chama `__Host-session` quando é `Secure`, para um subdomínio não fixar a sessão de outra pessoa; e, com o login, toda rota exige sessão por padrão, com as exceções numa lista explícita (`/health`, `/auth/nonce`, `/auth/verify`), como manda o `security.md`.
+  - Uma flag de eixo que não se aplica às outras escolhas (ex.: `--session` sem `--web3 evm`) é recusada pelo CLI, em vez de ir para o manifesto sem efeito.
   - Verificado em 2026-10-15: contra a API rodando, com o cliente real da rede (RPC da Amoy) e uma conta local assinando, o fluxo nonce, verify, `me`, `/access/admin` (403 sem contrato), logout e repetição da assinatura (401) passou no Nest com cookie, no Fastify com token e no Adonis com cookie. No navegador foram conferidos o carregamento, o CORS com credenciais e a recusa de assinatura inválida. Falta conectar uma carteira de verdade no navegador (R8).
 
 ## Em aberto
@@ -272,6 +274,7 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
 | A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
+| A16 | Botão no `@devwebdex/ui` | O componente da carteira usa botões locais, porque o `@devwebdex/ui` ainda não tem `Button`. O padrão de frontend manda pedir o componente ao time de design; quando ele existir, trocar nas três cópias (Next, Vite e Inertia) |
 
 ## Riscos conhecidos
 
@@ -285,5 +288,5 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 - **R8** Web3:
   - Nenhuma carteira de navegador (MetaMask, WalletConnect) assinou de verdade: os testes usam conta local e o conector `mock`. Teste com MetaMask na Amoy antes do primeiro projeto em produção.
   - `GET /auth/nonce` grava uma linha por chamada e não tem limite de taxa: um projeto exposto precisa de rate limit e de limpeza periódica das tabelas `auth_nonces` e `auth_sessions`.
-  - O conector `walletConnect` exige `@walletconnect/ethereum-provider`, que traz uma árvore grande de dependências (com avisos de peer `typescript@^5`). Ele só entra no build com `projectId`.
+  - O conector `walletConnect` exige `@walletconnect/ethereum-provider`, que entra no `package.json` de todo projeto web3 e traz uma árvore grande de dependências (com avisos de peer `typescript@^5`). O conector só é ativado com `projectId`.
   - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`.

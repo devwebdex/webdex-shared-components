@@ -8,6 +8,9 @@ import {
   validateSiweMessage,
 } from 'viem/siwe'
 import web3Config from '#config/web3'
+//#if session=cookie
+import { SESSION_COOKIE } from '#modules/auth/session_transport'
+//#endif
 import type ChainClient from '#shared/chain_client'
 
 /**
@@ -76,8 +79,10 @@ export function sessionHeaders(login: ApiResponse): Record<string, string> {
   //#if session=cookie
   // Lido do Set-Cookie: o response.cookie() do plugin do Adonis decodifica como cookie assinado e
   // perde o valor do cookie simples.
-  const token = /session=([^;]+)/.exec(String(login.header('set-cookie')))?.[1]
-  return { cookie: `session=${token}`, ...fromFrontend }
+  const token = new RegExp(`${SESSION_COOKIE.name}=([^;]+)`).exec(
+    String(login.header('set-cookie'))
+  )?.[1]
+  return { cookie: `${SESSION_COOKIE.name}=${token}`, ...fromFrontend }
   //#else
   return { authorization: `Bearer ${login.body().token}` }
   //#endif

@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common'
-//#if session=cookie
 import { APP_GUARD } from '@nestjs/core'
-//#endif
 import { ChainModule } from '../../shared/chain/chain.module.js'
 import { AuthController } from './auth.controller.js'
-import { AUTH_SERVICE, authServiceProvider } from './auth.providers.js'
+import { authServiceProvider } from './auth.providers.js'
 //#if session=cookie
 import { SameOriginGuard, SessionGuard } from './session.guard.js'
 //#else
@@ -12,21 +10,18 @@ import { SessionGuard } from './session.guard.js'
 //#endif
 import { SessionTransport } from './session.transport.js'
 
-// Outros módulos importam o AuthModule e protegem rotas com @UseGuards(SessionGuard).
+// Guards globais: valem para as rotas de todos os módulos. Rota sem sessão usa @Public().
 @Module({
   imports: [ChainModule],
   controllers: [AuthController],
-//#if session=cookie
   providers: [
     authServiceProvider,
     SessionTransport,
-    SessionGuard,
-    // Global: barra CSRF em toda rota que muda estado, de qualquer módulo.
+//#if session=cookie
+    // Barra CSRF em toda rota que muda estado; roda antes do SessionGuard.
     { provide: APP_GUARD, useClass: SameOriginGuard },
-  ],
-//#else
-  providers: [authServiceProvider, SessionTransport, SessionGuard],
 //#endif
-  exports: [AUTH_SERVICE, SessionTransport, SessionGuard],
+    { provide: APP_GUARD, useClass: SessionGuard },
+  ],
 })
 export class AuthModule {}

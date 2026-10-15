@@ -82,12 +82,14 @@ const address = getAddress(fields.address)
 
 O gerador entrega o login SIWE pronto, com a sessão escolhida na criação do projeto (`.webdex/manifest.json`, campo `session`). Todos os backends seguem o mesmo contrato, e o frontend gerado já o consome.
 
+Com o login, toda rota exige sessão por padrão (`security.md`). As exceções são explícitas e ficam numa lista visível no código: `GET /health`, `GET /auth/nonce` e `POST /auth/verify` (e, com Inertia, as páginas públicas). Rota nova sem sessão entra nessa lista de propósito, nunca por esquecimento.
+
 ### Rotas
 
 | Rota | Entrada | Resposta |
 |---|---|---|
 | `GET /auth/nonce` | nada | `200 { "nonce": "<32 hex>" }`; nonce de `randomBytes(16)`, guardado com validade de 5 minutos |
-| `POST /auth/verify` | `{ "message": string, "signature": "0x..." }` | sessão criada (ver Transporte). `400` corpo inválido; `401` nonce, domínio, URI, rede, validade ou assinatura inválidos |
+| `POST /auth/verify` | `{ "message": string, "signature": "0x..." }` | sessão criada (ver Transporte). `400` corpo inválido ou grande demais; `401` nonce, domínio, URI, rede, validade ou assinatura inválidos |
 | `GET /auth/me` | sessão | `200 { "address": "0x..." }` (endereço com checksum) ou `401` |
 | `POST /auth/logout` | sessão | `204`; a sessão é apagada no servidor |
 | `GET /access/admin` | sessão | `200 { "address": "0x...", "role": "admin" }` se o endereço tem `ADMIN_ROLE` no contrato de `ACCESS_CONTROL_ADDRESS`; `403` se não tem, se a variável está vazia ou se o RPC falha; `401` sem sessão |
@@ -96,7 +98,7 @@ O gerador entrega o login SIWE pronto, com a sessão escolhida na criação do p
 
 ### Verificação em `POST /auth/verify`, nesta ordem
 
-1. Corpo validado (`message` texto, `signature` hex).
+1. Corpo validado antes de qualquer leitura: `message` texto com no máximo 4096 caracteres e `signature` hex (`0x` + dígitos) com no máximo 16384. O `parseSiweMessage` do viem tem custo quadrático no tamanho da mensagem (100 KB levam cerca de 2 s): sem o limite, uma única requisição trava a API.
 2. `parseSiweMessage(message)` e consumo atômico do nonce: apaga e só segue se ele existia e não tinha expirado.
 3. `domain` igual ao host de `SIWE_ORIGIN`, `uri` com origem igual a `SIWE_ORIGIN` (comparar o começo do texto aceitaria `https://app.com.evil`), `chainId` igual ao da rede ativa e `expirationTime` presente e no máximo 10 minutos à frente.
 4. `publicClient.verifySiweMessage({ message, signature, domain, nonce })`.
@@ -105,7 +107,7 @@ O gerador entrega o login SIWE pronto, com a sessão escolhida na criação do p
 ### Transporte da sessão
 
 //#if session=cookie
-- Cookie `session`: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=86400` e `Secure` em produção. `POST /auth/verify` responde `204` com o cookie; `POST /auth/logout` o apaga.
+- Cookie `HttpOnly`, `SameSite=Lax`, `Path=/` e `Max-Age=86400`, sem `Domain`. Com `SIWE_ORIGIN` em https, o cookie é `Secure` e se chama `__Host-session`: o prefixo impede que um subdomínio grave um cookie com o mesmo nome e fixe a sessão de outra pessoa. Em http (desenvolvimento), chama-se `session`. `POST /auth/verify` responde `204` com o cookie; `POST /auth/logout` o apaga.
 - CSRF: toda requisição que muda estado (`POST`, `PUT`, `PATCH`, `DELETE`) precisa do cabeçalho `Origin` igual a `SIWE_ORIGIN`, senão `403`. O CORS libera só `CORS_ORIGINS`, com `credentials`.
 - O frontend chama a API com `credentials: 'include'`. Frontend e API ficam no mesmo site (ex.: `app.exemplo.com` e `api.exemplo.com`).
 //#else

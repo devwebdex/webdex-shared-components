@@ -1,6 +1,8 @@
 import app from '@adonisjs/core/services/app'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { test } from '@japa/runner'
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
+import web3Config from '#config/web3'
 import ChainClient from '#shared/chain_client'
 import { offlineChainClient, sessionHeaders, signIn } from '#tests/helpers/siwe'
 
@@ -21,5 +23,21 @@ test.group('GET /access/admin (banco real)', (group) => {
     const { response } = await signIn(client)
     const admin = await client.get('/access/admin').headers(sessionHeaders(response))
     admin.assertStatus(403)
+  })
+
+  test('com o papel no contrato responde 200', async ({ client, cleanup }) => {
+    const configured = web3Config.accessControlAddress
+    web3Config.accessControlAddress = privateKeyToAccount(generatePrivateKey()).address
+    const withRole = { ...offlineChainClient, readContract: async () => true }
+    app.container.swap(ChainClient, () => withRole as unknown as ChainClient)
+    cleanup(() => {
+      web3Config.accessControlAddress = configured
+      app.container.swap(ChainClient, () => offlineChainClient)
+    })
+
+    const { account, response } = await signIn(client)
+    const admin = await client.get('/access/admin').headers(sessionHeaders(response))
+    admin.assertStatus(200)
+    admin.assertBody({ address: account.address, role: 'admin' })
   })
 })
