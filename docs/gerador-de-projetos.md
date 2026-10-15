@@ -171,6 +171,7 @@ Convenções de nome dentro das camadas:
 - Iniciado por `__` vira `_` literal (`__journal.json` → `_journal.json`).
 - Sufixo `.append`: acrescenta o conteúdo ao arquivo de mesmo nome escrito por camadas anteriores (`AGENTS.md.append`, `pnpm-workspace.yaml.append`).
 - Sufixo `.merge`: mescla JSON no arquivo de mesmo nome (`package.json.merge`).
+- Blocos condicionais, linha a linha, em qualquer arquivo (`src/core/directives.ts`): `//#if queue=bullmq` … `//#else` … `//#endif`, com `!=` e alternativas (`frontend=next|vite`), aninháveis. As linhas de diretiva somem do arquivo gerado. Servem para um recurso opcional (fila, web3, sessão) entrar num arquivo que já existe sem que a camada dele traga uma cópia inteira desse arquivo: com dois ou mais recursos, as cópias se multiplicariam e divergiriam.
 
 Outros comportamentos:
 

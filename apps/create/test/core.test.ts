@@ -160,12 +160,25 @@ describe('layersFor', () => {
   })
 
   test('web3 vem por último, com ou sem backend', () => {
-    expect(layersFor(options({ web3: 'evm' })).at(-1)).toBe('web3-evm')
+    expect(layersFor(options({ web3: 'evm' })).slice(-6)).toEqual([
+      'web3-evm',
+      'web3-evm-core',
+      'web3-evm-store-prisma',
+      'web3-evm-prisma-postgres',
+      'web3-evm-nest',
+      'web3-evm-next',
+    ])
     expect(layersFor(options({ backend: 'none', web3: 'evm' }))).toEqual([
       'base',
       'frontend-next',
       'web3-evm',
+      'web3-evm-next',
     ])
+    expect(
+      layersFor(options({ backend: 'adonis', orm: 'lucid', frontend: 'inertia', web3: 'evm' })).slice(
+        -3
+      )
+    ).toEqual(['web3-evm', 'web3-evm-adonis', 'web3-evm-inertia'])
   })
 
   test('toda combinação disponível tem todas as camadas', () => {

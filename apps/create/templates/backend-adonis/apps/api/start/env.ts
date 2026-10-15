@@ -16,4 +16,15 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_USER: Env.schema.string(),
   DB_PASSWORD: Env.schema.string.optional(),
   DB_DATABASE: Env.schema.string(),
+  //#if queue=bullmq
+
+  REDIS_URL: Env.schema.string(),
+  //#endif
+  //#if web3=evm
+
+  CHAIN: Env.schema.enum(['polygon', 'polygonAmoy'] as const),
+  RPC_URL: Env.schema.string({ format: 'url', tld: false }),
+  SIWE_ORIGIN: Env.schema.string({ format: 'url', tld: false }),
+  ACCESS_CONTROL_ADDRESS: Env.schema.string.optional(),
+  //#endif
 })

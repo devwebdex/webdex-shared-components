@@ -1,0 +1,84 @@
+import type { ApiClient, ApiResponse } from '@japa/api-client'
+import { type Hex, isAddressEqual, recoverMessageAddress } from 'viem'
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
+import {
+  type CreateSiweMessageParameters,
+  createSiweMessage,
+  parseSiweMessage,
+  validateSiweMessage,
+} from 'viem/siwe'
+import web3Config from '#config/web3'
+import type ChainClient from '#shared/chain_client'
+
+/**
+ * Cliente da rede dos testes: confere a mensagem e recupera o signatário localmente, sem RPC.
+ * Só cobre carteira comum (EOA); carteira de contrato (EIP-1271) precisa da rede.
+ */
+export const offlineChainClient = {
+  async verifySiweMessage(params: {
+    message: string
+    signature: Hex
+    domain?: string
+    nonce?: string
+  }) {
+    const fields = parseSiweMessage(params.message)
+    if (!fields.address) return false
+    if (!validateSiweMessage({ message: fields, domain: params.domain, nonce: params.nonce })) {
+      return false
+    }
+    const signer = await recoverMessageAddress({
+      message: params.message,
+      signature: params.signature,
+    })
+    return isAddressEqual(signer, fields.address)
+  },
+  async readContract() {
+    throw new Error('sem RPC nos testes')
+  },
+} as unknown as ChainClient
+
+export const fromFrontend = { origin: web3Config.siwe.origin }
+
+//#if session=cookie
+export const LOGIN_STATUS = 204
+//#else
+export const LOGIN_STATUS = 200
+//#endif
+
+/** Faz o login completo com uma conta local nova: nonce, mensagem assinada e POST /auth/verify. */
+export async function signIn(
+  client: ApiClient,
+  overrides: Partial<CreateSiweMessageParameters> = {}
+) {
+  const account = privateKeyToAccount(generatePrivateKey())
+  const { nonce } = (await client.get('/auth/nonce')).body()
+  const message = createSiweMessage({
+    address: account.address,
+    chainId: web3Config.chain.id,
+    domain: web3Config.siwe.domain,
+    uri: web3Config.siwe.origin,
+    version: '1',
+    nonce,
+    issuedAt: new Date(),
+    expirationTime: new Date(Date.now() + 5 * 60 * 1000),
+    ...overrides,
+  })
+  const signature = await account.signMessage({ message })
+  const response = await client
+    .post('/auth/verify')
+    .headers(fromFrontend)
+    .json({ message, signature })
+  return { account, message, signature, response }
+}
+
+/** Cabeçalhos que levam a sessão criada pelo login às próximas requisições. */
+export function sessionHeaders(login: ApiResponse): Record<string, string> {
+  //#if session=cookie
+  // Lido do Set-Cookie: o response.cookie() do plugin do Adonis decodifica como cookie assinado e
+  // perde o valor do cookie simples.
+  const token = /session=([^;]+)/.exec(String(login.header('set-cookie')))?.[1]
+  return { cookie: `session=${token}`, ...fromFrontend }
+  //#else
+  return { authorization: `Bearer ${login.body().token}` }
+  //#endif
+}

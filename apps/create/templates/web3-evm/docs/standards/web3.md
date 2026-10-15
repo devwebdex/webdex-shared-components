@@ -1,6 +1,6 @@
 # Padrão de web3 (EVM)
 
-Regras para todo código que fala com blockchain neste projeto. Complementa [security.md](security.md) e [modular-monolith.md](modular-monolith.md). O subagente `web3` revisa contra este documento.
+Regras para todo código que fala com blockchain neste projeto. Complementa [security.md](security.md) e, quando há backend, o padrão de monólito modular. O subagente `web3` revisa contra este documento.
 
 ## Escolhas
 
@@ -11,7 +11,7 @@ Regras para todo código que fala com blockchain neste projeto. Complementa [sec
 
 ## Onde fica cada coisa
 
-- Cliente da rede da API (`createPublicClient`): infraestrutura compartilhada, fora dos módulos (`src/shared/` no Express, Fastify e Nest). Um cliente por processo, criado na inicialização com a chain e o RPC da configuração.
+- Cliente da rede da API (`createPublicClient`): infraestrutura compartilhada, fora dos módulos (`src/shared/` no Express, Fastify e Nest; `app/shared/` no AdonisJS). Um cliente por processo, criado na inicialização com a chain e o RPC da configuração.
 - ABI: no módulo dono do contrato, declarada `as const`. Sem o `as const`, o TypeScript não infere argumentos nem retorno de `readContract`.
 - Endereços de contrato: por rede, na configuração, ao lado da escolha da rede. Nunca espalhados em módulos ou componentes.
 - A interação com um contrato pertence ao módulo de domínio dono dele (ex.: `membership` lê o NFT de acesso). Outro módulo que precise do dado chama o serviço exportado por esse módulo, como em qualquer fronteira do monólito modular.
@@ -76,3 +76,58 @@ const address = getAddress(fields.address)
 - Unitários: o serviço recebe um cliente falso (objeto com `readContract`, `verifySiweMessage` etc. controlados pelo teste). Sem rede.
 - Integração: na Amoy, com contratos e carteiras de teste. A chave da carteira de teste é segredo do CI e a carteira não tem fundos na mainnet.
 - Nenhum teste automatizado contra a mainnet.
+//#if backend!=none
+
+## Login gerado com o projeto
+
+O gerador entrega o login SIWE pronto, com a sessão escolhida na criação do projeto (`.webdex/manifest.json`, campo `session`). Todos os backends seguem o mesmo contrato, e o frontend gerado já o consome.
+
+### Rotas
+
+| Rota | Entrada | Resposta |
+|---|---|---|
+| `GET /auth/nonce` | nada | `200 { "nonce": "<32 hex>" }`; nonce de `randomBytes(16)`, guardado com validade de 5 minutos |
+| `POST /auth/verify` | `{ "message": string, "signature": "0x..." }` | sessão criada (ver Transporte). `400` corpo inválido; `401` nonce, domínio, URI, rede, validade ou assinatura inválidos |
+| `GET /auth/me` | sessão | `200 { "address": "0x..." }` (endereço com checksum) ou `401` |
+| `POST /auth/logout` | sessão | `204`; a sessão é apagada no servidor |
+| `GET /access/admin` | sessão | `200 { "address": "0x...", "role": "admin" }` se o endereço tem `ADMIN_ROLE` no contrato de `ACCESS_CONTROL_ADDRESS`; `403` se não tem, se a variável está vazia ou se o RPC falha; `401` sem sessão |
+
+`/access/admin` é o exemplo de acesso por contrato: `hasRole(ADMIN_ROLE, address)` do AccessControl da OpenZeppelin, com `ADMIN_ROLE = keccak256("ADMIN_ROLE")`. Copie o padrão para os papéis do projeto.
+
+### Verificação em `POST /auth/verify`, nesta ordem
+
+1. Corpo validado (`message` texto, `signature` hex).
+2. `parseSiweMessage(message)` e consumo atômico do nonce: apaga e só segue se ele existia e não tinha expirado.
+3. `domain` igual ao host de `SIWE_ORIGIN`, `uri` com origem igual a `SIWE_ORIGIN` (comparar o começo do texto aceitaria `https://app.com.evil`), `chainId` igual ao da rede ativa e `expirationTime` presente e no máximo 10 minutos à frente.
+4. `publicClient.verifySiweMessage({ message, signature, domain, nonce })`.
+5. Sessão criada: token de `randomBytes(32)` em base64url; o servidor guarda só o SHA-256 do token, com o endereço (`getAddress`) e validade de 24 horas.
+
+### Transporte da sessão
+
+//#if session=cookie
+- Cookie `session`: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=86400` e `Secure` em produção. `POST /auth/verify` responde `204` com o cookie; `POST /auth/logout` o apaga.
+- CSRF: toda requisição que muda estado (`POST`, `PUT`, `PATCH`, `DELETE`) precisa do cabeçalho `Origin` igual a `SIWE_ORIGIN`, senão `403`. O CORS libera só `CORS_ORIGINS`, com `credentials`.
+- O frontend chama a API com `credentials: 'include'`. Frontend e API ficam no mesmo site (ex.: `app.exemplo.com` e `api.exemplo.com`).
+//#else
+- Token de acesso: `POST /auth/verify` responde `200 { "token": "...", "expiresAt": "<ISO 8601>" }`. As rotas com sessão leem `Authorization: Bearer <token>`.
+- O frontend guarda o token só em memória: some ao recarregar a página, e o usuário assina de novo. Não use `localStorage`, que um XSS leria.
+//#endif
+
+### Armazenamento
+
+- `auth_nonces`: `nonce` (chave) e `expires_at`.
+- `auth_sessions`: `id` (SHA-256 do token, chave), `address`, `expires_at` e `created_at`.
+- Linhas expiradas não valem; a limpeza periódica fica a critério do projeto.
+
+### Variáveis de ambiente da API
+
+- `CHAIN`: `polygonAmoy` (desenvolvimento) ou `polygon` (produção).
+- `RPC_URL`: o `.env.example` traz o RPC público da Amoy, só para desenvolvimento.
+- `SIWE_ORIGIN`: origem do frontend que pede a assinatura (ex.: `http://localhost:3000`).
+- `ACCESS_CONTROL_ADDRESS`: contrato com os papéis; vazio nega `/access/admin`.
+
+### Testes gerados
+
+- Unitários com cliente da rede falso.
+- e2e com o banco real: uma conta local (`privateKeyToAccount(generatePrivateKey())`) assina a mensagem, e um cliente da rede de teste verifica a assinatura sem RPC (`recoverMessageAddress`). Cobrem login, `me`, logout, nonce reutilizado, domínio errado e, com cookie, `Origin` inválido.
+//#endif

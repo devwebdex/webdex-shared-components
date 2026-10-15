@@ -1,22 +1,81 @@
+//#if web3=evm
+//#if session=cookie
+import cookieParser from 'cookie-parser'
+//#endif
+//#endif
 import cors from 'cors'
 import express from 'express'
+//#if web3=evm
+import { type AccessService, createAccessModule } from './modules/access/index.js'
+//#if session=cookie
+import {
+  type AuthService,
+  createAuthModule,
+  rejectCrossSiteRequests,
+} from './modules/auth/index.js'
+//#else
+import { type AuthService, createAuthModule } from './modules/auth/index.js'
+//#endif
+//#endif
 import { createHealthModule } from './modules/health/index.js'
 import type { DatabaseConnection } from './shared/database/database.js'
 import { errorHandler, notFoundHandler } from './shared/http/error-handler.js'
+//#if queue=bullmq
+import type { RedisConnection } from './shared/queue/redis.js'
+//#endif
 
 export type AppDependencies = {
   database: DatabaseConnection
+//#if queue=bullmq
+  redis: RedisConnection
+//#endif
   corsOrigins: string[]
+//#if web3=evm
+  authService: AuthService
+  accessService: AccessService
+//#if session=cookie
+  /** Origem do frontend (SIWE_ORIGIN): o CSRF e o Secure do cookie dependem dela. */
+  siweOrigin: string
+//#endif
+//#endif
 }
 
 /** Composição do app: cada módulo recebe só as dependências de que precisa. */
-export function createApp({ database, corsOrigins }: AppDependencies) {
+export function createApp(deps: AppDependencies) {
   const app = express()
   app.disable('x-powered-by')
-  app.use(cors({ origin: corsOrigins }))
+//#if web3=evm
+//#if session=cookie
+  // O cookie de sessão só viaja com credentials; o Origin barra CSRF no que muda estado.
+  app.use(cors({ origin: deps.corsOrigins, credentials: true }))
+  app.use(cookieParser())
+  app.use(rejectCrossSiteRequests(deps.siweOrigin))
+//#else
+  app.use(cors({ origin: deps.corsOrigins }))
+//#endif
+//#else
+  app.use(cors({ origin: deps.corsOrigins }))
+//#endif
   app.use(express.json())
 
-  app.use('/health', createHealthModule({ checks: [database] }).router)
+//#if queue=bullmq
+  app.use('/health', createHealthModule({ checks: [deps.database, deps.redis] }).router)
+//#else
+  app.use('/health', createHealthModule({ checks: [deps.database] }).router)
+//#endif
+//#if web3=evm
+//#if session=cookie
+  const auth = createAuthModule({ authService: deps.authService, siweOrigin: deps.siweOrigin })
+//#else
+  const auth = createAuthModule({ authService: deps.authService })
+//#endif
+  app.use('/auth', auth.router)
+  const access = createAccessModule({
+    accessService: deps.accessService,
+    authenticate: auth.authenticate,
+  })
+  app.use('/access', access.router)
+//#endif
 
   app.use(notFoundHandler)
   app.use(errorHandler)

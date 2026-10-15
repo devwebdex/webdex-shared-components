@@ -12,6 +12,7 @@ export type Orm = 'prisma' | 'drizzle' | 'mongoose' | 'lucid'
 export type Queue = 'none' | 'bullmq'
 export type Frontend = 'none' | 'next' | 'vite' | 'inertia'
 export type Web3 = 'none' | 'evm'
+export type Session = 'cookie' | 'token'
 
 export type ProjectOptions = {
   name: string
@@ -22,6 +23,7 @@ export type ProjectOptions = {
   queue: Queue
   frontend: Frontend
   web3: Web3
+  session: Session
 }
 
 export type Choices = Omit<ProjectOptions, 'name'>
@@ -36,6 +38,7 @@ export const choiceKeys = [
   'queue',
   'frontend',
   'web3',
+  'session',
 ] as const satisfies readonly ChoiceKey[]
 
 export const catalog = {
@@ -170,6 +173,20 @@ export const catalog = {
       available: true,
     },
   ] satisfies Option<Web3>[],
+  session: [
+    {
+      value: 'cookie',
+      label: 'Cookie de sessão',
+      description: 'HttpOnly e revogável; frontend e API no mesmo domínio (ex.: app. e api.)',
+      available: true,
+    },
+    {
+      value: 'token',
+      label: 'Token de acesso',
+      description: 'Bearer revogável; serve quando frontend e API ficam em domínios diferentes',
+      available: true,
+    },
+  ] satisfies Option<Session>[],
 }
 
 export const defaults: Choices = {
@@ -180,6 +197,7 @@ export const defaults: Choices = {
   queue: 'none',
   frontend: 'next',
   web3: 'none',
+  session: 'cookie',
 }
 
 /**
@@ -187,7 +205,8 @@ export const defaults: Choices = {
  * - Adonis só usa Lucid, que é só SQL (sem MongoDB);
  * - MongoDB só com Mongoose (o Prisma 7 não tem conector MongoDB e o Drizzle é só SQL);
  * - Inertia só existe com AdonisJS, que serve as páginas;
- * - banco, ORM e filas só existem quando há backend.
+ * - banco, ORM e filas só existem quando há backend;
+ * - a sessão do login só existe com web3 e backend; com Inertia, a página e a API têm a mesma origem: só cookie.
  */
 export function compatibleValues(key: ChoiceKey, choices: Choices): string[] {
   const all = (catalog[key] as Option<string>[]).map((o) => o.value)
@@ -204,6 +223,9 @@ export function compatibleValues(key: ChoiceKey, choices: Choices): string[] {
       return backend === 'none' ? [] : all
     case 'frontend':
       return backend === 'adonis' ? all : all.filter((value) => value !== 'inertia')
+    case 'session':
+      if (choices.web3 === 'none' || backend === 'none') return []
+      return choices.frontend === 'inertia' ? ['cookie'] : all
     default:
       return all
   }
@@ -217,7 +239,7 @@ export function isIrrelevant(options: Choices, key: ChoiceKey): boolean {
 /** Ajusta as escolhas dependentes depois de uma mudança (ex.: MongoDB troca o ORM para Mongoose). */
 export function normalize(choices: Choices): Choices {
   const next = { ...choices }
-  for (const key of ['database', 'orm', 'queue', 'frontend'] as const) {
+  for (const key of ['database', 'orm', 'queue', 'frontend', 'session'] as const) {
     const values = compatibleValues(key, next).filter((value) => isAvailable(key, value))
     if (values.length > 0 && !values.includes(next[key])) {
       next[key] = (values.includes(defaults[key]) ? defaults[key] : values[0]) as never
@@ -264,6 +286,7 @@ export const flagNames: Record<ChoiceKey, string> = {
   queue: 'queue',
   frontend: 'frontend',
   web3: 'web3',
+  session: 'session',
 }
 
 /** Todas as combinações válidas (eixos irrelevantes fixados no padrão, para não repetir). */
@@ -282,6 +305,15 @@ export function validCombinations(): Choices[] {
     combinations.set(key, options)
   }
   return [...combinations.values()]
+}
+
+/**
+ * Valor sugerido de um eixo para as escolhas atuais. A sessão segue o frontend: uma SPA em Vite costuma
+ * ficar em outro domínio que a API, onde o cookie não chega; Next e Inertia ficam no mesmo.
+ */
+export function recommendedValue<K extends ChoiceKey>(key: K, choices: Choices): Choices[K] {
+  if (key === 'session') return (choices.frontend === 'vite' ? 'token' : 'cookie') as Choices[K]
+  return defaults[key]
 }
 
 function isAvailable(key: ChoiceKey, value: string) {

@@ -24,6 +24,9 @@ export default defineConfig({
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/cors/cors_provider'),
     () => import('@adonisjs/inertia/inertia_provider'),
+    //#if web3=evm
+    () => import('#providers/web3_provider'),
+    //#endif
   ],
 
   preloads: [() => import('#start/routes'), () => import('#start/kernel')],

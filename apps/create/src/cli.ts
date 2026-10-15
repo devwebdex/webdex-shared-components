@@ -3,7 +3,14 @@ import { spawnSync } from 'node:child_process'
 import { basename, resolve } from 'node:path'
 import { type ParseArgsConfig, parseArgs } from 'node:util'
 import pkg from '../package.json' with { type: 'json' }
-import { defaults, normalize, type ProjectOptions, validate } from './core/catalog.js'
+import {
+  type Choices,
+  defaults,
+  normalize,
+  type ProjectOptions,
+  recommendedValue,
+  validate,
+} from './core/catalog.js'
 import { appsFor, generate, LockedError, linkPackagesProblem } from './core/generate.js'
 import { initGitRepository } from './core/git.js'
 import { lockReason } from './core/lock.js'
@@ -23,6 +30,7 @@ Opções:
   --queue <valor>          none | bullmq
   --frontend <valor>       next | vite | inertia (só Adonis) | none
   --web3 <valor>           none | evm (Polygon com viem)
+  --session <valor>        cookie | token (login com carteira; padrão: token com Vite, cookie nos outros)
   --yes                    não interativo: usa os flags e os padrões
   --skip-install           não roda pnpm install
   --skip-git               não inicializa o git nem cria o commit inicial
@@ -41,6 +49,7 @@ const optionsConfig = {
   queue: { type: 'string' },
   frontend: { type: 'string' },
   web3: { type: 'string' },
+  session: { type: 'string' },
   yes: { type: 'boolean', default: false },
   'skip-install': { type: 'boolean', default: false },
   'skip-git': { type: 'boolean', default: false },
@@ -58,6 +67,7 @@ const examples: Record<string, string> = {
   queue: 'bullmq',
   frontend: 'next',
   web3: 'evm',
+  session: 'cookie',
   'link-packages': '.',
 }
 
@@ -91,6 +101,7 @@ const flags = Object.fromEntries(
     queue: values.queue,
     frontend: values.frontend,
     web3: values.web3,
+    session: values.session,
   }).filter(([, value]) => value !== undefined)
 ) as Partial<ProjectOptions>
 
@@ -106,14 +117,14 @@ if (values.yes) {
     )
   }
   options = {
-    ...normalize({ ...defaults, ...flags }),
+    ...initialChoices(flags),
     name: basename(resolve(directory)),
     ...flags,
   }
 } else {
   if (!process.stdin.isTTY) fail('terminal não interativo: use --yes com os flags desejados')
   const { runTui } = await import('./tui/app.js')
-  const answer = await runTui({ directory, initial: normalize({ ...defaults, ...flags }) })
+  const answer = await runTui({ directory, initial: initialChoices(flags) })
   if (!answer) process.exit(130)
   directory = answer.directory
   options = answer.options
@@ -154,6 +165,13 @@ console.log(`
 Próximos passos:
   cd ${directory}${options.backend !== 'none' ? '\n  docker compose up -d' : ''}
   pnpm dev`)
+
+/** Padrões com os flags por cima; sem --session, a sessão segue o frontend escolhido. */
+function initialChoices(flags: Partial<ProjectOptions>): Choices {
+  const choices = normalize({ ...defaults, ...flags })
+  if (!flags.session) choices.session = recommendedValue('session', choices)
+  return choices
+}
 
 /** parseArgs lança erro técnico em inglês; aqui ele vira uma mensagem curta, sem stack trace. */
 function parseCliArgs() {

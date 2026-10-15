@@ -130,6 +130,27 @@ test('MongoDB pula a etapa de ORM e usa Mongoose', async () => {
   })
 })
 
+test('web3 com backend pergunta a sessão e sugere token com Vite', async () => {
+  let result: TuiResult | null | undefined
+  const s = await mount((r) => {
+    result = r
+  })
+  await click(s, 'Monólito modular')
+  await click(s, 'Express')
+  await click(s, 'PostgreSQL')
+  await click(s, 'Prisma')
+  await click(s, 'Sem filas')
+  await click(s, 'Vite + React')
+  await click(s, 'EVM com viem')
+  const frame = s.captureCharFrame()
+  expect(frame).toContain('● Sessão do login')
+  const tokenLine = frame.split('\n').find((line) => line.includes('Token de acesso'))
+  expect(tokenLine).toContain('recomendado')
+  await click(s, 'Cookie de sessão')
+  await click(s, 'Criar projeto')
+  expect(result?.options).toMatchObject({ web3: 'evm', session: 'cookie', frontend: 'vite' })
+})
+
 test('Enter seleciona a opção destacada e Esc cancela', async () => {
   let result: TuiResult | null | undefined
   const s = await mount((r) => {

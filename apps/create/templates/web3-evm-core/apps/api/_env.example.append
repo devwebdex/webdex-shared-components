@@ -1,0 +1,6 @@
+CHAIN=polygonAmoy
+# RPC público da Amoy: só para desenvolvimento. Produção usa RPC de provedor contratado.
+RPC_URL=https://rpc-amoy.polygon.technology
+SIWE_ORIGIN=http://localhost:3000
+# Contrato AccessControl com os papéis; vazio nega GET /access/admin.
+ACCESS_CONTROL_ADDRESS=

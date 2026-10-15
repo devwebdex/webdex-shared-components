@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "#providers/*": "./providers/*.js",
+    "#shared/*": "./app/shared/*.js"
+  },
+  "dependencies": {
+    "viem": "2.57.7"
+  }
+}

@@ -8,11 +8,11 @@ import {
   type Choices,
   catalog,
   compatibleValues,
-  defaults,
   isIrrelevant,
   normalize,
   type Option,
   type ProjectOptions,
+  recommendedValue,
 } from '../core/catalog.js'
 import { appsFor } from '../core/generate.js'
 import { lockReason } from '../core/lock.js'
@@ -37,6 +37,7 @@ const steps: { key: ChoiceKey; title: string; note?: string }[] = [
   { key: 'queue', title: 'Filas' },
   { key: 'frontend', title: 'Frontend' },
   { key: 'web3', title: 'Web3' },
+  { key: 'session', title: 'Sessão do login' },
 ]
 
 // Cores da marca WEbdEX (painel WEbdEX); line, muted e faint são tons derivados do fundo ameixa.
@@ -122,6 +123,8 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
   function choose(option: Option<string>) {
     if (!step || !option.available) return
     const next = normalize({ ...choices, [step.key]: option.value } as Choices)
+    // A sessão vem depois de todas as etapas de que depende; até lá, acompanha a sugestão.
+    if (step.key !== 'session') next.session = recommendedValue('session', next)
     setChoices(next)
     const remaining = stepsFor(next)
     const index = remaining.findIndex((s) => s.key === step.key)
@@ -269,7 +272,7 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
                   compact={compact}
                   selected={choices[step.key] === option.value}
                   focused={index === highlight}
-                  recommended={defaults[step.key] === option.value}
+                  recommended={recommendedValue(step.key, choices) === option.value}
                   onHover={() => option.available && setHighlight(index)}
                   onChoose={() => choose(option)}
                 />

@@ -1,0 +1,9 @@
+//#if session=cookie
+{
+  "dependencies": {
+    "@fastify/cookie": "11.1.3"
+  }
+}
+//#else
+{}
+//#endif

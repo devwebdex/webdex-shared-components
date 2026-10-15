@@ -1,0 +1,81 @@
+import { createHash, randomBytes } from 'node:crypto'
+import { inject } from '@adonisjs/core'
+import { DateTime } from 'luxon'
+import { type Address, getAddress, type Hex } from 'viem'
+import { parseSiweMessage } from 'viem/siwe'
+import web3Config from '#config/web3'
+import AuthRepository from '#modules/auth/auth_repository'
+import ChainClient from '#shared/chain_client'
+
+export const SESSION_TTL_SECONDS = 24 * 60 * 60
+const NONCE_TTL_MINUTES = 5
+// Uma mensagem assinada que vaze só serve enquanto não expira: a validade aceita é curta.
+const MAX_MESSAGE_LIFETIME_MS = 10 * 60 * 1000
+
+export type Session = { token: string; expiresAt: DateTime }
+type SiweFields = ReturnType<typeof parseSiweMessage>
+
+/** API pública do módulo auth: login SIWE e sessões do projeto. */
+@inject()
+export default class AuthService {
+  constructor(
+    private readonly chainClient: ChainClient,
+    private readonly repository: AuthRepository
+  ) {}
+
+  // randomBytes, e não o generateSiweNonce do viem, que usa Math.random.
+  async issueNonce() {
+    const nonce = randomBytes(16).toString('hex')
+    await this.repository.createNonce(nonce, DateTime.now().plus({ minutes: NONCE_TTL_MINUTES }))
+    return nonce
+  }
+
+  /** Confere a mensagem na ordem de docs/standards/web3.md e abre a sessão; null se algo não confere. */
+  async login(message: string, signature: Hex): Promise<Session | null> {
+    const fields = parseSiweMessage(message)
+    if (!fields.nonce || !(await this.repository.consumeNonce(fields.nonce))) return null
+    if (!fields.address || !isForThisApp(fields)) return null
+
+    // Não confere chainId nem URI (por isso isForThisApp); confere assinatura, domínio, nonce e validade.
+    const valid = await this.chainClient.verifySiweMessage({
+      message,
+      signature,
+      domain: web3Config.siwe.domain,
+      nonce: fields.nonce,
+    })
+    if (!valid) return null
+    return this.openSession(getAddress(fields.address))
+  }
+
+  async sessionAddress(token: string) {
+    return (await this.repository.findSessionAddress(hashToken(token))) as Address | null
+  }
+
+  async logout(token: string) {
+    await this.repository.deleteSession(hashToken(token))
+  }
+
+  private async openSession(address: Address): Promise<Session> {
+    const token = randomBytes(32).toString('base64url')
+    const expiresAt = DateTime.now().plus({ seconds: SESSION_TTL_SECONDS })
+    await this.repository.createSession({ id: hashToken(token), address, expiresAt })
+    return { token, expiresAt }
+  }
+}
+
+function isForThisApp({ domain, uri, chainId, expirationTime }: SiweFields) {
+  return (
+    domain === web3Config.siwe.domain &&
+    uri !== undefined &&
+    URL.canParse(uri) &&
+    new URL(uri).origin === web3Config.siwe.origin &&
+    chainId === web3Config.chain.id &&
+    expirationTime !== undefined &&
+    expirationTime.getTime() <= Date.now() + MAX_MESSAGE_LIFETIME_MS
+  )
+}
+
+// O banco guarda só o hash: um vazamento da tabela não entrega sessões válidas.
+function hashToken(token: string) {
+  return createHash('sha256').update(token).digest('hex')
+}

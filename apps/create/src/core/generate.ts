@@ -10,6 +10,7 @@ import {
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Choices, ProjectOptions } from './catalog.js'
+import { renderDirectives } from './directives.js'
 import { lockReason, manifestPath } from './lock.js'
 
 export const templatesDir = fileURLToPath(new URL('../../templates', import.meta.url))
@@ -105,7 +106,33 @@ export function layersFor({
     layers.push(`queue-${queue}`, ...(node ? [`node-${queue}`] : []), `${backend}-${queue}`)
   }
   if (frontend !== 'none') layers.push(`frontend-${frontend}`)
-  if (web3 !== 'none') layers.push(`web3-${web3}`)
+  if (web3 !== 'none') layers.push(...web3LayersFor({ backend, orm, database, frontend }))
+  return layers
+}
+
+/**
+ * Web3 (EVM): padrão e agente; no backend, o núcleo do login SIWE (comum a Nest, Express e Fastify),
+ * o armazenamento de nonces e sessões no ORM do projeto e a integração com o framework; no frontend,
+ * a carteira. O transporte da sessão (cookie ou token) é escolhido por blocos //#if nos arquivos.
+ */
+function web3LayersFor({
+  backend,
+  orm,
+  database,
+  frontend,
+}: Pick<ProjectOptions, 'backend' | 'orm' | 'database' | 'frontend'>) {
+  const layers = ['web3-evm']
+  if (backend === 'adonis') {
+    layers.push('web3-evm-adonis')
+  } else if (backend !== 'none') {
+    layers.push(
+      'web3-evm-core',
+      `web3-evm-store-${orm}`,
+      ...(orm === 'mongoose' ? [] : [`web3-evm-${orm}-${database}`]),
+      `web3-evm-${backend}`
+    )
+  }
+  if (frontend !== 'none') layers.push(`web3-evm-${frontend}`)
   return layers
 }
 
@@ -114,13 +141,15 @@ export function layersFor({
  * - segmento iniciado por `_` vira `.` (o npm descarta `.gitignore` e similares ao publicar);
  * - segmento iniciado por `__` vira `_` literal (ex.: `__journal.json` → `_journal.json`);
  * - sufixo `.append` acrescenta o conteúdo ao arquivo de mesmo nome escrito por camadas anteriores;
- * - sufixo `.merge` mescla o JSON no arquivo de mesmo nome (objetos recursivamente, o resto substitui).
+ * - sufixo `.merge` mescla o JSON no arquivo de mesmo nome (objetos recursivamente, o resto substitui);
+ * - linhas `//#if`, `//#else` e `//#endif` mantêm ou removem blocos conforme as escolhas (directives.ts).
  */
 function applyLayer(layerDir: string, targetDir: string, options: ProjectOptions) {
   for (const source of walk(layerDir)) {
     const parts = relative(layerDir, source).split(sep).map(targetName)
     const target = join(targetDir, ...parts)
-    const content = readFileSync(source, 'utf8').replaceAll('{{name}}', options.name)
+    const template = readFileSync(source, 'utf8').replaceAll('{{name}}', options.name)
+    const content = renderDirectives(template, options, relative(templatesDir, source))
     mkdirSync(dirname(target), { recursive: true })
     if (target.endsWith('.append')) {
       appendFileSync(target.slice(0, -'.append'.length), content)

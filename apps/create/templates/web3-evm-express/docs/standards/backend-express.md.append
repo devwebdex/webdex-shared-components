@@ -1,0 +1,9 @@
+
+## Login com carteira (web3)
+
+O contrato das rotas está em [web3.md](web3.md), seção "Login gerado com o projeto". No código:
+
+- `shared/chain/`: `loadChainConfig()` lê `CHAIN`, `RPC_URL`, `SIWE_ORIGIN` e `ACCESS_CONTROL_ADDRESS` (é a configuração da rede, fora do `env.ts`); `createChainClient()` cria o cliente viem, um por processo.
+- `modules/auth/`: `auth.service.ts` (nonce, verificação SIWE, sessão), `auth.repository.ts` (nonces e sessões no banco) e `session.ts` (transporte da sessão, cookie ou Bearer, e o CSRF por `Origin` no modo cookie). Outros módulos protegem rotas com o `authenticate(req)` exportado pelo `index.ts`: ele devolve o endereço da sessão ou responde 401.
+- `modules/access/`: acesso por papel no contrato (`hasRole`), com falha fechada. Copie a rota `/access/admin` para os papéis do projeto.
+- O `createApp` recebe `authService` e `accessService` prontos; o `main.ts` os monta. Os testes trocam o cliente da rede por um falso (`test/support/siwe.ts`), sem RPC.
