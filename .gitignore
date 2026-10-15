@@ -150,3 +150,6 @@ vite.config.ts.timestamp-*
 
 # Worktrees locais do Claude Code
 .claude/worktrees/
+
+# Cache de respostas da REST API do Figma (scripts/figma-nodes.mjs)
+.figma-cache/
