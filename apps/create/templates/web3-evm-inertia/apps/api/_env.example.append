@@ -1,0 +1,6 @@
+# Páginas React (Inertia): VITE_* vai para o navegador no build, nada de segredo aqui.
+# RPC próprio do frontend (chave separada da RPC_URL, restrita por domínio no provedor).
+VITE_CHAIN=polygonAmoy
+VITE_RPC_URL=https://rpc-amoy.polygon.technology
+# projectId do Reown (WalletConnect), opcional: vazio desliga o conector.
+VITE_WALLETCONNECT_PROJECT_ID=

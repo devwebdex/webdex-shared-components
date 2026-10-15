@@ -29,6 +29,27 @@ apps/web/src/
 
 - Elemento semântico (`button`, `a`, `nav`, `main`, `label`), foco visível em todo elemento interativo, `alt` em toda imagem, `aria-label` em botão só com ícone.
 - Formulário: todo campo com `label` associado e mensagem de erro ligada por `aria-describedby`.
+//#if web3=evm
+
+## Carteira (web3)
+
+Regras de carteira e login em [web3.md](web3.md). No `apps/web`:
+
+- `src/lib/web3.ts`: único arquivo que escolhe a rede (`NEXT_PUBLIC_CHAIN`, `NEXT_PUBLIC_RPC_URL`) e monta o config do wagmi; `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` vazio desliga o WalletConnect. Variáveis em `apps/web/.env` (modelo em `.env.example`); o Next as embute no build.
+- `src/components/web3-provider.tsx` (no `layout.tsx`): `WagmiProvider` e `QueryClientProvider`, Client Component. Hook do wagmi só em Client Component abaixo dele.
+- SSR: o config usa `ssr: true` e a interface da carteira só aparece depois da hidratação (`useHydrated` em `wallet-login.tsx`), porque as carteiras do navegador não existem no servidor. Sem cookie do wagmi, a página continua estática.
+//#if backend!=none
+- `src/components/wallet-login.tsx`: conectar, trocar de rede, entrar (SIWE) e sair. O cliente das rotas `/auth` fica em `src/lib/web3.ts` (`authApi`), com a API em `NEXT_PUBLIC_API_URL`.
+//#if session=cookie
+- Sessão em cookie `HttpOnly`: toda chamada à API usa `credentials: 'include'`.
+//#else
+- Sessão por token só em memória (variável do módulo), enviado em `Authorization: Bearer`. Nunca em `localStorage` nem cookie legível por JavaScript.
+//#endif
+//#else
+- `src/components/wallet-login.tsx`: conectar, trocar de rede e desconectar.
+//#endif
+- Testes com o conector `mock` do wagmi e `fetch` simulado (`wallet-login.test.tsx`), sem carteira nem rede reais.
+//#endif
 
 ## Antes de entregar
 

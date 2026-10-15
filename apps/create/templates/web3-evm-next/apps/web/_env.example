@@ -1,0 +1,10 @@
+# Copie para .env e ajuste. Nunca commite o .env.
+# NEXT_PUBLIC_* vai para o navegador no build: nada de segredo aqui.
+NEXT_PUBLIC_CHAIN=polygonAmoy
+# RPC público da Amoy: só para desenvolvimento. Produção: provedor contratado, chave própria do frontend restrita por domínio.
+NEXT_PUBLIC_RPC_URL=https://rpc-amoy.polygon.technology
+# projectId do Reown (WalletConnect), opcional: vazio desliga o conector. Cadastre a allowlist de origens no painel.
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
+//#if backend!=none
+NEXT_PUBLIC_API_URL=http://localhost:3333
+//#endif

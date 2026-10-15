@@ -27,6 +27,17 @@ apps/api/
 
 - Só utilitários do Tailwind ligados aos tokens; proibido hex, valor arbitrário e `style` inline para valores visuais.
 - Elemento semântico, foco visível, `alt` em imagem, `label` em todo campo.
+//#if web3=evm
+
+## Carteira (web3)
+
+Regras de carteira e login em [web3.md](web3.md). Em `apps/api/inertia`:
+
+- `lib/web3.ts`: único arquivo que escolhe a rede no navegador (`VITE_CHAIN`, `VITE_RPC_URL` no `apps/api/.env`, embutidas no build pelo Vite) e monta o config do wagmi; `VITE_WALLETCONNECT_PROJECT_ID` vazio desliga o WalletConnect. Use uma RPC do frontend separada da `RPC_URL` do servidor.
+- `components/web3-provider.tsx`: `WagmiProvider` e `QueryClientProvider`, montados em `app.tsx` em volta do app do Inertia (a carteira continua conectada entre páginas).
+- `components/wallet-login.tsx`: conectar, trocar de rede, entrar (SIWE) e sair. O cliente das rotas `/auth` (`authApi` em `lib/web3.ts`) usa URL relativa: mesma origem, cookie `HttpOnly` com `credentials: 'include'`.
+- Testes React com Vitest (`inertia/**/*.test.tsx`, rodam no `pnpm test` junto do Japa), com o conector `mock` do wagmi e `fetch` simulado.
+//#endif
 
 ## Antes de entregar
 

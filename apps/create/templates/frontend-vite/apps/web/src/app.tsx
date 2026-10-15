@@ -1,4 +1,7 @@
 import { cn } from '@devwebdex/ui'
+//#if web3=evm
+import { WalletLogin } from './components/wallet-login'
+//#endif
 
 export function App() {
   return (
@@ -7,6 +10,9 @@ export function App() {
       <p>
         Projeto gerado pelo <code>@devwebdex/create</code>. Padrões em <code>docs/standards</code>.
       </p>
+      //#if web3=evm
+      <WalletLogin />
+      //#endif
     </main>
   )
 }

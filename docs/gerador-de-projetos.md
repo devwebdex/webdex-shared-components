@@ -49,11 +49,12 @@ Perguntado pela TUI:
 | Filas | nenhuma, BullMQ + Redis 8 (só com backend) |
 | Frontend | nenhum, Next, Vite + React, Inertia + React (só com Adonis) |
 | Web3 | nenhum, EVM com viem (Polygon), com ou sem backend (D15) |
+| Sessão do login | cookie ou token; só com web3 e backend; sugestão: token com Vite, cookie nos outros; com Inertia, só cookie (D15) |
 
 - Adonis não oferece Prisma/Drizzle porque auth, factories e validação do Adonis assumem Lucid.
 - Express permanece porque projetos novos ainda nascem nele. Como o Express não traz convenção de módulos, a WEbdEX define e mantém a própria (`docs/standards/backend-express.md`, na camada `backend-express`).
 - Microserviços ficam fora da v1. Entram depois como comando `webdex add service`.
-- São 216 combinações válidas: as 108 de stack (30 para cada backend Node, ou seja, 5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend; 16 do Adonis, 2 bancos × fila × 4 frontends; e 2 só-frontend, Next e Vite), cada uma com ou sem web3. O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
+- São 318 combinações válidas. Sem web3, as 108 de stack: 30 para cada backend Node (5 pares banco + ORM × com ou sem fila × Next, Vite ou nenhum frontend), 16 do Adonis (2 bancos × fila × 4 frontends) e 2 só-frontend (Next e Vite). Com web3: as 2 só-frontend e as 106 com backend, cada uma com cookie ou token, menos as 4 com Inertia, que só têm cookie (208). O CI cobre 17, escolhidas para que toda camada de template rode ao menos uma vez (D12).
 - A TUI só oferece combinações que existem: opção incompatível com as escolhas anteriores some, e etapa com uma opção só é pulada (ex.: Mongoose depois de MongoDB, filas sem backend).
 
 ### D3. Lint e formatação
@@ -161,6 +162,10 @@ Camadas aplicadas em ordem (`layersFor` em `generate.ts`):
 | `queue-bullmq` | Redis no `docker-compose.yml`, `REDIS_URL`, `pnpm dev:worker` e o padrão `queues-bullmq.md` |
 | `node-bullmq`, `<framework>-bullmq` | Fila de exemplo `mail`, worker separado, Redis no `/health` e teste com Redis real |
 | `frontend-<frontend>` | Next ou Vite (`apps/web`, com tokens, `@devwebdex/ui` e testes) ou Inertia (páginas React dentro do `apps/api` do Adonis) |
+| `web3-evm` | Padrão `web3.md` e subagente `web3` |
+| `web3-evm-core`, `web3-evm-store-<orm>`, `web3-evm-<orm>-<banco>` | Núcleo do login SIWE e do acesso por contrato (comum a Nest, Express e Fastify), armazenamento de nonces e sessões no ORM e migrações por dialeto |
+| `web3-evm-<backend>` | Rotas, transporte da sessão e CSRF no framework (no Adonis, o login inteiro) |
+| `web3-evm-<frontend>` | Carteira (wagmi) e, com backend, o login SIWE na página inicial |
 
 Contrato entre camadas: toda integração framework + ORM expõe um `ping()` do banco (no Nest, `DatabaseHealth`; no Express e no Fastify, `connectDatabase()`), e o módulo `health` depende só dele. No Express e no Fastify, o `health` recebe uma lista de dependências com `ping()` (`checks`), então a fila só acrescenta o Redis à lista. A ordem das camadas importa quando duas escrevem o mesmo arquivo: a última vence. Por isso a fila do Adonis registra o worker como comando do Ace (descoberto sozinho na pasta `commands/`) e não mexe no `adonisrc.ts`, que a camada Inertia substitui. Para adicionar uma stack, crie as camadas dela, marque a opção como `available` no catálogo; um teste exige que toda combinação disponível tenha todas as camadas.
 
@@ -221,6 +226,7 @@ Pedido pelo operador em 2026-10-14.
 - AdonisJS: Japa, o runner nativo (suítes `unit` e `functional`).
 - Next e Vite: vitest com Testing Library e jsdom. Inertia: teste funcional do Japa com o plugin do Inertia (`withInertia()`, `assertInertiaComponent`).
 - Com fila: um teste e2e enfileira um job e espera o worker terminar, contra o Redis do docker compose.
+- Com web3: unitários do login com cliente da rede falso; e2e com o banco real, uma conta local assinando a mensagem SIWE e um cliente da rede que verifica sem RPC. Cobrem login, `me`, logout, nonce reutilizado, domínio e URI errados, corpo inválido, `/access/admin` e, com cookie, `Origin` inválido. Nos frontends, o componente da carteira com o conector `mock` do wagmi e o login com `fetch` simulado.
 - CI do projeto gerado (`.github/workflows/ci.yml`): instala com acesso de leitura ao GitHub Packages, roda `env:setup`, build, tipos, lint e testes; se houver `docker-compose.yml`, sobe o banco, aplica migrações e roda o e2e. Actions fixadas por SHA, como no monorepo.
 - Git: commit inicial depois do `pnpm install` (o lockfile entra), branch `main`, `.env` fora do repositório (há teste para isso).
 
@@ -247,7 +253,10 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 - Acesso: login SIWE com nonce de uso único verificado no servidor, e papéis lidos do contrato no backend. O frontend nunca decide acesso. O nonce sai de `node:crypto`: o `generateSiweNonce` do viem usa `Math.random`, que não é criptograficamente seguro (conferido no viem 2.57.7).
 - Em duas etapas:
   - **E1 (feita)**: eixo `--web3 none|evm` na TUI e no CLI; a camada `web3-evm` traz o padrão `docs/standards/web3.md` e o subagente `web3` (revisão, sem editar código).
-  - **E2 (a fazer)**: configuração do wagmi no frontend (Next e Vite), cliente viem na API, módulo de login SIWE e guarda de acesso por contrato. Depende de decidir a sessão emitida depois do SIWE (cookie de sessão ou token), porque os backends ainda não têm autenticação (A15).
+  - **E2 (feita em 2026-10-15)**: login SIWE e acesso por contrato nos quatro backends e carteira nos três frontends, pelo contrato da seção "Login gerado com o projeto" do `web3.md` (rotas `/auth/nonce`, `/auth/verify`, `/auth/me`, `/auth/logout` e o exemplo `/access/admin`). O operador decidiu que o dev escolhe a sessão na TUI (`--session cookie|token`). As duas são revogáveis: o servidor guarda só o SHA-256 do token. Cookie: `HttpOnly`, `SameSite=Lax` e CSRF por `Origin`. Token: `Authorization: Bearer`, guardado só em memória no frontend.
+  - A `uri` da mensagem SIWE é aceita só com origem igual a `SIWE_ORIGIN`; comparar o começo do texto aceitaria `https://app.com.evil`.
+  - O acesso por papel lê o contrato com `blockTag: 'finalized'` e nega se o RPC falha.
+  - Verificado em 2026-10-15: contra a API rodando, com o cliente real da rede (RPC da Amoy) e uma conta local assinando, o fluxo nonce, verify, `me`, `/access/admin` (403 sem contrato), logout e repetição da assinatura (401) passou no Nest com cookie, no Fastify com token e no Adonis com cookie. No navegador foram conferidos o carregamento, o CORS com credenciais e a recusa de assinatura inválida. Falta conectar uma carteira de verdade no navegador (R8).
 
 ## Em aberto
 
@@ -263,14 +272,18 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
 | A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
-| A15 | Sessão do login SIWE (E2 da D15) | Os backends gerados não têm autenticação. Decidir o que o SIWE emite (cookie de sessão ou token) e se vale para os quatro backends ou começa por um |
 
 ## Riscos conhecidos
 
 - **R1** OpenTUI ainda é jovem; mudanças de API podem afetar a TUI.
-- **R2** São 216 combinações e o CI roda 17. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
+- **R2** São 318 combinações e o CI roda 17. Uma combinação fora da matriz pode quebrar sem ninguém notar, se duas camadas que nunca rodaram juntas escreverem o mesmo arquivo. Mitigação: a matriz cobre cada camada ao menos uma vez e um teste do gerador exige que toda combinação tenha todas as camadas.
 - **R3** A convenção de módulos do Express é responsabilidade da WEbdEX.
 - **R4** Sem assento Dev ou Full em plano pago do Figma, a importação via MCP fica limitada a 20 chamadas por mês, o que inviabiliza gerar componentes a partir do Figma. O README do servidor MCP no GitHub ainda diz 6 por mês; vale a página oficial de limites. Ver [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md).
 - **R5** TypeScript preso em 6.0.x até o typescript-eslint suportar o 7. Se a demora for grande, reavaliar o ESLint mínimo (D3). Candidato observado, não avaliado: o Nest 12 gera projetos com oxlint + `oxlint-tsgolint` (lint com tipos).
 - **R6** O OpenTUI bloqueia o processo num pseudo-terminal sem emulador por trás (ex.: `script` sem terminal real), porque espera respostas às consultas de capacidade do terminal. Em terminal real funciona; CI e automações devem usar `--yes`. Validado num pseudo-terminal que responde às consultas: TUI desenha, gera o projeto pelo teclado e encerra em 0,05 s com SIGTERM (código 130).
 - **R7** O CI roda o gerador e um projeto gerado (Nest + Prisma + Next) em Windows, mas sem docker nem e2e: os runners Windows do GitHub não rodam containers Linux. Banco, migrações, e2e e a TUI em terminal do Windows não são verificados.
+- **R8** Web3:
+  - Nenhuma carteira de navegador (MetaMask, WalletConnect) assinou de verdade: os testes usam conta local e o conector `mock`. Teste com MetaMask na Amoy antes do primeiro projeto em produção.
+  - `GET /auth/nonce` grava uma linha por chamada e não tem limite de taxa: um projeto exposto precisa de rate limit e de limpeza periódica das tabelas `auth_nonces` e `auth_sessions`.
+  - O conector `walletConnect` exige `@walletconnect/ethereum-provider`, que traz uma árvore grande de dependências (com avisos de peer `typescript@^5`). Ele só entra no build com `projectId`.
+  - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`.

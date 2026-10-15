@@ -1,0 +1,10 @@
+# Copie para .env e ajuste. Nunca commite o .env.
+# VITE_* vai para o navegador no build: nada de segredo aqui.
+VITE_CHAIN=polygonAmoy
+# RPC público da Amoy: só para desenvolvimento. Produção: provedor contratado, chave própria do frontend restrita por domínio.
+VITE_RPC_URL=https://rpc-amoy.polygon.technology
+# projectId do Reown (WalletConnect), opcional: vazio desliga o conector. Cadastre a allowlist de origens no painel.
+VITE_WALLETCONNECT_PROJECT_ID=
+//#if backend!=none
+VITE_API_URL=http://localhost:3333
+//#endif

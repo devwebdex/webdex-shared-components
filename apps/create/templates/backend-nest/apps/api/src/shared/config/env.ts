@@ -7,5 +7,8 @@ function required(name: string): string {
 export const env = {
   port: Number(process.env.PORT ?? 3333),
   databaseUrl: required('DATABASE_URL'),
+//#if queue=bullmq
+  redisUrl: required('REDIS_URL'),
+//#endif
   corsOrigins: required('CORS_ORIGINS').split(','),
 }

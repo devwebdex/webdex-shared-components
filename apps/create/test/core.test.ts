@@ -175,9 +175,9 @@ describe('layersFor', () => {
       'web3-evm-next',
     ])
     expect(
-      layersFor(options({ backend: 'adonis', orm: 'lucid', frontend: 'inertia', web3: 'evm' })).slice(
-        -3
-      )
+      layersFor(
+        options({ backend: 'adonis', orm: 'lucid', frontend: 'inertia', web3: 'evm' })
+      ).slice(-3)
     ).toEqual(['web3-evm', 'web3-evm-adonis', 'web3-evm-inertia'])
   })
 

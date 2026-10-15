@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@tanstack/react-query": "5.104.3",
+    "@walletconnect/ethereum-provider": "2.26.0",
+    "viem": "2.57.7",
+    "wagmi": "3.7.7"
+  }
+}

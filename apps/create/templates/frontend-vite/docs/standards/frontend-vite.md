@@ -31,6 +31,26 @@ apps/web/
 ## Acessibilidade
 
 - Elemento semântico, foco visível em todo elemento interativo, `alt` em imagem, `aria-label` em botão só com ícone, `label` associado a todo campo.
+//#if web3=evm
+
+## Carteira (web3)
+
+Regras de carteira e login em [web3.md](web3.md). No `apps/web`:
+
+- `src/lib/web3.ts`: único arquivo que escolhe a rede (`VITE_CHAIN`, `VITE_RPC_URL`) e monta o config do wagmi; `VITE_WALLETCONNECT_PROJECT_ID` vazio desliga o WalletConnect. Variáveis em `apps/web/.env` (modelo em `.env.example`); o Vite as embute no build.
+- `src/components/web3-provider.tsx` (no `main.tsx`): `WagmiProvider` e `QueryClientProvider`. Hook do wagmi só em componente abaixo dele.
+//#if backend!=none
+- `src/components/wallet-login.tsx`: conectar, trocar de rede, entrar (SIWE) e sair. O cliente das rotas `/auth` fica em `src/lib/web3.ts` (`authApi`), com a API em `VITE_API_URL`.
+//#if session=cookie
+- Sessão em cookie `HttpOnly`: toda chamada à API usa `credentials: 'include'`.
+//#else
+- Sessão por token só em memória (variável do módulo), enviado em `Authorization: Bearer`. Nunca em `localStorage` nem cookie legível por JavaScript.
+//#endif
+//#else
+- `src/components/wallet-login.tsx`: conectar, trocar de rede e desconectar.
+//#endif
+- Testes com o conector `mock` do wagmi e `fetch` simulado (`wallet-login.test.tsx`), sem carteira nem rede reais.
+//#endif
 
 ## Antes de entregar
 

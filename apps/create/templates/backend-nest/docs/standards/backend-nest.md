@@ -6,8 +6,8 @@ Complementa [modular-monolith.md](modular-monolith.md) com as convenções do `a
 
 ```
 apps/api/src/
-  main.ts                   # bootstrap: CORS, ValidationPipe global, shutdown hooks
-  app.module.ts             # só importa módulos
+  main.ts                   # bootstrap: CORS e shutdown hooks
+  app.module.ts             # importa os módulos e registra o ValidationPipe global (APP_PIPE)
   modules/<modulo>/
     <modulo>.module.ts
     <modulo>.controller.ts  # HTTP: valida entrada (DTO) e delega
@@ -27,6 +27,6 @@ Arquivos e pastas em kebab-case. Para criar um módulo: `pnpm --filter api exec 
 - Classe injetada no construtor é importada com `import`, **nunca** `import type`: o Nest lê o tipo em tempo de execução (`emitDecoratorMetadata`) e o `import type` apaga a classe, quebrando a injeção. Por isso a regra `useImportType` do Biome fica desligada no `apps/api`.
 - Toda promessa é aguardada ou tratada; o ESLint (`no-floating-promises`) bloqueia o contrário.
 - Controller não tem regra de negócio nem acessa o banco.
-- Entrada de rota sempre por DTO com `class-validator`. O `ValidationPipe` global descarta e rejeita campos não declarados.
+- Entrada de rota sempre por DTO com `class-validator`. O `ValidationPipe` global descarta e rejeita campos não declarados; ele fica no `AppModule` (`APP_PIPE`), não no `main.ts`, para valer também nos testes e2e.
 - Erro esperado vira exceção HTTP do Nest (`NotFoundException`, `ConflictException`...). Erro inesperado sobe e vira 500 sem detalhes.
 - Variável de ambiente nova: adicione em `shared/config/env.ts` (falha na inicialização se ausente) e no `.env.example`.

@@ -70,53 +70,53 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: nest + prisma + postgres + next
-            flags: --backend nest --orm prisma --db postgres --queue none --frontend next
+          - name: nest + prisma + postgres + next + web3 (cookie)
+            flags: --backend nest --orm prisma --db postgres --queue none --frontend next --web3 evm --session cookie
             database: true
           - name: nest + prisma + mysql
-            flags: --backend nest --orm prisma --db mysql --queue none --frontend none
+            flags: --backend nest --orm prisma --db mysql --queue none --frontend none --web3 none
             database: true
-          - name: nest + drizzle + postgres
-            flags: --backend nest --orm drizzle --db postgres --queue none --frontend none
+          - name: nest + drizzle + postgres + web3 (token)
+            flags: --backend nest --orm drizzle --db postgres --queue none --frontend none --web3 evm --session token
             database: true
           - name: nest + drizzle + mysql
-            flags: --backend nest --orm drizzle --db mysql --queue none --frontend none
+            flags: --backend nest --orm drizzle --db mysql --queue none --frontend none --web3 none
             database: true
-          - name: nest + mongoose + mongodb + bullmq
-            flags: --backend nest --orm mongoose --db mongodb --queue bullmq --frontend none
+          - name: nest + mongoose + mongodb + bullmq + web3 (cookie)
+            flags: --backend nest --orm mongoose --db mongodb --queue bullmq --frontend none --web3 evm --session cookie
             database: true
           - name: express + prisma + postgres + bullmq
-            flags: --backend express --orm prisma --db postgres --queue bullmq --frontend none
+            flags: --backend express --orm prisma --db postgres --queue bullmq --frontend none --web3 none
             database: true
-          - name: express + prisma + mysql
-            flags: --backend express --orm prisma --db mysql --queue none --frontend none
+          - name: express + prisma + mysql + web3 (token)
+            flags: --backend express --orm prisma --db mysql --queue none --frontend none --web3 evm --session token
             database: true
           - name: express + drizzle + postgres + next
-            flags: --backend express --orm drizzle --db postgres --queue none --frontend next
+            flags: --backend express --orm drizzle --db postgres --queue none --frontend next --web3 none
             database: true
-          - name: express + drizzle + mysql + vite + web3
-            flags: --backend express --orm drizzle --db mysql --queue none --frontend vite --web3 evm
+          - name: express + drizzle + mysql + vite + web3 (cookie)
+            flags: --backend express --orm drizzle --db mysql --queue none --frontend vite --web3 evm --session cookie
             database: true
           - name: express + mongoose + mongodb
-            flags: --backend express --orm mongoose --db mongodb --queue none --frontend none
+            flags: --backend express --orm mongoose --db mongodb --queue none --frontend none --web3 none
             database: true
-          - name: fastify + prisma + postgres
-            flags: --backend fastify --orm prisma --db postgres --queue none --frontend none
+          - name: fastify + prisma + postgres + web3 (cookie)
+            flags: --backend fastify --orm prisma --db postgres --queue none --frontend none --web3 evm --session cookie
             database: true
-          - name: fastify + drizzle + mysql
-            flags: --backend fastify --orm drizzle --db mysql --queue none --frontend none
+          - name: fastify + drizzle + mysql + vite
+            flags: --backend fastify --orm drizzle --db mysql --queue none --frontend vite --web3 none
             database: true
-          - name: fastify + mongoose + mongodb + bullmq
-            flags: --backend fastify --orm mongoose --db mongodb --queue bullmq --frontend none
+          - name: fastify + mongoose + mongodb + bullmq + next + web3 (token)
+            flags: --backend fastify --orm mongoose --db mongodb --queue bullmq --frontend next --web3 evm --session token
             database: true
-          - name: adonis + postgres + inertia
-            flags: --backend adonis --orm lucid --db postgres --queue none --frontend inertia
+          - name: adonis + postgres + inertia + web3 (cookie)
+            flags: --backend adonis --orm lucid --db postgres --queue none --frontend inertia --web3 evm --session cookie
             database: true
-          - name: adonis + mysql + bullmq
-            flags: --backend adonis --orm lucid --db mysql --queue bullmq --frontend none
+          - name: adonis + mysql + bullmq + web3 (token)
+            flags: --backend adonis --orm lucid --db mysql --queue bullmq --frontend none --web3 evm --session token
             database: true
           - name: só frontend (next)
-            flags: --backend none --frontend next
+            flags: --backend none --frontend next --web3 none
             database: false
           - name: só frontend (vite) + web3
             flags: --backend none --frontend vite --web3 evm
