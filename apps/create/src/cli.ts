@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { basename, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import pkg from '../package.json' with { type: 'json' }
-import { defaults, type ProjectOptions, validate } from './core/catalog.js'
+import { defaults, normalize, type ProjectOptions, validate } from './core/catalog.js'
 import { generate, LockedError } from './core/generate.js'
 import { initGitRepository } from './core/git.js'
 import { lockReason } from './core/lock.js'
@@ -15,10 +15,11 @@ Sem --yes, abre a interface interativa (mouse e teclado).
 Opções:
   --name <nome>            nome do projeto (padrão: nome do diretório)
   --architecture <valor>   modular-monolith
-  --backend <valor>        nest | none
-  --orm <valor>            prisma
-  --db <valor>             postgres
-  --frontend <valor>       next | none
+  --backend <valor>        nest | express | fastify | adonis | none
+  --db <valor>             postgres | mysql | mongodb
+  --orm <valor>            prisma | drizzle (SQL) · mongoose (MongoDB) · lucid (Adonis)
+  --queue <valor>          none | bullmq
+  --frontend <valor>       next | vite | inertia (só Adonis) | none
   --yes                    não interativo: usa os flags e os padrões
   --skip-install           não roda pnpm install
   --skip-git               não inicializa o git nem cria o commit inicial
@@ -33,6 +34,7 @@ const { values, positionals } = parseArgs({
     backend: { type: 'string' },
     orm: { type: 'string' },
     db: { type: 'string' },
+    queue: { type: 'string' },
     frontend: { type: 'string' },
     yes: { type: 'boolean', default: false },
     'skip-install': { type: 'boolean', default: false },
@@ -54,6 +56,7 @@ const flags = Object.fromEntries(
     backend: values.backend,
     orm: values.orm,
     database: values.db,
+    queue: values.queue,
     frontend: values.frontend,
   }).filter(([, value]) => value !== undefined)
 ) as Partial<ProjectOptions>
@@ -64,11 +67,15 @@ if (directory) failIfLocked(resolve(directory))
 let options: ProjectOptions
 if (values.yes) {
   if (!directory) fail('o modo não interativo exige o diretório de destino')
-  options = { ...defaults, name: basename(resolve(directory)), ...flags }
+  options = {
+    ...normalize({ ...defaults, ...flags }),
+    name: basename(resolve(directory)),
+    ...flags,
+  }
 } else {
   if (!process.stdin.isTTY) fail('terminal não interativo: use --yes com os flags desejados')
   const { runTui } = await import('./tui/app.js')
-  const answer = await runTui({ directory, initial: { ...defaults, ...flags } })
+  const answer = await runTui({ directory, initial: normalize({ ...defaults, ...flags }) })
   if (!answer) process.exit(130)
   directory = answer.directory
   options = answer.options

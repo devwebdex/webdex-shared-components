@@ -1,11 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import {
-  appendFileSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'node:fs'
+import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { ProjectOptions } from './catalog.js'
@@ -48,21 +42,25 @@ export function generate({
  * Camadas em ordem de aplicação. Cada uma cuida de uma parte (framework, ORM, driver do banco,
  * integração framework + ORM) e as posteriores acrescentam ou mesclam nos arquivos das anteriores.
  */
-export function layersFor({ backend, orm, database, frontend }: ProjectOptions): string[] {
+export function layersFor({ backend, orm, database, queue, frontend }: ProjectOptions): string[] {
   const layers = ['base']
   if (backend === 'adonis') {
     layers.push('backend-common', `db-${database}`, 'backend-adonis', `backend-adonis-${database}`)
   } else if (backend !== 'none') {
+    // Express e Fastify compartilham estrutura e integrações (connectDatabase); o Nest usa as próprias (DI).
+    const node = backend === 'express' || backend === 'fastify'
     layers.push(
       'backend-common',
       `db-${database}`,
+      ...(node ? ['backend-node-common'] : []),
       `backend-${backend}`,
       `orm-${orm}`,
       `orm-${orm}-${database}`,
-      `${backend}-${orm}`,
+      `${node ? 'node' : backend}-${orm}`,
       `database-url-${database}`
     )
   }
+  if (backend !== 'none' && queue !== 'none') layers.push(`queue-${queue}`, `${backend}-${queue}`)
   if (frontend !== 'none') layers.push(`frontend-${frontend}`)
   return layers
 }

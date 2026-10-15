@@ -11,7 +11,13 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { defaults, type ProjectOptions, validate, validCombinations } from '../src/core/catalog.js'
+import {
+  defaults,
+  normalize,
+  type ProjectOptions,
+  validate,
+  validCombinations,
+} from '../src/core/catalog.js'
 import { generate, LockedError, layersFor, targetName, templatesDir } from '../src/core/generate.js'
 import { initGitRepository } from '../src/core/git.js'
 import { lockReason } from '../src/core/lock.js'
@@ -57,6 +63,28 @@ describe('validate', () => {
 
   test('ignora ORM e banco quando não há backend', () => {
     expect(validate(options({ backend: 'none', database: 'mysql' }))).toEqual([])
+  })
+
+  test('MongoDB só com Mongoose; Adonis sem MongoDB; Inertia só com Adonis', () => {
+    expect(validate(options({ database: 'mongodb', orm: 'prisma' })).join()).toContain(
+      'não é compatível'
+    )
+    expect(validate(options({ database: 'mongodb', orm: 'mongoose' }))).toEqual([])
+    expect(
+      validate(options({ backend: 'adonis', orm: 'lucid', database: 'mongodb' })).join()
+    ).toContain('não é compatível')
+    expect(validate(options({ frontend: 'inertia' })).join()).toContain('não é compatível')
+    expect(validate(options({ backend: 'adonis', orm: 'lucid', frontend: 'inertia' }))).toEqual([])
+  })
+
+  test('normalize ajusta só o que ficou incompatível', () => {
+    expect(normalize({ ...defaults, database: 'mongodb' }).orm).toBe('mongoose')
+    expect(normalize({ ...defaults, backend: 'adonis', database: 'mongodb' })).toMatchObject({
+      database: 'postgres',
+      orm: 'lucid',
+    })
+    expect(normalize({ ...defaults, frontend: 'inertia' }).frontend).toBe('next')
+    expect(normalize(defaults)).toEqual(defaults)
   })
 
   test('rejeita nome inválido', () => {

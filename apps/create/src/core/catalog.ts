@@ -6,19 +6,24 @@ export type Option<T extends string> = {
 }
 
 export type Architecture = 'modular-monolith' | 'microservices'
-export type Backend = 'none' | 'nest' | 'adonis' | 'express'
-export type Orm = 'prisma' | 'drizzle' | 'lucid'
-export type Database = 'postgres' | 'mysql'
-export type Frontend = 'none' | 'next'
+export type Backend = 'none' | 'nest' | 'express' | 'fastify' | 'adonis'
+export type Database = 'postgres' | 'mysql' | 'mongodb'
+export type Orm = 'prisma' | 'drizzle' | 'mongoose' | 'lucid'
+export type Queue = 'none' | 'bullmq'
+export type Frontend = 'none' | 'next' | 'vite' | 'inertia'
 
 export type ProjectOptions = {
   name: string
   architecture: Architecture
   backend: Backend
-  orm: Orm
   database: Database
+  orm: Orm
+  queue: Queue
   frontend: Frontend
 }
+
+export type Choices = Omit<ProjectOptions, 'name'>
+export type ChoiceKey = keyof Choices
 
 export const catalog = {
   architecture: [
@@ -43,19 +48,45 @@ export const catalog = {
       available: true,
     },
     {
-      value: 'adonis',
-      label: 'AdonisJS',
-      description: 'Framework completo, com ORM e autenticação próprios',
-      available: true,
-    },
-    {
       value: 'express',
       label: 'Express',
       description: 'Mínimo e flexível, com a estrutura de módulos da WEbdEX',
       available: true,
     },
+    {
+      value: 'fastify',
+      label: 'Fastify',
+      description: 'Leve e rápido, com a estrutura de módulos da WEbdEX',
+      available: true,
+    },
+    {
+      value: 'adonis',
+      label: 'AdonisJS',
+      description: 'Framework completo, com ORM próprio (Lucid)',
+      available: true,
+    },
     { value: 'none', label: 'Sem backend', description: 'Só o frontend', available: true },
   ] satisfies Option<Backend>[],
+  database: [
+    {
+      value: 'postgres',
+      label: 'PostgreSQL',
+      description: 'Relacional; roda localmente pelo docker compose',
+      available: true,
+    },
+    {
+      value: 'mysql',
+      label: 'MySQL',
+      description: 'Para projetos que já dependem de MySQL',
+      available: true,
+    },
+    {
+      value: 'mongodb',
+      label: 'MongoDB',
+      description: 'Banco de documentos, com Mongoose',
+      available: true,
+    },
+  ] satisfies Option<Database>[],
   orm: [
     {
       value: 'prisma',
@@ -69,46 +100,102 @@ export const catalog = {
       description: 'Consultas próximas do SQL, tipadas em TypeScript',
       available: true,
     },
+    {
+      value: 'mongoose',
+      label: 'Mongoose',
+      description: 'Schemas e models para MongoDB',
+      available: true,
+    },
     { value: 'lucid', label: 'Lucid', description: 'ORM nativo do AdonisJS', available: true },
   ] satisfies Option<Orm>[],
-  database: [
+  queue: [
     {
-      value: 'postgres',
-      label: 'PostgreSQL',
-      description: 'Roda localmente pelo docker compose',
+      value: 'none',
+      label: 'Sem filas',
+      description: 'Tudo roda dentro da requisição',
       available: true,
     },
     {
-      value: 'mysql',
-      label: 'MySQL',
-      description: 'Para projetos que já dependem de MySQL',
+      value: 'bullmq',
+      label: 'BullMQ + Redis',
+      description: 'Jobs em segundo plano num worker separado, com Redis local',
       available: true,
     },
-  ] satisfies Option<Database>[],
+  ] satisfies Option<Queue>[],
   frontend: [
     {
       value: 'next',
       label: 'Next.js',
-      description: 'React com Tailwind, tokens e componentes da WEbdEX',
+      description: 'React com rotas no servidor, Tailwind, tokens e componentes da WEbdEX',
+      available: true,
+    },
+    {
+      value: 'vite',
+      label: 'Vite + React',
+      description: 'SPA React (painéis, áreas logadas) com Tailwind, tokens e componentes',
+      available: true,
+    },
+    {
+      value: 'inertia',
+      label: 'Inertia + React',
+      description: 'Páginas React servidas pelo próprio AdonisJS, numa app só',
       available: true,
     },
     { value: 'none', label: 'Sem frontend', description: 'Só a API', available: true },
   ] satisfies Option<Frontend>[],
 }
 
-export const defaults: Omit<ProjectOptions, 'name'> = {
+export const defaults: Choices = {
   architecture: 'modular-monolith',
   backend: 'nest',
-  orm: 'prisma',
   database: 'postgres',
+  orm: 'prisma',
+  queue: 'none',
   frontend: 'next',
 }
 
-/** ORMs válidos para cada backend: Adonis só funciona com Lucid (auth, factories e validação dependem dele). */
-export function ormsFor(backend: Backend): Orm[] {
-  if (backend === 'adonis') return ['lucid']
-  if (backend === 'none') return []
-  return ['prisma', 'drizzle']
+/**
+ * Valores compatíveis de um eixo com as outras escolhas:
+ * - Adonis só usa Lucid, que é só SQL (sem MongoDB);
+ * - MongoDB só com Mongoose (o Prisma 7 não tem conector MongoDB e o Drizzle é só SQL);
+ * - Inertia só existe com AdonisJS, que serve as páginas;
+ * - banco, ORM e filas só existem quando há backend.
+ */
+export function compatibleValues(key: ChoiceKey, choices: Choices): string[] {
+  const all = (catalog[key] as Option<string>[]).map((o) => o.value)
+  const { backend, database } = choices
+  switch (key) {
+    case 'database':
+      if (backend === 'none') return []
+      return backend === 'adonis' ? ['postgres', 'mysql'] : all
+    case 'orm':
+      if (backend === 'none') return []
+      if (backend === 'adonis') return ['lucid']
+      return database === 'mongodb' ? ['mongoose'] : ['prisma', 'drizzle']
+    case 'queue':
+      return backend === 'none' ? [] : all
+    case 'frontend':
+      return backend === 'adonis' ? all : all.filter((value) => value !== 'inertia')
+    default:
+      return all
+  }
+}
+
+/** Banco, ORM, filas e frontend só são perguntados/validados quando fazem sentido. */
+export function isIrrelevant(options: Choices, key: ChoiceKey): boolean {
+  return compatibleValues(key, options).length === 0
+}
+
+/** Ajusta as escolhas dependentes depois de uma mudança (ex.: MongoDB troca o ORM para Mongoose). */
+export function normalize(choices: Choices): Choices {
+  const next = { ...choices }
+  for (const key of ['database', 'orm', 'queue', 'frontend'] as const) {
+    const values = compatibleValues(key, next).filter((value) => isAvailable(key, value))
+    if (values.length > 0 && !values.includes(next[key])) {
+      next[key] = (values.includes(defaults[key]) ? defaults[key] : values[0]) as never
+    }
+  }
+  return next
 }
 
 export function validate(options: ProjectOptions): string[] {
@@ -119,41 +206,41 @@ export function validate(options: ProjectOptions): string[] {
   if (options.backend === 'none' && options.frontend === 'none') {
     errors.push('escolha ao menos um backend ou um frontend')
   }
-  if (options.backend !== 'none' && !ormsFor(options.backend).includes(options.orm)) {
-    errors.push(`ORM "${options.orm}" não é compatível com o backend "${options.backend}"`)
-  }
-  for (const key of ['architecture', 'backend', 'orm', 'database', 'frontend'] as const) {
+  for (const key of ['architecture', 'backend', 'database', 'orm', 'queue', 'frontend'] as const) {
     if (isIrrelevant(options, key)) continue
     const option = (catalog[key] as Option<string>[]).find((o) => o.value === options[key])
     if (!option) errors.push(`${key}: valor "${options[key]}" desconhecido`)
     else if (!option.available) errors.push(`${key}: "${option.label}" ainda não está disponível`)
+    else if (!compatibleValues(key, options).includes(option.value)) {
+      errors.push(`${key}: "${option.label}" não é compatível com as outras escolhas`)
+    }
   }
   return errors
 }
 
-/** ORM e banco só importam quando existe backend. */
-export function isIrrelevant(options: ProjectOptions, key: keyof ProjectOptions): boolean {
-  return options.backend === 'none' && (key === 'orm' || key === 'database')
-}
-
-/** Todas as combinações que passam na validação (sem repetir ORM e banco quando não há backend). */
-export function validCombinations(): Omit<ProjectOptions, 'name'>[] {
-  const values = <K extends keyof typeof catalog>(key: K) =>
+/** Todas as combinações válidas (eixos irrelevantes fixados no padrão, para não repetir). */
+export function validCombinations(): Choices[] {
+  const values = (key: ChoiceKey) =>
     (catalog[key] as Option<string>[]).filter((o) => o.available).map((o) => o.value)
-  const combinations = new Map<string, Omit<ProjectOptions, 'name'>>()
+  const combinations = new Map<string, Choices>()
   for (const architecture of values('architecture'))
     for (const backend of values('backend'))
-      for (const orm of values('orm'))
-        for (const database of values('database'))
-          for (const frontend of values('frontend')) {
-            const options = { architecture, backend, orm, database, frontend } as Omit<
-              ProjectOptions,
-              'name'
-            >
-            if (validate({ ...options, name: 'x' }).length > 0) continue
-            const key =
-              backend === 'none' ? `${architecture}/none/${frontend}` : JSON.stringify(options)
-            combinations.set(key, options)
-          }
+      for (const database of values('database'))
+        for (const orm of values('orm'))
+          for (const queue of values('queue'))
+            for (const frontend of values('frontend')) {
+              const options = { architecture, backend, database, orm, queue, frontend } as Choices
+              if (validate({ ...options, name: 'x' }).length > 0) continue
+              const key = (
+                ['architecture', 'backend', 'database', 'orm', 'queue', 'frontend'] as const
+              )
+                .map((k) => (isIrrelevant(options, k) ? '-' : options[k]))
+                .join('/')
+              combinations.set(key, options)
+            }
   return [...combinations.values()]
+}
+
+function isAvailable(key: ChoiceKey, value: string) {
+  return (catalog[key] as Option<string>[]).some((o) => o.value === value && o.available)
 }

@@ -1,3 +1,7 @@
+# "services" fica por último: outras camadas do gerador (ex.: filas) acrescentam serviços no fim do arquivo.
+volumes:
+  postgres-data:
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -16,6 +20,3 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
-volumes:
-  postgres-data:

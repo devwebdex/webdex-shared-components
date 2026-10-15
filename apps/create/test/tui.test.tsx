@@ -42,9 +42,12 @@ test('fluxo completo pelo mouse', async () => {
   expect(s.captureCharFrame()).toContain('● Arquitetura')
   await click(s, 'Monólito modular')
   await click(s, 'NestJS')
+  await click(s, 'PostgreSQL')
   expect(s.captureCharFrame()).toMatch(/○ Drizzle/)
   await click(s, 'Prisma')
-  await click(s, 'PostgreSQL')
+  expect(s.captureCharFrame()).toContain('● Filas')
+  await click(s, 'Sem filas')
+  expect(s.captureCharFrame()).not.toContain('Inertia')
   await click(s, 'Next.js')
   expect(s.captureCharFrame()).toContain('● Resumo')
   await click(s, 'Criar projeto')
@@ -61,7 +64,7 @@ test('opção indisponível não avança', async () => {
   expect(s.captureCharFrame()).toContain('● Arquitetura')
 })
 
-test('sem backend pula ORM e banco', async () => {
+test('sem backend pula banco, ORM e filas', async () => {
   let result: TuiResult | null | undefined
   const s = await mount((r) => {
     result = r
@@ -72,6 +75,7 @@ test('sem backend pula ORM e banco', async () => {
   expect(frame).toContain('● Frontend')
   expect(frame).not.toContain('○ ORM')
   expect(frame).not.toContain('○ Banco de dados')
+  expect(frame).not.toContain('○ Filas')
   await click(s, 'Next.js')
   await click(s, 'Criar projeto')
   expect(result?.options.backend).toBe('none')
@@ -87,11 +91,36 @@ test('Adonis pula a etapa de ORM (só Lucid) e mantém o ORM no resumo', async (
   const frame = s.captureCharFrame()
   expect(frame).toContain('● Banco de dados')
   expect(frame).not.toContain('○ ORM')
+  expect(frame).not.toContain('MongoDB')
   await click(s, 'MySQL')
+  await click(s, 'Sem filas')
+  expect(s.captureCharFrame()).toContain('Inertia + React')
   await click(s, 'Sem frontend')
   expect(s.captureCharFrame()).toMatch(/ORM +Lucid/)
   await click(s, 'Criar projeto')
   expect(result?.options).toMatchObject({ backend: 'adonis', orm: 'lucid', database: 'mysql' })
+})
+
+test('MongoDB pula a etapa de ORM e usa Mongoose', async () => {
+  let result: TuiResult | null | undefined
+  const s = await mount((r) => {
+    result = r
+  })
+  await click(s, 'Monólito modular')
+  await click(s, 'Fastify')
+  await click(s, 'MongoDB')
+  expect(s.captureCharFrame()).toContain('● Filas')
+  await click(s, 'BullMQ + Redis')
+  await click(s, 'Vite + React')
+  expect(s.captureCharFrame()).toMatch(/ORM +Mongoose/)
+  await click(s, 'Criar projeto')
+  expect(result?.options).toMatchObject({
+    backend: 'fastify',
+    database: 'mongodb',
+    orm: 'mongoose',
+    queue: 'bullmq',
+    frontend: 'vite',
+  })
 })
 
 test('Enter seleciona a opção destacada e Esc cancela', async () => {
@@ -116,6 +145,6 @@ test('terminal estreito usa o layout compacto', async () => {
   )
   await setup.renderOnce()
   const frame = setup.captureCharFrame()
-  expect(frame).toContain('Arquitetura (1 de 6)')
+  expect(frame).toContain('Arquitetura (1 de 7)')
   expect(frame).not.toContain('Etapas')
 })

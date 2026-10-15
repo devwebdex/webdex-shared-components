@@ -4,17 +4,18 @@ import { createCliRenderer } from '@opentui/core'
 import { createRoot, useKeyboard, useTerminalDimensions } from '@opentui/react'
 import { useState } from 'react'
 import {
+  type ChoiceKey,
+  type Choices,
   catalog,
+  compatibleValues,
   defaults,
   isIrrelevant,
+  normalize,
   type Option,
-  ormsFor,
   type ProjectOptions,
 } from '../core/catalog.js'
 import { lockReason } from '../core/lock.js'
 
-type Choices = Omit<ProjectOptions, 'name'>
-type ChoiceKey = keyof Choices
 type Stage = 'directory' | number | 'summary'
 export type TuiResult = { directory: string; options: ProjectOptions }
 type Props = {
@@ -26,8 +27,9 @@ type Props = {
 const steps: { key: ChoiceKey; title: string }[] = [
   { key: 'architecture', title: 'Arquitetura' },
   { key: 'backend', title: 'Backend' },
-  { key: 'orm', title: 'ORM' },
   { key: 'database', title: 'Banco de dados' },
+  { key: 'orm', title: 'ORM' },
+  { key: 'queue', title: 'Filas' },
   { key: 'frontend', title: 'Frontend' },
 ]
 
@@ -113,11 +115,7 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
 
   function choose(option: Option<string>) {
     if (!step || !option.available) return
-    const next = { ...choices, [step.key]: option.value } as Choices
-    if (step.key === 'backend') {
-      const valid = ormsFor(next.backend)
-      if (valid.length > 0 && !valid.includes(next.orm)) next.orm = valid[0] as Choices['orm']
-    }
+    const next = normalize({ ...choices, [step.key]: option.value } as Choices)
     setChoices(next)
     const remaining = stepsFor(next)
     const index = remaining.findIndex((s) => s.key === step.key)
@@ -275,7 +273,7 @@ export function App({ directory: initialDirectory, initial, onDone }: Props) {
             <Summary
               directory={directory}
               rows={steps
-                .filter((s) => !isIrrelevant({ ...choices, name: '' }, s.key))
+                .filter((s) => !isIrrelevant(choices, s.key))
                 .map((s) => ({
                   title: s.title,
                   value: labelOf(s.key, choices[s.key]),
@@ -461,16 +459,13 @@ function Footer({ stage }: { stage: Stage }) {
 /** Etapas a perguntar: sem as irrelevantes (ORM e banco sem backend) e sem as de opção única (ORM do Adonis). */
 function stepsFor(choices: Choices) {
   return steps.filter(
-    (step) =>
-      !isIrrelevant({ ...choices, name: '' }, step.key) && optionsFor(step.key, choices).length > 1
+    (step) => !isIrrelevant(choices, step.key) && optionsFor(step.key, choices).length > 1
   )
 }
 
 function optionsFor(key: ChoiceKey, choices: Choices): Option<string>[] {
-  const list = catalog[key] as Option<string>[]
-  if (key !== 'orm') return list
-  const valid: string[] = ormsFor(choices.backend)
-  return list.filter((option) => valid.includes(option.value))
+  const compatible = compatibleValues(key, choices)
+  return (catalog[key] as Option<string>[]).filter((option) => compatible.includes(option.value))
 }
 
 function labelOf(key: ChoiceKey, value: string) {
