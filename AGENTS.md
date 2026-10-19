@@ -31,6 +31,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 
 - TypeScript fixado em 6.0.x: o typescript-eslint ainda não suporta o 7.
 - Pacotes ESM com `module: NodeNext`: imports relativos com extensão `.js`.
+- Componente novo no `@devwebdex/ui`: siga [docs/ui/criar-componente.md](docs/ui/criar-componente.md) e acrescente-o ao teste de CSS do Storybook.
 - Não edite `.claude/agents`, `.opencode/agents` nem `.codex/agents` à mão: edite `ai/agents/` e rode `pnpm agents:sync`.
 - Decisão nova ou mudança relevante: atualize `docs/gerador-de-projetos.md`.
 - Mudou um template? Gere um projeto com `--yes --link-packages .` e rode `pnpm build`, `pnpm check-types` e `pnpm lint` nele: os templates não passam pelo Biome deste repositório.
