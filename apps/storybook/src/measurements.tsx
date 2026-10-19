@@ -45,7 +45,12 @@ const ROWS: Row[] = [
       return svg ? `${Math.round(svg.getBoundingClientRect().width)}px` : '—'
     },
   },
-  { property: 'espessura da borda', namespace: null, read: (s) => s.borderTopWidth },
+  {
+    // A borda é inset-ring (box-shadow), não `border`: ler borderTopWidth daria 0.
+    property: 'borda (inset ring)',
+    namespace: null,
+    read: (s) => s.getPropertyValue('--tw-inset-ring-shadow').match(/(\d+px)\s*\S*$/)?.[1] ?? '—',
+  },
   { property: 'altura total', namespace: null, read: (_s, b) => `${Math.round(b.offsetHeight)}px` },
 ]
 

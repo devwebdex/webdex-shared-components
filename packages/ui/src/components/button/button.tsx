@@ -28,16 +28,18 @@ import { cn } from '../../lib/cn.js'
  * - `focus-visible` usa um anel provisório. No Figma, Focused é pixel a pixel
  *   idêntico a Enabled nas 18 combinações, o que deixaria a navegação por teclado
  *   sem indicação. O anel definitivo é o SCRUM-141.
- * - Variantes sem borda visível levam `border-transparent` para que a borda de 1px
- *   do Outlined não as deixe 2px maiores.
+ * - A borda do Outlined é `inset-ring`, não `border`. No Figma, Contained e Outlined
+ *   têm a mesma altura (82x42 no Large): o stroke não entra na caixa. `border` somaria
+ *   1px em cima e 1px embaixo e deixaria o componente 2px mais alto que o desenho.
+ *   `inset-ring` é box-shadow, então não afeta o layout.
  * - O wrapper vertical do auto-layout do Figma foi omitido: ele envolve uma única
  *   linha e não muda o resultado.
  */
 const buttonVariants = cva(
   [
-    'inline-flex items-center justify-center gap-2 border',
+    'inline-flex items-center justify-center gap-2',
     'font-sans font-medium whitespace-nowrap select-none',
-    'cursor-pointer transition-[background-color,background-image,border-color,box-shadow,color]',
+    'cursor-pointer transition-[background-color,background-image,box-shadow,color]',
     'disabled:cursor-not-allowed',
     'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
     '[&_svg]:shrink-0',
@@ -73,7 +75,7 @@ const buttonVariants = cva(
         color: 'brand',
         variant: 'contained',
         class: [
-          'border-transparent bg-linear-to-br from-coral-50 to-brand text-text-primary shadow-1',
+          'bg-linear-to-br from-coral-50 to-brand text-text-primary shadow-1',
           'hover:to-magenta-80 hover:shadow-4 active:shadow-6',
           'disabled:bg-none disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
         ],
@@ -82,15 +84,15 @@ const buttonVariants = cva(
         color: 'brand',
         variant: 'outlined',
         class: [
-          'border-brand text-brand hover:bg-brand-soft/15',
-          'disabled:border-white/15 disabled:bg-transparent disabled:text-white/15',
+          'inset-ring-1 inset-ring-brand text-brand hover:bg-brand-soft/15',
+          'disabled:inset-ring-white/15 disabled:bg-transparent disabled:text-white/15',
         ],
       },
       {
         color: 'brand',
         variant: 'text',
         class: [
-          'border-transparent text-brand hover:bg-brand-soft/10',
+          'text-brand hover:bg-brand-soft/10',
           'disabled:bg-transparent disabled:text-white/15',
         ],
       },
@@ -100,24 +102,24 @@ const buttonVariants = cva(
         color: 'code',
         variant: 'contained',
         class: [
-          'border-line-default bg-surface-code text-text-primary shadow-1',
-          'hover:border-white/50 hover:shadow-4 active:shadow-6',
-          'disabled:border-transparent disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
+          'inset-ring-1 inset-ring-line-default bg-surface-code text-text-primary shadow-1',
+          'hover:inset-ring-white/50 hover:shadow-4 active:shadow-6',
+          'disabled:inset-ring-0 disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
         ],
       },
       {
         color: 'code',
         variant: 'outlined',
         class: [
-          'border-text-primary/27 text-text-primary hover:bg-surface-code',
-          'disabled:border-white/15 disabled:bg-transparent disabled:text-white/15',
+          'inset-ring-1 inset-ring-text-primary/27 text-text-primary hover:bg-surface-code',
+          'disabled:inset-ring-white/15 disabled:bg-transparent disabled:text-white/15',
         ],
       },
       {
         color: 'code',
         variant: 'text',
         class: [
-          'border-transparent text-text-primary hover:bg-surface-code',
+          'text-text-primary hover:bg-surface-code',
           'disabled:bg-transparent disabled:text-white/15',
         ],
       },
