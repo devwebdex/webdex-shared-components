@@ -80,9 +80,11 @@ O mínimo: um `Playground` com controles e uma story por eixo de variante. Decla
 Durante o trabalho:
 
 ```bash
-pnpm build                          # uma vez, para o Storybook ler dist atualizado
-pnpm --filter ui-storybook dev      # deixa rodando: hot reload do componente
+pnpm turbo run build --filter=@devwebdex/ui   # tokens + ui, nada além
+pnpm --filter ui-storybook dev                # deixa rodando: hot reload do componente
 ```
+
+O `pnpm build` da raiz também serve, mas faz mais do que o necessário aqui: ele roda o `storybook build` junto e gera o `storybook-static/`, que o servidor de desenvolvimento nem usa — o `dev` compila na hora. O site estático só importa para publicar e para o teste do passo 6.
 
 O `dev` recarrega mudança no componente, **mas não em token**: o CSS importa o `theme.css` do `dist`. Mexeu em `packages/tokens/src/`? Rode `pnpm --filter @devwebdex/tokens build` e o Vite recarrega.
 
