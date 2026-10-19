@@ -70,13 +70,13 @@ const buttonVariants = cva(
       { variant: 'text', size: 'small', class: 'px-[5px]' },
 
       // Brand: o Contained é gradiente diagonal (Coral -> Brand), e o hover troca
-      // o fim para Magenta 80. As três elevações vêm de shadow.json.
+      // o fim para Magenta 80. As elevações são os Effect Styles paper/elevation-N do Figma.
       {
         color: 'brand',
         variant: 'contained',
         class: [
-          'bg-linear-to-br from-coral-50 to-brand text-text-primary shadow-1',
-          'hover:to-magenta-80 hover:shadow-4 active:shadow-6',
+          'bg-linear-to-br from-coral-50 to-brand text-text-primary shadow-elevation-2',
+          'hover:to-magenta-80 hover:shadow-elevation-4 active:shadow-elevation-6',
           'disabled:bg-none disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
         ],
       },
@@ -102,8 +102,8 @@ const buttonVariants = cva(
         color: 'code',
         variant: 'contained',
         class: [
-          'inset-ring-1 inset-ring-line-default bg-surface-code text-text-primary shadow-1',
-          'hover:inset-ring-white/50 hover:shadow-4 active:shadow-6',
+          'inset-ring-1 inset-ring-line-default bg-surface-code text-text-primary shadow-elevation-2',
+          'hover:inset-ring-white/50 hover:shadow-elevation-4 active:shadow-elevation-6',
           'disabled:inset-ring-0 disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
         ],
       },

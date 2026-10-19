@@ -1,15 +1,15 @@
 {
   "shadow": {
-    "$description": "PROVISÓRIO: elevações lidas do Button no Figma. Sombra não existe como Variable na Figma — o equivalente é Effect Style, que o time de design ainda não criou. Os três níveis diferenciam Enabled, Hovered e Pressed.",
-    "1": {
+    "$description": "Elevações do Button. Na Figma não existe Variable de sombra: estes são os Effect Styles paper/elevation-2, -4 e -6, transcritos. Enabled e Focused usam a 2, Hovered a 4 e Pressed a 6; Disabled não tem sombra.",
+    "elevation-2": {
       "$type": "shadow",
       "$value": "0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14), 0 1px 5px 0 rgb(0 0 0 / 0.12)"
     },
-    "4": {
+    "elevation-4": {
       "$type": "shadow",
       "$value": "0 2px 4px -1px rgb(0 0 0 / 0.2), 0 4px 5px 0 rgb(0 0 0 / 0.14), 0 1px 10px 0 rgb(0 0 0 / 0.12)"
     },
-    "6": {
+    "elevation-6": {
       "$type": "shadow",
       "$value": "0 3px 5px -1px rgb(0 0 0 / 0.2), 0 6px 10px 0 rgb(0 0 0 / 0.14), 0 1px 18px 0 rgb(0 0 0 / 0.12)"
     }
