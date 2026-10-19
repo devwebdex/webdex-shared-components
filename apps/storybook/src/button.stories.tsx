@@ -1,5 +1,6 @@
 import { Button, type ButtonProps, buttonVariants } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { Measurements } from './measurements.js'
 
 const Wallet = () => (
   <svg
@@ -39,13 +40,56 @@ const meta = {
     iconLeft: <Wallet />,
     iconRight: <Check />,
   },
+  // O docgen não extrai tipo de VariantProps, que é um mapped type: sem declarar
+  // `table.type` à mão, a coluna de tipo do painel de controles fica vazia.
   argTypes: {
-    size: { control: 'inline-radio', options: ['large', 'medium', 'small'] },
-    color: { control: 'inline-radio', options: ['brand', 'code'] },
-    variant: { control: 'inline-radio', options: ['contained', 'outlined', 'text'] },
-    disabled: { control: 'boolean' },
-    iconLeft: { control: false },
-    iconRight: { control: false },
+    size: {
+      control: { type: 'inline-radio' },
+      options: ['large', 'medium', 'small'],
+      description: 'Muda padding, raio, fonte, altura de linha e tamanho do ícone.',
+      table: {
+        type: { summary: "'large' | 'medium' | 'small'" },
+        defaultValue: { summary: 'medium' },
+      },
+    },
+    color: {
+      control: { type: 'inline-radio' },
+      options: ['brand', 'code'],
+      description: 'brand é o gradiente da marca; code é a superfície translúcida.',
+      table: {
+        type: { summary: "'brand' | 'code'" },
+        defaultValue: { summary: 'brand' },
+      },
+    },
+    variant: {
+      control: { type: 'inline-radio' },
+      options: ['contained', 'outlined', 'text'],
+      description: 'Preenchimento. A variante text usa metade do padding horizontal.',
+      table: {
+        type: { summary: "'contained' | 'outlined' | 'text'" },
+        defaultValue: { summary: 'contained' },
+      },
+    },
+    disabled: {
+      control: { type: 'boolean' },
+      description: 'Atributo nativo do botão. Remove o gradiente e a sombra.',
+      table: { type: { summary: 'boolean' } },
+    },
+    children: {
+      control: { type: 'text' },
+      description: 'Rótulo do botão.',
+      table: { type: { summary: 'ReactNode' } },
+    },
+    iconLeft: {
+      control: false,
+      description: 'Ícone antes do rótulo.',
+      table: { type: { summary: 'ReactNode' } },
+    },
+    iconRight: {
+      control: false,
+      description: 'Ícone depois do rótulo.',
+      table: { type: { summary: 'ReactNode' } },
+    },
   },
   parameters: {
     docs: {
@@ -259,3 +303,12 @@ export const Matriz: Story = {
   render: (args) => <Matrix {...args} />,
   parameters: { layout: 'fullscreen' },
 }
+
+/**
+ * Mede o componente já renderizado e diz de qual token veio cada valor.
+ *
+ * Os números saem de getComputedStyle no botão real, não da leitura das classes:
+ * é o que o navegador aplicou. O que aparece como "sem token" existe no componente
+ * mas não corresponde a Variable nenhuma, e é a lista do que falta criar no Figma.
+ */
+export const Medidas: Story = { render: (args) => <Measurements {...args} /> }
