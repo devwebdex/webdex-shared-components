@@ -153,3 +153,6 @@ vite.config.ts.timestamp-*
 
 # Cache de respostas da REST API do Figma (scripts/figma-nodes.mjs)
 .figma-cache/
+
+# Saída do build do Storybook (apps/storybook)
+storybook-static/
