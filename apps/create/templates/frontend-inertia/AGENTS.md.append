@@ -1,0 +1,6 @@
+
+## Frontend: Inertia + React no `apps/api`
+
+- O AdonisJS serve as páginas React pelo Inertia; não há `apps/web`. Padrão: [docs/standards/frontend-inertia.md](docs/standards/frontend-inertia.md).
+- Componentes visuais vêm de `@devwebdex/ui`; cores, espaçamentos e fontes vêm de `@devwebdex/tokens`.
+- Subagente `frontend`: implementa as páginas em `apps/api/inertia` seguindo o padrão.

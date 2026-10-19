@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "check-types": {
+      "dependsOn": ["^build", "build"]
+    },
+    "build": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    }
+  }
+}

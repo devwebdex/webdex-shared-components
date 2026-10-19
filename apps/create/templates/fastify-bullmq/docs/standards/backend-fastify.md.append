@@ -1,0 +1,6 @@
+
+## Filas
+
+- `src/worker.ts` é a entrada do worker (processo separado); `shared/queue/redis.ts` abre a conexão da API com o Redis.
+- O `createApp` recebe a conexão do Redis como recebe a do banco, e o `/health` confere as duas.
+- Regras das filas: [queues-bullmq.md](queues-bullmq.md).

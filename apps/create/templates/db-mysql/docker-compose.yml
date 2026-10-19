@@ -1,0 +1,22 @@
+# "services" fica por último: outras camadas do gerador (ex.: filas) acrescentam serviços no fim do arquivo.
+volumes:
+  mysql-data:
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-mysql}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-{{name}}}
+    # Só localhost: a senha é de desenvolvimento e o Docker publica portas ignorando o firewall do host.
+    ports:
+      - '127.0.0.1:${MYSQL_PORT:-3306}:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # Pela rede (127.0.0.1): durante a inicialização o MySQL roda sem rede, então só fica saudável quando está pronto.
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD:-mysql}']
+      interval: 5s
+      timeout: 5s
+      retries: 20

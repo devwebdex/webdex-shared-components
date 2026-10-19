@@ -1,0 +1,1 @@
+- Framework: Express 5. Padrão: [docs/standards/backend-express.md](docs/standards/backend-express.md). Código ESM: imports relativos com extensão `.js`.

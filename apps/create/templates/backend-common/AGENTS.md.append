@@ -1,0 +1,7 @@
+
+## Backend: `apps/api`
+
+- Arquitetura: monólito modular. Padrão: [docs/standards/modular-monolith.md](docs/standards/modular-monolith.md).
+- Banco local: `docker compose up -d`. Migração: `pnpm db:migrate`.
+- Subagente `backend`: implementa no `apps/api` seguindo os padrões.
+- Subagente `architecture-reviewer`: confere fronteiras entre módulos, sem editar código.

@@ -1,0 +1,6 @@
+
+## Frontend (`apps/web`)
+
+```bash
+pnpm dev   # http://localhost:3000
+```

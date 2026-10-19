@@ -1,0 +1,5 @@
+
+# MongoDB local (docker compose)
+MONGO_USER=mongo
+MONGO_PASSWORD=mongo
+MONGO_PORT=27017

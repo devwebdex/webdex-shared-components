@@ -1,0 +1,1 @@
+- Banco: MySQL 8.4 (docker compose, porta só em `127.0.0.1`).

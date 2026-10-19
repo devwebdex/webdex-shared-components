@@ -1,0 +1,14 @@
+
+## Login com carteira (web3)
+
+O contrato das rotas está em [web3.md](web3.md), seção "Login gerado com o projeto". No código:
+
+- `shared/chain/`: `loadChainConfig()` lê `CHAIN`, `RPC_URL`, `SIWE_ORIGIN` e `ACCESS_CONTROL_ADDRESS` (configuração da rede, fora do `env.ts`); o `ChainModule` expõe a configuração e o cliente viem nos tokens `CHAIN_CONFIG` e `CHAIN_CLIENT`, um por processo.
+- `modules/auth/`: `auth.service.ts` (nonce, verificação SIWE, sessão) e `auth.repository.ts` (nonces e sessões no banco) são funções sem Nest; `auth.providers.ts` os monta com o serviço do ORM no token `AUTH_SERVICE`. `session.transport.ts` lê e entrega a sessão (cookie ou Bearer). `session.guard.ts` tem o `SessionGuard` e os decorators `@Public()` e `@SessionAddress()`; no modo cookie, também o `SameOriginGuard`, que exige `Origin` igual a `SIWE_ORIGIN` em `POST`, `PUT`, `PATCH` e `DELETE`. Os dois guards são globais (`APP_GUARD` no `AuthModule`).
+//#if session=jwt
+- JWT: `auth.service.ts` emite e confere o JWT com `jose` (HS256; `loadJwtConfig()` lê `JWT_SECRET` ao criar o serviço). A sessão não passa pelo banco e o logout não revoga o JWT, que vale até expirar (1 hora).
+//#endif
+- Toda rota exige sessão, em qualquer módulo, sem `@UseGuards`. Rota pública leva `@Public()` no método (ou no controller), como `GET /health`, `GET /auth/nonce` e `POST /auth/verify`; rota inexistente continua 404.
+- Nas rotas com sessão, leia o endereço com `@SessionAddress()`, nunca do corpo da requisição.
+- `modules/access/`: acesso por papel no contrato (`hasRole`), com falha fechada. Copie a rota `/access/admin` para os papéis do projeto.
+- Testes e2e: `overrideProvider(CHAIN_CLIENT)` com o cliente falso de `test/support/siwe.ts`, sem RPC.

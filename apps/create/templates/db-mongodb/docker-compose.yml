@@ -1,0 +1,21 @@
+# "services" fica por último: outras camadas do gerador (ex.: filas) acrescentam serviços no fim do arquivo.
+volumes:
+  mongodb-data:
+
+services:
+  mongodb:
+    image: mongo:8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mongo}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongo}
+    # Só localhost: a senha é de desenvolvimento e o Docker publica portas ignorando o firewall do host.
+    ports:
+      - '127.0.0.1:${MONGO_PORT:-27017}:27017'
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

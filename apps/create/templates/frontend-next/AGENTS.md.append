@@ -1,0 +1,7 @@
+
+## Frontend: `apps/web` (Next.js 16 + Tailwind 4)
+
+- Padrão: [docs/standards/frontend-next.md](docs/standards/frontend-next.md).
+- Componentes visuais vêm de `@devwebdex/ui`; cores, espaçamentos e fontes vêm de `@devwebdex/tokens`.
+- O Next escreve neste arquivo um bloco próprio de orientação para agentes; mantenha-o commitado.
+- Subagente `frontend`: implementa no `apps/web` seguindo o padrão.

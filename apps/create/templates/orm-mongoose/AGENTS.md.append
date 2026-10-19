@@ -1,0 +1,1 @@
+- ODM: Mongoose 9. Padrão: [docs/standards/orm-mongoose.md](docs/standards/orm-mongoose.md). MongoDB não usa migrações: `pnpm db:migrate` e `pnpm db:deploy` não fazem nada.

@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "db:migrate": "pnpm --filter api run --if-present db:migrate",
+    "db:deploy": "pnpm --filter api run --if-present db:deploy"
+  }
+}

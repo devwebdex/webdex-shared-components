@@ -1,0 +1,43 @@
+{
+  "name": "@devwebdex/ui",
+  "version": "0.1.0",
+  "description": "Componentes React WEbdEX, criados a partir do Figma",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devwebdex/webdex-shared-components",
+    "directory": "packages/ui"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.7.0"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
+  },
+  "devDependencies": {
+    "@devwebdex/tsconfig": "workspace:*",
+    "@types/react": "19.3.0",
+    "react": "19.3.0",
+    "typescript": "6.0.3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

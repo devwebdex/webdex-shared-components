@@ -1,0 +1,10 @@
+{
+  "extends": "@devwebdex/tsconfig/node.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false,
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src", "test"]
+}
