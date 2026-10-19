@@ -156,3 +156,6 @@ vite.config.ts.timestamp-*
 
 # Saída do build do Storybook (apps/storybook)
 storybook-static/
+
+# Safelist de estados forçados, gerada por apps/storybook/.storybook/main.ts
+apps/storybook/src/forced-states.generated.css

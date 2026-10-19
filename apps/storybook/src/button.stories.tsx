@@ -1,4 +1,4 @@
-import { Button, type ButtonProps } from '@devwebdex/ui'
+import { Button, type ButtonProps, buttonVariants } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 const Wallet = () => (
@@ -68,12 +68,12 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** Use os controles ao lado para trocar tamanho, cor e variante. */
-export const Playground: Story = {}
-
 const SIZES = ['large', 'medium', 'small'] as const
 const COLORS = ['brand', 'code'] as const
 const VARIANTS = ['contained', 'outlined', 'text'] as const
+
+/** Use os controles ao lado para trocar tamanho, cor e variante. */
+export const Playground: Story = {}
 
 function Grade({ children, ...props }: ButtonProps) {
   return (
@@ -95,9 +95,7 @@ function Grade({ children, ...props }: ButtonProps) {
 }
 
 /** As seis combinações de cor e variante, no tamanho médio. */
-export const Variantes: Story = {
-  render: (args) => <Grade {...args} />,
-}
+export const Variantes: Story = { render: (args) => <Grade {...args} /> }
 
 /** Os três tamanhos, lado a lado. */
 export const Tamanhos: Story = {
@@ -110,21 +108,154 @@ export const Tamanhos: Story = {
   ),
 }
 
-/** Desabilitado perde o gradiente e a sombra, e o texto cai para branco a 15%. */
-export const Desabilitado: Story = {
-  render: (args) => <Grade {...args} disabled />,
+// --------------------------------------------------------------------------
+// Matriz no formato do Figma
+
+type Axes = {
+  size: (typeof SIZES)[number]
+  color: (typeof COLORS)[number]
+  variant: (typeof VARIANTS)[number]
 }
 
-/** A matriz inteira: 3 tamanhos x 2 cores x 3 variantes. */
-export const Matriz: Story = {
-  render: (args) => (
-    <div className="flex flex-col gap-10">
-      {SIZES.map((size) => (
-        <section key={size} className="flex flex-col gap-4">
-          <h3 className="font-mono text-sm text-brand">size = {size}</h3>
-          <Grade {...args} size={size} />
-        </section>
-      ))}
+/**
+ * Hovered, Pressed e Focused são pseudo-classes: o navegador só as aplica na
+ * interação, então não há como mostrar os quatro estados lado a lado de verdade.
+ *
+ * Esta função tira o prefixo das classes que o próprio cva gera (`hover:shadow-4`
+ * vira `shadow-4`) e devolve só elas. O Button passa o className depois do
+ * buttonVariants no cn, e o tailwind-merge resolve o conflito mantendo a última --
+ * então `to-brand` cede lugar a `to-magenta-80`.
+ *
+ * Os valores continuam saindo do componente real: nada aqui é redigitado.
+ */
+function forcedState(axes: Axes, state: 'hover' | 'active' | 'focus-visible') {
+  const prefix = `${state}:`
+  return buttonVariants(axes)
+    .split(/\s+/)
+    .filter((utility) => utility.startsWith(prefix))
+    .map((utility) => utility.slice(prefix.length))
+    .join(' ')
+}
+
+const STATE_COLUMNS = [
+  { key: 'enabled', label: 'Enabled' },
+  { key: 'hovered', label: 'Hovered' },
+  { key: 'pressed', label: 'Pressed' },
+  { key: 'disabled', label: 'Disabled' },
+] as const
+
+function Cell({
+  axes,
+  state,
+  edge,
+  ...props
+}: ButtonProps & { axes: Axes; state: string; edge?: boolean }) {
+  const forced =
+    state === 'hovered'
+      ? forcedState(axes, 'hover')
+      : state === 'pressed'
+        ? forcedState(axes, 'active')
+        : state === 'focus'
+          ? forcedState(axes, 'focus-visible')
+          : undefined
+
+  return (
+    <td className={`px-3 py-3 text-center ${edge ? 'border-l border-line-default' : ''}`}>
+      <Button {...props} {...axes} disabled={state === 'disabled'} className={forced} />
+    </td>
+  )
+}
+
+const th = 'px-3 py-2 font-mono text-[11px] font-medium tracking-wide text-text-secondary'
+
+function Matrix(props: ButtonProps) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="border-separate border-spacing-0 text-text-primary">
+        <thead>
+          <tr>
+            <th className={th} colSpan={2} />
+            {SIZES.map((size) => (
+              <th key={size} className={`${th} border-b border-line-default`} colSpan={4}>
+                {size}
+              </th>
+            ))}
+            <th className={`${th} border-b border-l border-line-default`} colSpan={3}>
+              focus
+            </th>
+          </tr>
+          <tr>
+            <th className={th} colSpan={2} />
+            {SIZES.flatMap((size) =>
+              STATE_COLUMNS.map((state) => (
+                <th key={`${size}-${state.key}`} className={th}>
+                  {state.label}
+                </th>
+              ))
+            )}
+            {SIZES.map((size, index) => (
+              <th
+                key={size}
+                className={`${th} ${index === 0 ? 'border-l border-line-default' : ''}`}
+              >
+                {size}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {COLORS.flatMap((color) =>
+            VARIANTS.map((variant, variantIndex) => (
+              <tr key={`${color}-${variant}`}>
+                {variantIndex === 0 && (
+                  <th
+                    className={`${th} border-t border-line-default align-middle text-brand`}
+                    rowSpan={VARIANTS.length}
+                  >
+                    {color}
+                  </th>
+                )}
+                <th
+                  className={`${th} text-left ${variantIndex === 0 ? 'border-t border-line-default' : ''}`}
+                >
+                  {variant}
+                </th>
+                {SIZES.flatMap((size) =>
+                  STATE_COLUMNS.map((state) => (
+                    <Cell
+                      key={`${size}-${state.key}`}
+                      {...props}
+                      axes={{ size, color, variant }}
+                      state={state.key}
+                    />
+                  ))
+                )}
+                {SIZES.map((size, index) => (
+                  <Cell
+                    key={`focus-${size}`}
+                    {...props}
+                    axes={{ size, color, variant }}
+                    state="focus"
+                    edge={index === 0}
+                  />
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
-  ),
+  )
+}
+
+/**
+ * As 90 variantes no mesmo formato do arquivo do Figma: Brand e Code nas linhas,
+ * cada tamanho com seus quatro estados nas colunas, e o bloco de foco à direita.
+ *
+ * Hovered, Pressed e Focused aqui são forçados por classe, porque são pseudo-classes.
+ * Para ver o comportamento real, use o Playground e interaja com o botão.
+ */
+export const Matriz: Story = {
+  render: (args) => <Matrix {...args} />,
+  parameters: { layout: 'fullscreen' },
 }
