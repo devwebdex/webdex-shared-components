@@ -59,12 +59,12 @@ Hoje o mesmo token tem três nomes:
 
 No fluxo novo, quem manda é a coluna do meio, porque é dela que sai o `theme.css`. Convergir os outros dois está em aberto.
 
-## O que ficou desatualizado
+## O que mudou junto
 
-- [`figma-para-componentes.md`](figma-para-componentes.md) descreve o fluxo antigo inteiro, do Figma para o código.
-- O subagente `design-to-code` (`ai/agents/design-to-code.md`) idem, e manda ler aquele documento antes de qualquer ação.
+O guia e o subagente descreviam o fluxo antigo inteiro, do Figma para o componente. Os dois foram reduzidos a tokens, que é a parte que continua valendo:
 
-Nenhum dos dois foi revisado ainda. Até lá, valem como registro do fluxo anterior, não como instrução.
+- `figma-para-componentes.md` virou [`figma-para-tokens.md`](figma-para-tokens.md): como nomear Variables e escrever DTCG. A conversão de componente saiu.
+- O subagente `design-to-code` virou `figma-tokens`, com escopo só de tokens. Se pedirem um componente, ele aponta [criar-componente.md](criar-componente.md) e para.
 
 ## Arquivos em `docs/ui/`
 
@@ -78,7 +78,6 @@ Os dois últimos são produtos, não material de design system, e somam 960 KB d
 
 ## Em aberto
 
-- Revisar `figma-para-componentes.md` e o subagente `design-to-code` para o fluxo novo.
 - Convergir os três vocabulários de token para os namespaces do Tailwind 4.
 - Variante `Pixel` do Button: o design quer botões pixelados, de estética de jogo dos anos 90. Já existe a Variable `Font Pixel` (Pixelify Sans) e o `--pixel` no HTML, e o eixo `variant` do Button vai precisar de um quarto valor.
 - Quem mantém o `webdex-design-system.html` quando a linguagem mudar.
