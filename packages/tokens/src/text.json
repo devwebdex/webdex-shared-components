@@ -1,0 +1,9 @@
+{
+  "text": {
+    "$type": "dimension",
+    "$description": "PROVISÓRIO: tamanhos lidos do componente Button no Figma (13/14/15px), não de Variables — a coleção Tipografia só define família e peso. Substituir quando o designer criar as Variables de tamanho.",
+    "sm": { "$value": "0.8125rem" },
+    "base": { "$value": "0.875rem" },
+    "lg": { "$value": "0.9375rem" }
+  }
+}

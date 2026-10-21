@@ -1,0 +1,6 @@
+
+## Frontend: `apps/web` (Vite 8 + React 19 + Tailwind 4)
+
+- Padrão: [docs/standards/frontend-vite.md](docs/standards/frontend-vite.md).
+- Componentes visuais vêm de `@devwebdex/ui`; cores, espaçamentos e fontes vêm de `@devwebdex/tokens`.
+- Subagente `frontend`: implementa no `apps/web` seguindo o padrão.

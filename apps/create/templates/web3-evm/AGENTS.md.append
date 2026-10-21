@@ -1,0 +1,5 @@
+
+## Web3
+
+- EVM com viem (no frontend, via wagmi): Polygon (137) em produção, Polygon Amoy (80002) em desenvolvimento e testes. Padrão: [docs/standards/web3.md](docs/standards/web3.md).
+- Subagente `web3`: revisa código de carteira, SIWE, contratos e valores on-chain; não edita código.

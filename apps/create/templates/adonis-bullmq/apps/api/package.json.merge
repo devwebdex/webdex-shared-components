@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev:worker": "node ace queue:work",
+    "worker": "node --env-file-if-exists=.env build/ace.js queue:work"
+  },
+  "dependencies": {
+    "bullmq": "6.3.15",
+    "ioredis": "6.0.0"
+  }
+}

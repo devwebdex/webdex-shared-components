@@ -1,0 +1,1 @@
+- ORM: Drizzle. Padrão: [docs/standards/orm-drizzle.md](docs/standards/orm-drizzle.md). Tabelas em `src/modules/<modulo>/<modulo>.schema.ts`; migrações SQL em `drizzle/`.

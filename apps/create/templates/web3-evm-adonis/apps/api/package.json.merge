@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "#providers/*": "./providers/*.js",
+    "#shared/*": "./app/shared/*.js"
+  },
+  "dependencies": {
+//#if session=jwt
+    "jose": "6.2.12",
+//#endif
+    "viem": "2.57.7"
+  }
+}

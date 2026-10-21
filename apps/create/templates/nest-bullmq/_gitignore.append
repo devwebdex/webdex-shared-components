@@ -1,0 +1,2 @@
+# Build do worker em desenvolvimento (pnpm dev:worker)
+apps/api/dist-worker/

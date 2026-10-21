@@ -1,0 +1,7 @@
+### Filas (BullMQ + Redis)
+
+```bash
+pnpm dev:worker        # worker das filas, em outro terminal (o Redis sobe com o docker compose)
+```
+
+Em produção, depois do build: `pnpm --filter api worker`. Padrão em [docs/standards/queues-bullmq.md](docs/standards/queues-bullmq.md).

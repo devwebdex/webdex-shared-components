@@ -1,0 +1,1 @@
+- ORM: Prisma 7. Padrão: [docs/standards/orm-prisma.md](docs/standards/orm-prisma.md). `src/generated/` é gerado pelo `prisma generate`: não edite nem commite.

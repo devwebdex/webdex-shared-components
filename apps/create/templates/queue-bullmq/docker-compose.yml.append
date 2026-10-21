@@ -1,0 +1,11 @@
+  # Sem senha em desenvolvimento: por isso a porta fica só em localhost.
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10

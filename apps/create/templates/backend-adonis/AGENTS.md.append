@@ -1,0 +1,1 @@
+- Framework: AdonisJS 7 com Lucid (ORM nativo). Padrão: [docs/standards/backend-adonis.md](docs/standards/backend-adonis.md). Comandos do framework: `pnpm --filter api exec node ace <comando>`.

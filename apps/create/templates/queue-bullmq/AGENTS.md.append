@@ -1,0 +1,1 @@
+- Filas: BullMQ + Redis 8 (docker compose, porta só em `127.0.0.1`). A API enfileira; o worker, processo separado, processa (`pnpm dev:worker`). Padrão: [docs/standards/queues-bullmq.md](docs/standards/queues-bullmq.md).

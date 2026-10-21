@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@prisma/adapter-mariadb": "7.10.0"
+  }
+}

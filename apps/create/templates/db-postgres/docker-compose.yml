@@ -1,0 +1,22 @@
+# "services" fica por último: outras camadas do gerador (ex.: filas) acrescentam serviços no fim do arquivo.
+volumes:
+  postgres-data:
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-{{name}}}
+    # Só localhost: a senha é de desenvolvimento e o Docker publica portas ignorando o firewall do host.
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 10

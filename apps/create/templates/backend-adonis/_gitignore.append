@@ -1,0 +1,5 @@
+
+# AdonisJS
+apps/api/build/
+apps/api/tmp/*
+!apps/api/tmp/.gitkeep

@@ -1,0 +1,1 @@
+- Framework: NestJS 12. Padrão: [docs/standards/backend-nest.md](docs/standards/backend-nest.md). Código ESM: imports relativos com extensão `.js`.

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "@devwebdex/tokens/theme.css";
+@import "./forced-states.generated.css";
+
+/* O Tailwind precisa ver o código-fonte dos componentes para gerar as classes que eles usam. */
+@source "../../../packages/ui/src";
+@source "./";

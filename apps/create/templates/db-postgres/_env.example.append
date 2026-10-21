@@ -1,0 +1,6 @@
+
+# PostgreSQL local (docker compose)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB={{name}}
+POSTGRES_PORT=5432

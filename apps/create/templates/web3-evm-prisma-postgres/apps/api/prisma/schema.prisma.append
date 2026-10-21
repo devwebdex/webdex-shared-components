@@ -1,0 +1,18 @@
+
+// Módulo auth: nonces do login SIWE (uso único, 5 minutos).
+model AuthNonce {
+  nonce     String   @id @db.Char(32)
+  expiresAt DateTime @map("expires_at")
+
+  @@map("auth_nonces")
+}
+
+// Módulo auth: sessões; id é o SHA-256 do token, que nunca é guardado.
+model AuthSession {
+  id        String   @id @db.Char(64)
+  address   String   @db.Char(42)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("auth_sessions")
+}

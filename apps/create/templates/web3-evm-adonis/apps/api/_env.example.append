@@ -1,0 +1,13 @@
+CHAIN=polygonAmoy
+# RPC público da Amoy: só para desenvolvimento (limite de taxa). Em produção, use um provedor contratado.
+RPC_URL=https://rpc-amoy.polygon.technology
+//#if frontend=inertia
+SIWE_ORIGIN=http://localhost:3333
+//#else
+SIWE_ORIGIN=http://localhost:3000
+//#endif
+ACCESS_CONTROL_ADDRESS=
+//#if session=jwt
+# Vazio aqui: o pnpm env:setup gera um valor aleatório no .env.
+JWT_SECRET=
+//#endif
