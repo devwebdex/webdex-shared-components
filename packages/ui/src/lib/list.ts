@@ -1,20 +1,18 @@
-import { cva } from 'class-variance-authority'
+import { cva, type VariantProps } from 'class-variance-authority'
 
 /**
- * Lista suspensa compartilhada pelo Select e pelo Menu: a caixa que abre e os itens dela.
+ * Lista suspensa compartilhada pelo Select, pelo Menu e pelo Combobox: a caixa que abre e os
+ * itens dela.
  *
  * Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `aria-disabled`,
- * `data-state`), escritos como classes literais para o Tailwind encontrá-las no código.
+ * `data-state`), escritos como classes literais para o Tailwind encontrá-las no código. O
+ * Combobox usa o cmdk, que marca o destaque com `data-selected="true"` e acrescenta essas classes.
  *
- * VALORES SEM TOKEN: altura de linha (22, 24, 26px), como no Button, porque os tokens não têm
- * escala de line-height; e a barra de 2px do item em destaque, menor que o menor espaçamento.
+ * VALORES SEM TOKEN, os mesmos do Button: padding vertical de 6px no medium (fora da escala
+ * Spacing), altura de linha 22, 24 e 26px (sem namespace de line-height) e ícones de 22, 20 e
+ * 18px (fora da escala Spacing); e a barra de 2px do item em destaque, menor que o menor
+ * espaçamento.
  */
-
-/** Tamanhos com as alturas do Button (42, 36 e 30px), para campo e botão alinharem lado a lado. */
-export type ListSize = 'large' | 'medium' | 'small'
-
-/** Nomes dos tokens de `radius` (0, 4, 8, 12, 16, 24px e `full`). */
-export type ListRadius = '0' | '1' | '2' | '3' | '4' | '5' | 'full'
 
 // O item fica dentro da caixa com 4px de respiro (p-1): o raio dele é o da caixa menos 4px, para
 // as curvas serem concêntricas. Uma caixa de várias linhas não pode ser pílula, então `full`
@@ -58,6 +56,7 @@ export const listItemVariants = cva(
     'before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:rounded-full',
     'before:opacity-0 before:transition-opacity data-highlighted:before:opacity-100',
     // aria-disabled, não data-disabled: o cmdk (Combobox) põe data-disabled="false" em todo item.
+    // Ele também põe aria-disabled="false", mas o `aria-disabled:` do Tailwind só casa com "true".
     'aria-disabled:cursor-not-allowed aria-disabled:text-text-disabled',
     '[&_svg]:shrink-0',
   ],
@@ -86,6 +85,9 @@ export const listItemVariants = cva(
     defaultVariants: { size: 'medium', radius: '2', tone: 'default' },
   }
 )
+
+/** Nomes dos tokens de `radius` (0, 4, 8, 12, 16, 24px e `full`). */
+export type ListRadius = NonNullable<VariantProps<typeof listItemVariants>['radius']>
 
 export const listSeparatorClass = 'my-1 h-px bg-line-default'
 

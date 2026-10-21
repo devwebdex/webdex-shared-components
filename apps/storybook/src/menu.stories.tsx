@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   type ListRadius,
   listItemVariants,
   listPopupVariants,
@@ -86,7 +87,8 @@ const meta = {
     radius: {
       control: { type: 'inline-radio' },
       options: ['0', '1', '2', '3', '4', '5', 'full'],
-      description: 'Token de raio da lista. Os itens usam o raio da lista menos o respiro interno.',
+      description:
+        'Token de raio da lista. Os itens usam o raio da lista menos o respiro interno. O gatilho padrão mantém o raio do Button.',
       table: {
         type: { summary: "'0' | '1' | '2' | '3' | '4' | '5' | 'full'" },
         defaultValue: { summary: '2' },
@@ -164,7 +166,7 @@ export const GatilhoProprio: Story = {
   args: { trigger: <Button>Nova transação</Button> },
 }
 
-/** Um menu por token de raio. */
+/** Um menu por token de raio. Abra cada um: muda a lista, o gatilho mantém o raio do Button. */
 export const Arredondamento: Story = {
   render: (args: MenuProps) => (
     <div className="flex flex-wrap gap-4">
@@ -185,7 +187,7 @@ export const Lista: Story = {
     const item = listItemVariants({ size, radius })
     const danger = listItemVariants({ size, radius, tone: 'danger' })
     return (
-      <div className={`${listPopupVariants({ radius })} min-w-56`}>
+      <div className={cn(listPopupVariants({ radius }), 'min-w-56')}>
         <div className={item}>
           <Pencil />
           Editar

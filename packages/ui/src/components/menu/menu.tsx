@@ -20,6 +20,9 @@ import { Button } from '../button/button.js'
  *
  * Com `label`, o gatilho é um Button `code` com a seta que gira ao abrir. Para outro gatilho,
  * passe o elemento em `trigger`; o Radix o liga ao menu com `aria-haspopup` e `aria-expanded`.
+ *
+ * `radius` arredonda só a lista: o gatilho padrão é o Button, com o raio que o design system dá a
+ * cada tamanho.
  */
 export type MenuAction = {
   label: ReactNode
@@ -34,7 +37,9 @@ export type MenuAction = {
 export type MenuItem = MenuAction | 'separator'
 
 export type MenuProps = Omit<ComponentProps<typeof DropdownMenu.Root>, 'children'> &
-  Omit<VariantProps<typeof listItemVariants>, 'tone'> & {
+  Omit<VariantProps<typeof listItemVariants>, 'tone' | 'radius'> & {
+    /** Token de raio da lista. Não muda o gatilho padrão, que tem o raio do Button. */
+    radius?: VariantProps<typeof listItemVariants>['radius']
     /** Rótulo do gatilho padrão (Button com seta). */
     label?: ReactNode
     /** Gatilho próprio no lugar do padrão; `label` e `attention` deixam de valer. */
@@ -43,6 +48,7 @@ export type MenuProps = Omit<ComponentProps<typeof DropdownMenu.Root>, 'children
     align?: 'start' | 'center' | 'end'
     /** Halo pulsante no gatilho padrão para chamar a atenção; some de vez depois da primeira abertura. */
     attention?: boolean
+    /** Classe do gatilho padrão, como no Select e no Combobox; com `trigger`, não vale. */
     className?: string
   }
 
@@ -74,7 +80,7 @@ export function Menu({
             color="code"
             size={size}
             iconRight={<ChevronDown className={chevronClass} />}
-            className={cn('relative', attention && !opened && attentionClass)}
+            className={cn('relative', attention && !opened && attentionClass, className)}
           >
             {label}
           </Button>
@@ -87,8 +93,7 @@ export function Menu({
           className={cn(
             listPopupVariants({ radius }),
             'origin-(--radix-dropdown-menu-content-transform-origin)',
-            'min-w-(--radix-dropdown-menu-trigger-width) max-h-(--radix-dropdown-menu-content-available-height)',
-            className
+            'min-w-(--radix-dropdown-menu-trigger-width) max-h-(--radix-dropdown-menu-content-available-height)'
           )}
         >
           {items.map((item, index) =>

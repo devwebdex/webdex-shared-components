@@ -1,16 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { Combobox, type ComboboxOption } from '../src/index.js'
+import { Combobox, type ComboboxOption, type ComboboxProps } from '../src/index.js'
 
 const networks: ComboboxOption[] = [
   { value: 'polygon', label: 'Polygon', keywords: ['matic'] },
   { value: 'ethereum', label: 'Ethereum' },
   { value: 'arbitrum', label: 'Arbitrum One' },
   { value: 'arbitrum-nova', label: 'Arbitrum Nova' },
+  { value: 'fantom', label: 'Fantom', disabled: true },
 ]
 
-function setup(onValueChange = vi.fn()) {
+function setup(onValueChange = vi.fn(), props: Partial<ComboboxProps> = {}) {
   render(
     <form aria-label="formulário">
       <Combobox
@@ -21,6 +22,8 @@ function setup(onValueChange = vi.fn()) {
         aria-label="Rede"
         name="rede"
         onValueChange={onValueChange}
+        attention
+        {...props}
       />
     </form>
   )
@@ -41,6 +44,49 @@ describe('Combobox', () => {
     expect(onValueChange).toHaveBeenCalledWith('arbitrum')
     expect(trigger.textContent).toContain('Arbitrum One')
     expect(trigger.hasAttribute('data-placeholder')).toBe(false)
+  })
+
+  it('abre um diálogo com nome, e a busca tem nome para leitor de tela', async () => {
+    const { user, trigger } = setup()
+    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog')
+    await user.click(trigger)
+    expect(screen.getByRole('dialog', { name: 'Rede' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: 'Buscar rede' })).toBe(document.activeElement)
+  })
+
+  it('reabre com o valor escolhido em destaque e anunciado', async () => {
+    const { user, trigger } = setup()
+    await user.click(trigger)
+    await user.click(screen.getByRole('option', { name: 'Ethereum' }))
+    await user.click(trigger)
+    const chosen = screen.getByRole('option', { name: 'Ethereum (selecionado)' })
+    expect(chosen.getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('não escolhe a opção desabilitada', async () => {
+    const onValueChange = vi.fn()
+    const { user, trigger } = setup(onValueChange)
+    await user.click(trigger)
+    const option = screen.getByRole('option', { name: 'Fantom' })
+    expect(option.getAttribute('aria-disabled')).toBe('true')
+    await user.click(option)
+    expect(onValueChange).not.toHaveBeenCalled()
+  })
+
+  // O halo depende de data-placeholder, como no Select: some quando o campo ganha um valor.
+  it('tira o halo de atenção depois da escolha', async () => {
+    const { user, trigger } = setup()
+    expect(trigger.className).toContain('after:animate-pulse')
+    expect(trigger.hasAttribute('data-placeholder')).toBe(true)
+    await user.click(trigger)
+    await user.click(screen.getByRole('option', { name: 'Polygon' }))
+    expect(trigger.hasAttribute('data-placeholder')).toBe(false)
+  })
+
+  it('não envia o valor quando desabilitado', () => {
+    setup(vi.fn(), { disabled: true, defaultValue: 'polygon' })
+    const form = screen.getByRole('form', { name: 'formulário' }) as HTMLFormElement
+    expect(new FormData(form).has('rede')).toBe(false)
   })
 
   it('acha pelas keywords e envia o valor no formulário', async () => {

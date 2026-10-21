@@ -1,6 +1,7 @@
 import {
   Combobox,
   type ComboboxOption,
+  cn,
   listItemVariants,
   listPopupVariants,
   Menu,
@@ -9,7 +10,13 @@ import {
   type SelectOption,
 } from '@devwebdex/ui'
 import type { ReactNode } from 'react'
-import { boxRows, type MeasureColumn, type MeasureRow, MeasureTable } from './measurements.js'
+import {
+  boxRows,
+  insetRingRow,
+  type MeasureColumn,
+  type MeasureRow,
+  MeasureTable,
+} from './measurements.js'
 
 /**
  * Medidas do Select, do Combobox e do Menu, no formato da Medidas do Button. O campo e o gatilho são os
@@ -33,14 +40,7 @@ const itemRows: MeasureRow[] = [
 const popupRows: MeasureRow[] = [
   { property: 'respiro interno', namespace: 'spacing', read: (s) => s.paddingTop },
   { property: 'raio', namespace: 'radius', read: (s) => s.borderTopLeftRadius },
-  {
-    property: 'borda (inset ring)',
-    namespace: null,
-    read: (s) =>
-      s
-        .getPropertyValue('--tw-inset-ring-shadow')
-        .match(/inset\s+0\S*\s+0\S*\s+0\S*\s+(\d+px)/)?.[1] ?? '—',
-  },
+  insetRingRow,
 ]
 
 function Part({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
@@ -59,7 +59,7 @@ function itemColumns(icon: ReactNode, label: string): MeasureColumn[] {
   return SIZES.map((size) => ({
     label: size,
     render: (ref) => (
-      <div className={`${listPopupVariants()} w-56`}>
+      <div className={cn(listPopupVariants(), 'w-56')}>
         <div ref={ref} className={listItemVariants({ size })}>
           {icon}
           {label}
@@ -73,7 +73,7 @@ const popupColumns = (icon: ReactNode, label: string): MeasureColumn[] => [
   {
     label: 'radius = 2 (padrão)',
     render: (ref) => (
-      <div ref={ref} className={`${listPopupVariants()} w-56`}>
+      <div ref={ref} className={cn(listPopupVariants(), 'w-56')}>
         <div className={listItemVariants()}>
           {icon}
           {label}

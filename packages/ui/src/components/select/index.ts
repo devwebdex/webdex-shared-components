@@ -1,1 +1,1 @@
-export { Select, type SelectOption, type SelectProps, selectTriggerVariants } from './select.js'
+export { Select, type SelectOption, type SelectProps } from './select.js'

@@ -35,10 +35,11 @@ describe('Menu', () => {
 
   // Sem valor para indicar que a pessoa já agiu, o halo para na primeira abertura.
   it('tira o halo de atenção depois da primeira abertura', async () => {
-    render(<Menu label="Ações" items={[{ label: 'Editar' }]} attention />)
+    render(<Menu label="Ações" items={[{ label: 'Editar' }]} attention className="ml-2" />)
     const user = userEvent.setup()
     const trigger = screen.getByRole('button', { name: 'Ações' })
     expect(trigger.className).toContain('after:animate-pulse')
+    expect(trigger.className).toContain('ml-2')
 
     await user.click(trigger)
     await user.keyboard('{Escape}')

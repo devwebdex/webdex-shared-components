@@ -68,7 +68,7 @@ Convenções:
 
 Sobre estado: o que é pseudo-classe (`hover`, `active`, `focus-visible`, `disabled`) **não vira prop** — vira modificador de classe. O que é estado da aplicação (`loading`, `selected`) vira prop.
 
-Componente com comportamento (abrir, escolher, navegar pelo teclado) usa o primitivo do Radix (D16) e lê o estado dos atributos que ele põe no DOM: `data-state`, `data-highlighted`, `data-placeholder`. Para desabilitado, use `aria-disabled:`, não `data-disabled:` — o `cmdk` põe `data-disabled="false"` em todo item, e a regra pegaria todos.
+Componente com comportamento (abrir, escolher, navegar pelo teclado) usa o primitivo do Radix (D16) e lê o estado dos atributos que ele põe no DOM: `data-state`, `data-highlighted`, `data-placeholder`. Com o `cmdk` (Combobox), o destaque é `data-selected="true"`. Para desabilitado, use `aria-disabled:`, não `data-disabled:` — o `cmdk` põe `data-disabled="false"` em todo item habilitado, e a regra pegaria todos; já `aria-disabled:` só casa com `"true"`.
 
 ## 4. A story
 

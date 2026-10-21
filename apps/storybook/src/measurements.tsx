@@ -26,6 +26,16 @@ export type MeasureRow = {
   read: (style: CSSStyleDeclaration, element: HTMLElement) => string
 }
 
+/** A borda é inset-ring (box-shadow), não `border`: ler borderTopWidth daria 0. */
+export const insetRingRow: MeasureRow = {
+  property: 'borda (inset ring)',
+  namespace: null,
+  read: (s) =>
+    s
+      .getPropertyValue('--tw-inset-ring-shadow')
+      .match(/inset\s+0\S*\s+0\S*\s+0\S*\s+(\d+px)/)?.[1] ?? '—',
+}
+
 /** Medidas de uma caixa com texto e ícone: serve ao Button, ao campo do Select e aos itens da lista. */
 export const boxRows: MeasureRow[] = [
   { property: 'padding horizontal', namespace: 'spacing', read: (s) => s.paddingLeft },
@@ -45,15 +55,7 @@ export const boxRows: MeasureRow[] = [
       return svg ? getComputedStyle(svg).width : '—'
     },
   },
-  {
-    // A borda é inset-ring (box-shadow), não `border`: ler borderTopWidth daria 0.
-    property: 'borda (inset ring)',
-    namespace: null,
-    read: (s) =>
-      s
-        .getPropertyValue('--tw-inset-ring-shadow')
-        .match(/inset\s+0\S*\s+0\S*\s+0\S*\s+(\d+px)/)?.[1] ?? '—',
-  },
+  insetRingRow,
   {
     property: 'altura total',
     namespace: null,

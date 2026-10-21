@@ -1,58 +1,18 @@
 'use client'
 
-import { cva, type VariantProps } from 'class-variance-authority'
+import type { VariantProps } from 'class-variance-authority'
 import { Select as SelectPrimitive } from 'radix-ui'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../../lib/cn.js'
+import { selectTriggerVariants } from '../../lib/field.js'
 import { Check, ChevronDown, chevronClass } from '../../lib/icons.js'
-import { attentionClass, listItemVariants, listPopupVariants } from '../../lib/list.js'
+import { listItemVariants, listPopupVariants } from '../../lib/list.js'
 
 /**
  * Select do design system WEbdEX: escolha de um valor numa lista (padrão ARIA listbox),
  * sobre o Select do Radix, que cuida de teclado, foco, leitor de tela e posicionamento.
- *
- * O gatilho parte do Button `code` (superfície translúcida com borda fina): no hover a borda
- * esquenta para `brand-soft`, aberto ela fica `brand` e a seta gira. Estados são atributos,
- * não props: aberto é `data-[state=open]`, sem valor é `data-placeholder`.
+ * O gatilho vem de `selectTriggerVariants` (lib/field.ts), dividido com o Combobox.
  */
-const selectTriggerVariants = cva(
-  [
-    'relative inline-flex w-full items-center justify-between gap-2',
-    'font-sans text-text-primary bg-surface-code inset-ring-1 inset-ring-line-default',
-    'cursor-pointer select-none transition-[box-shadow,background-color] duration-150',
-    'hover:bg-surface-elevated hover:inset-ring-brand-soft/40 data-[state=open]:inset-ring-brand',
-    'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-    'data-placeholder:text-text-secondary',
-    'disabled:cursor-not-allowed disabled:bg-surface-code disabled:text-text-disabled',
-    'disabled:inset-ring-line-default',
-    '[&_svg]:shrink-0',
-  ],
-  {
-    variants: {
-      size: {
-        large: 'px-4 py-2 text-lg leading-[26px] [&_svg]:size-[22px]',
-        medium: 'px-3 py-[6px] text-base leading-[24px] [&_svg]:size-[20px]',
-        small: 'px-2 py-1 text-sm leading-[22px] [&_svg]:size-[18px]',
-      },
-      radius: {
-        '0': 'rounded-0',
-        '1': 'rounded-1',
-        '2': 'rounded-2',
-        '3': 'rounded-3',
-        '4': 'rounded-4',
-        '5': 'rounded-5',
-        full: 'rounded-full',
-      },
-      /** Halo pulsante para chamar a atenção; some ao abrir e não volta depois de escolhido um valor. */
-      attention: {
-        true: [attentionClass, 'not-data-placeholder:after:hidden'],
-        false: '',
-      },
-    },
-    defaultVariants: { size: 'medium', radius: '2', attention: false },
-  }
-)
-
 export type SelectOption = {
   value: string
   label: ReactNode
@@ -134,5 +94,3 @@ export function Select({
     </SelectPrimitive.Root>
   )
 }
-
-export { selectTriggerVariants }
