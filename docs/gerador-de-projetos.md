@@ -263,6 +263,15 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
   - Uma flag de eixo que não se aplica às outras escolhas (ex.: `--session` sem `--web3 evm`) é recusada pelo CLI, em vez de ir para o manifesto sem efeito.
   - Verificado em 2026-10-15: contra a API rodando, com o cliente real da rede (RPC da Amoy) e uma conta local assinando, o fluxo nonce, verify, `me`, `/access/admin` (403 sem contrato), logout e repetição da assinatura (401) passou no Nest com cookie, no Fastify com token e no Adonis com cookie. No navegador foram conferidos o carregamento, o CORS com credenciais e a recusa de assinatura inválida. Falta conectar uma carteira de verdade no navegador (R8).
 
+### D16. Primitivos acessíveis: Radix
+
+Decidido pelo operador em 2026-10-21, ao criar o dropdown; fecha a antiga A8.
+
+- O `@devwebdex/ui` usa o **Radix** (`radix-ui`, versão fixada) para componentes com comportamento: select, menu, e depois dialog, popover, tooltip e tabs. O Radix cuida de teclado, foco, leitor de tela e posicionamento; o pacote só estiliza, com `cva`, `cn` e as classes ligadas a tokens.
+- Motivo da escolha: os outros projetos da WEbdEX (`site` e `admin` do painel) já usam Radix via shadcn/ui (estilo `radix-nova`), com `select`, `dropdown-menu`, `dialog`, `popover`, `tooltip` e `tabs` prontos. Usar a mesma base deixa o time no que já conhece e facilita trazer esses componentes para o pacote compartilhado. O Base UI foi analisado (Select com valor de qualquer tipo e Combobox no mesmo pacote), mas a vantagem não compensou a diferença em relação ao que o time usa.
+- Componente com Radix leva `'use client'`, porque os primitivos usam estado e contexto. Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `data-state`, `data-disabled`, `data-placeholder`), escritos como classes literais.
+- Primeiros componentes: `Select` e `Menu`, com os eixos `size` e `radius` e a lista compartilhada em `packages/ui/src/lib/list.ts`. O visual é proposta para revisão do design: a referência aprovada ainda não tem campo de seleção nem menu.
+
 ## Em aberto
 
 | # | Tema | Pendência |
@@ -272,7 +281,6 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
 | A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
 | A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
-| A8 | Primitivos acessíveis | Biblioteca para dialog, menu, select, popover, tooltip e tabs (ex.: Radix ou Base UI). Até decidir, esses componentes não são implementados |
 | A9 | Publicação | Implementada (D12); falta a primeira execução no GitHub, que acontece no merge na `prod`, e a configuração única do repositório descrita em [publicacao.md](publicacao.md) |
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
