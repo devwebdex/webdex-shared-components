@@ -27,10 +27,13 @@ O primeiro se resolve com `pnpm build`. O segundo, com changeset.
 ## 1. A branch
 
 ```bash
-git checkout -b ui/<componente> origin/prod
+git fetch origin
+git checkout -b ui/<componente> origin/dev
 ```
 
-Se o componente depender de outro que ainda não foi mergeado, saia da branch dele em vez da `prod`.
+Sai da **`dev`**, e o PR também vai para ela. A `prod` é a branch de release: o workflow de publicação dispara em push nela, então ela só recebe a `dev` quando é hora de publicar uma versão.
+
+Se o componente depender de outro que ainda não foi mergeado, saia da branch dele em vez da `dev`.
 
 ## 2. Os tokens existem?
 
@@ -116,6 +119,7 @@ O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que
 ## 7. A entrega
 
 - Commit no formato `feat(ui): adiciona Spinner`.
+- PR para a **`dev`**.
 - `pnpm changeset` no mesmo PR: componente novo em `@devwebdex/ui` é **minor**.
 - No PR: o que o componente faz, as decisões que fogem do padrão, e a **lista de lacunas** — valor sem token, variante adiada, acessibilidade pendente.
 

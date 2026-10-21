@@ -40,7 +40,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 
 ## Subagentes
 
-- `design-to-code`: Figma → tokens e componentes. Segue [docs/ui/figma-para-componentes.md](docs/ui/figma-para-componentes.md).
+- `figma-tokens`: Variables do Figma → tokens DTCG. Segue [docs/ui/figma-para-tokens.md](docs/ui/figma-para-tokens.md). Componente não passa por ele: ver [docs/ui/criar-componente.md](docs/ui/criar-componente.md).
 
 <!-- BEGIN:turborepo-agent-rules -->
 
