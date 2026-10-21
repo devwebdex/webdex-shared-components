@@ -118,7 +118,7 @@ Decisão:
 
 > **Alterada em 2026-10-19.** O componente passou a nascer em código, e o Figma virou etapa de revisão: [ui/html-primeiro.md](ui/html-primeiro.md). O resto desta decisão continua valendo.
 
-- O time de design cria tokens e componentes com o subagente `design-to-code`, seguindo [ui/figma-para-componentes.md](ui/figma-para-componentes.md). O time de dev mantém a fundação (pacotes, build, convenções).
+- O time de design define a linguagem visual; o componente é implementado em código e revisado por ele depois, seguindo [ui/criar-componente.md](ui/criar-componente.md). Os tokens vêm das Variables do Figma pelo subagente `figma-tokens`, seguindo [ui/figma-para-tokens.md](ui/figma-para-tokens.md).
 - Componentes são distribuídos como pacote npm `@devwebdex/ui`, publicado a partir de `packages/ui` deste monorepo. A opção de registry com cópia (estilo shadcn) foi descartada: correções não chegariam aos projetos.
 - Tokens no formato DTCG em `packages/tokens/src/`. O Style Dictionary gera `dist/theme.css` com bloco `@theme`, então os nomes dos tokens seguem os namespaces do Tailwind 4 (`color`, `radius`, `spacing`, `font`, `text`...).
 - Componentes: variantes com `class-variance-authority`, classes mescladas por `cn` (`clsx` + `tailwind-merge`), só classes ligadas a tokens.

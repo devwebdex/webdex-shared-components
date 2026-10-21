@@ -1,6 +1,6 @@
 # Limites de chamadas do MCP do Figma
 
-Quanto o fluxo de [figma-para-componentes.md](figma-para-componentes.md) consome do MCP do Figma, e qual plano e assento tornam o fluxo viável. Serve de base para decidir a compra de assento (pendência A3 em [gerador-de-projetos.md](../gerador-de-projetos.md)).
+Quanto a importação de tokens de [figma-para-tokens.md](figma-para-tokens.md) consome do MCP do Figma, e qual plano e assento tornam o fluxo viável. Serve de base para decidir a compra de assento (pendência A3 em [gerador-de-projetos.md](../gerador-de-projetos.md)).
 
 Fontes, consultadas em 2026-10-13:
 
@@ -74,4 +74,4 @@ O guia oficial da Figma documenta um limite de **modos por coleção de Variable
 
 ## Como acompanhar o consumo
 
-A Figma não mostra o uso acumulado. Por isso, o subagente `design-to-code` informa no relatório final quantas chamadas fez, por ferramenta. Somando esses relatórios, o time acompanha o consumo real e corrige as estimativas deste documento.
+A Figma não mostra o uso acumulado. Por isso, o subagente `figma-tokens` informa no relatório final quantas chamadas fez, por ferramenta. Somando esses relatórios, o time acompanha o consumo real e corrige as estimativas deste documento.
