@@ -10,6 +10,7 @@ import {
 } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
+import { MenuMeasurements } from './dropdown-measurements.js'
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -209,4 +210,16 @@ export const Lista: Story = {
       </div>
     )
   },
+}
+
+/**
+ * Mede o componente já renderizado e diz de qual token veio cada valor.
+ *
+ * Os números saem de getComputedStyle, não da leitura das classes: é o que o navegador
+ * aplicou. O que aparece como "sem token" existe no componente mas não corresponde a
+ * Variable nenhuma, e é a lista do que falta criar no Figma.
+ */
+export const Medidas: Story = {
+  render: () => <MenuMeasurements items={actions} icon={<Pencil />} />,
+  parameters: { layout: 'padded' },
 }

@@ -17,6 +17,7 @@ import {
   NetworkPolygon,
   NetworkPolygonAmoy,
 } from '@web3icons/react'
+import { SelectMeasurements } from './dropdown-measurements.js'
 
 // Símbolos oficiais das redes (@web3icons, variante com as cores de cada marca). O Select não
 // conhece ícone de rede: `icon` aceita qualquer imagem, e o tamanho vem do tamanho do campo.
@@ -93,12 +94,16 @@ const meta = {
       table: { type: { summary: 'SelectOption[]' } },
     },
   },
+  // Campo com a largura de um formulário; a story Medidas pede a largura toda para a tabela.
   decorators: [
-    (Story) => (
-      <div className="w-72">
+    (Story, context) =>
+      context.parameters.fullWidth ? (
         <Story />
-      </div>
-    ),
+      ) : (
+        <div className="w-72">
+          <Story />
+        </div>
+      ),
   ],
   parameters: {
     docs: {
@@ -211,4 +216,18 @@ export const Lista: Story = {
       </div>
     )
   },
+}
+
+/**
+ * Mede o componente já renderizado e diz de qual token veio cada valor.
+ *
+ * Os números saem de getComputedStyle, não da leitura das classes: é o que o navegador
+ * aplicou. O que aparece como "sem token" existe no componente mas não corresponde a
+ * Variable nenhuma, e é a lista do que falta criar no Figma.
+ */
+export const Medidas: Story = {
+  render: () => (
+    <SelectMeasurements options={networks} icon={<NetworkPolygon variant="branded" />} />
+  ),
+  parameters: { layout: 'padded', fullWidth: true },
 }
