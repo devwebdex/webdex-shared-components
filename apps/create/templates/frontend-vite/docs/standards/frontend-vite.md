@@ -25,7 +25,7 @@ apps/web/
 
 ## Estilo
 
-- Só utilitários do Tailwind. Cores, raios, espaçamentos e fontes vêm dos tokens (`bg-primary`, `rounded-md`, `p-md`).
+- Só utilitários do Tailwind. Cores, raios, espaçamentos e fontes vêm dos tokens (`bg-brand`, `text-text-primary`, `rounded-2`, `p-4`).
 - **Proibido**: cor em hex/rgb no código, valores arbitrários (`p-[13px]`, `bg-[#fff]`), CSS-in-JS, `style` inline para valores visuais.
 
 ## Acessibilidade

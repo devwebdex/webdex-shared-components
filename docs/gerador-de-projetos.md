@@ -277,7 +277,6 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
 | A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
-| A16 | Botão no `@devwebdex/ui` | O componente da carteira usa botões locais, porque o `@devwebdex/ui` ainda não tem `Button`. O padrão de frontend manda pedir o componente ao time de design; quando ele existir, trocar nas três cópias (Next, Vite e Inertia) |
 
 ## Riscos conhecidos
 
@@ -292,4 +291,4 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
   - Nenhuma carteira de navegador (MetaMask, WalletConnect) assinou de verdade: os testes usam conta local e o conector `mock`. Teste com MetaMask na Amoy antes do primeiro projeto em produção.
   - `GET /auth/nonce` grava uma linha por chamada e não tem limite de taxa: um projeto exposto precisa de rate limit e de limpeza periódica das tabelas `auth_nonces` e `auth_sessions`.
   - O conector `walletConnect` exige `@walletconnect/ethereum-provider`, que entra no `package.json` de todo projeto web3 e traz uma árvore grande de dependências (com avisos de peer `typescript@^5`). O conector só é ativado com `projectId`.
-  - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`.
+  - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`. Os botões dele são o `Button` do `@devwebdex/ui` desde a 0.2.0 (a pendência A16 saiu).
