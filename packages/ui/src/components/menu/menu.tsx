@@ -4,15 +4,22 @@ import type { VariantProps } from 'class-variance-authority'
 import { DropdownMenu } from 'radix-ui'
 import type { ComponentProps, ReactElement, ReactNode } from 'react'
 import { cn } from '../../lib/cn.js'
-import { listItemVariants, listPopupVariants, listSeparatorClass } from '../../lib/list.js'
+import { ChevronDown, chevronClass } from '../../lib/icons.js'
+import {
+  attentionClass,
+  listItemVariants,
+  listPopupVariants,
+  listSeparatorClass,
+} from '../../lib/list.js'
+import { Button } from '../button/button.js'
 
 /**
  * Menu do design system WEbdEX: lista de ações aberta por um gatilho (padrão ARIA menu),
  * sobre o DropdownMenu do Radix, que cuida de teclado, foco, leitor de tela e posicionamento.
  * Nada fica selecionado: cada item executa uma ação.
  *
- * O gatilho é o elemento recebido em `trigger` (normalmente um Button), que o Radix liga ao
- * menu com `aria-haspopup` e `aria-expanded`.
+ * Com `label`, o gatilho é um Button `code` com a seta que gira ao abrir. Para outro gatilho,
+ * passe o elemento em `trigger`; o Radix o liga ao menu com `aria-haspopup` e `aria-expanded`.
  */
 export type MenuAction = {
   label: ReactNode
@@ -28,31 +35,49 @@ export type MenuItem = MenuAction | 'separator'
 
 export type MenuProps = Omit<ComponentProps<typeof DropdownMenu.Root>, 'children'> &
   Omit<VariantProps<typeof listItemVariants>, 'tone'> & {
-    /** Elemento que abre o menu, normalmente um Button. */
-    trigger: ReactElement
+    /** Rótulo do gatilho padrão (Button com seta). */
+    label?: ReactNode
+    /** Gatilho próprio no lugar do padrão; `label` e `attention` deixam de valer. */
+    trigger?: ReactElement
     items: MenuItem[]
     align?: 'start' | 'center' | 'end'
+    /** Halo pulsante no gatilho padrão para chamar a atenção; some quando o menu abre. */
+    attention?: boolean
     className?: string
   }
 
 export function Menu({
+  label,
   trigger,
   items,
   size,
   radius,
   align = 'start',
+  attention = false,
   className,
   ...props
 }: MenuProps) {
   return (
     <DropdownMenu.Root {...props}>
-      <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
+      <DropdownMenu.Trigger asChild>
+        {trigger ?? (
+          <Button
+            color="code"
+            size={size}
+            iconRight={<ChevronDown className={chevronClass} />}
+            className={cn('relative', attention && attentionClass)}
+          >
+            {label}
+          </Button>
+        )}
+      </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align={align}
-          sideOffset={4}
+          sideOffset={6}
           className={cn(
             listPopupVariants({ radius }),
+            'origin-(--radix-dropdown-menu-content-transform-origin)',
             'min-w-(--radix-dropdown-menu-trigger-width) max-h-(--radix-dropdown-menu-content-available-height)',
             className
           )}

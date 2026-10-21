@@ -4,25 +4,27 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Select as SelectPrimitive } from 'radix-ui'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../../lib/cn.js'
-import { listItemVariants, listPopupVariants } from '../../lib/list.js'
+import { Check, ChevronDown, chevronClass } from '../../lib/icons.js'
+import { attentionClass, listItemVariants, listPopupVariants } from '../../lib/list.js'
 
 /**
  * Select do design system WEbdEX: escolha de um valor numa lista (padrão ARIA listbox),
  * sobre o Select do Radix, que cuida de teclado, foco, leitor de tela e posicionamento.
  *
- * O visual do gatilho é o do Button `code` (superfície translúcida com borda fina), porque
- * a referência visual ainda não tem campo de seleção. Estados são atributos, não props:
- * aberto é `data-[state=open]`, sem valor é `data-placeholder`.
+ * O gatilho parte do Button `code` (superfície translúcida com borda fina): no hover a borda
+ * esquenta para `brand-soft`, aberto ela fica `brand` e a seta gira. Estados são atributos,
+ * não props: aberto é `data-[state=open]`, sem valor é `data-placeholder`.
  */
 const selectTriggerVariants = cva(
   [
-    'inline-flex w-full items-center justify-between gap-2',
+    'relative inline-flex w-full items-center justify-between gap-2',
     'font-sans text-text-primary bg-surface-code inset-ring-1 inset-ring-line-default',
-    'cursor-pointer select-none transition-[box-shadow,background-color]',
-    'hover:inset-ring-white/50 data-[state=open]:inset-ring-brand',
+    'cursor-pointer select-none transition-[box-shadow,background-color] duration-150',
+    'hover:bg-surface-elevated hover:inset-ring-brand-soft/40 data-[state=open]:inset-ring-brand',
     'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
     'data-placeholder:text-text-secondary',
-    'disabled:cursor-not-allowed disabled:text-text-disabled disabled:inset-ring-white/15',
+    'disabled:cursor-not-allowed disabled:bg-surface-code disabled:text-text-disabled',
+    'disabled:inset-ring-line-default',
     '[&_svg]:shrink-0',
   ],
   {
@@ -41,14 +43,21 @@ const selectTriggerVariants = cva(
         '5': 'rounded-5',
         full: 'rounded-full',
       },
+      /** Halo pulsante para chamar a atenção; some quando a lista abre. */
+      attention: {
+        true: attentionClass,
+        false: '',
+      },
     },
-    defaultVariants: { size: 'medium', radius: '2' },
+    defaultVariants: { size: 'medium', radius: '2', attention: false },
   }
 )
 
 export type SelectOption = {
   value: string
   label: ReactNode
+  /** Imagem antes do rótulo (ex.: símbolo da rede); aparece também no gatilho. */
+  icon?: ReactNode
   disabled?: boolean
 }
 
@@ -69,6 +78,7 @@ export function Select({
   placeholder,
   size,
   radius,
+  attention,
   id,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
@@ -81,19 +91,20 @@ export function Select({
         id={id}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
-        className={cn(selectTriggerVariants({ size, radius }), className)}
+        className={cn(selectTriggerVariants({ size, radius, attention }), className)}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon asChild>
-          <ChevronDown />
+          <ChevronDown className={chevronClass} />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content
           position="popper"
-          sideOffset={4}
+          sideOffset={6}
           className={cn(
             listPopupVariants({ radius }),
+            'origin-(--radix-select-content-transform-origin)',
             'min-w-(--radix-select-trigger-width) max-h-(--radix-select-content-available-height)'
           )}
         >
@@ -105,7 +116,13 @@ export function Select({
                 disabled={option.disabled}
                 className={cn(listItemVariants({ size, radius }), 'justify-between')}
               >
-                <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
+                {/* O ItemText é o que o Radix copia para o gatilho: o ícone vai junto. */}
+                <SelectPrimitive.ItemText>
+                  <span className="flex items-center gap-2">
+                    {option.icon}
+                    {option.label}
+                  </span>
+                </SelectPrimitive.ItemText>
                 <SelectPrimitive.ItemIndicator>
                   <Check />
                 </SelectPrimitive.ItemIndicator>
@@ -115,38 +132,6 @@ export function Select({
         </SelectPrimitive.Content>
       </SelectPrimitive.Portal>
     </SelectPrimitive.Root>
-  )
-}
-
-function ChevronDown() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  )
-}
-
-function Check() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
   )
 }
 

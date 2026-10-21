@@ -18,7 +18,9 @@ import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
+  attentionClass,
   buttonVariants,
+  chevronClass,
   listItemVariants,
   listPopupVariants,
   listSeparatorClass,
@@ -118,13 +120,17 @@ test('toda classe que o Button produz existe no CSS compilado', () => {
 const RADII = ['0', '1', '2', '3', '4', '5', 'full']
 const TONES = ['default', 'danger']
 
-/** Toda classe do Select e do Menu: gatilho, lista, itens (com o tom) e separador. */
+/** Toda classe do Select e do Menu: gatilho (com e sem halo), seta, lista, itens e separador. */
 function listClasses() {
-  const all = new Set(listSeparatorClass.split(/\s+/))
+  const all = new Set([listSeparatorClass, attentionClass, chevronClass].join(' ').split(/\s+/))
   for (const radius of RADII) {
     for (const utility of listPopupVariants({ radius }).split(/\s+/)) all.add(utility)
     for (const size of SIZES) {
-      for (const utility of selectTriggerVariants({ size, radius }).split(/\s+/)) all.add(utility)
+      for (const attention of [false, true]) {
+        for (const utility of selectTriggerVariants({ size, radius, attention }).split(/\s+/)) {
+          all.add(utility)
+        }
+      }
       for (const tone of TONES) {
         for (const utility of listItemVariants({ size, radius, tone }).split(/\s+/))
           all.add(utility)

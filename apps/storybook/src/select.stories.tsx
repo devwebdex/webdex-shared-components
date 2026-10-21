@@ -3,15 +3,41 @@ import {
   listItemVariants,
   listPopupVariants,
   Select,
+  type SelectOption,
   type SelectProps,
 } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import {
+  NetworkArbitrumOne,
+  NetworkAvalanche,
+  NetworkBase,
+  NetworkBinanceSmartChain,
+  NetworkEthereum,
+  NetworkOptimism,
+  NetworkPolygon,
+  NetworkPolygonAmoy,
+} from '@web3icons/react'
 
-const networks = [
-  { value: 'polygon', label: 'Polygon' },
-  { value: 'amoy', label: 'Polygon Amoy (testnet)' },
-  { value: 'ethereum', label: 'Ethereum' },
-  { value: 'base', label: 'Base', disabled: true },
+// Símbolos oficiais das redes (@web3icons, variante com as cores de cada marca). O Select não
+// conhece ícone de rede: `icon` aceita qualquer imagem, e o tamanho vem do tamanho do campo.
+const networks: SelectOption[] = [
+  { value: 'polygon', label: 'Polygon', icon: <NetworkPolygon variant="branded" /> },
+  {
+    value: 'amoy',
+    label: 'Polygon Amoy (testnet)',
+    icon: <NetworkPolygonAmoy variant="branded" />,
+  },
+  { value: 'ethereum', label: 'Ethereum', icon: <NetworkEthereum variant="branded" /> },
+  { value: 'base', label: 'Base', icon: <NetworkBase variant="branded" /> },
+  { value: 'arbitrum', label: 'Arbitrum One', icon: <NetworkArbitrumOne variant="branded" /> },
+  { value: 'optimism', label: 'Optimism', icon: <NetworkOptimism variant="branded" /> },
+  { value: 'bnb', label: 'BNB Chain', icon: <NetworkBinanceSmartChain variant="branded" /> },
+  {
+    value: 'avalanche',
+    label: 'Avalanche',
+    icon: <NetworkAvalanche variant="branded" />,
+    disabled: true,
+  },
 ]
 
 const meta = {
@@ -44,6 +70,12 @@ const meta = {
         defaultValue: { summary: '2' },
       },
     },
+    attention: {
+      control: { type: 'boolean' },
+      description:
+        'Halo que pulsa em volta do campo para chamar a atenção. Some quando a lista abre e com movimento reduzido.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
     disabled: {
       control: { type: 'boolean' },
       description: 'Desabilita o campo inteiro. Para uma opção só, use `disabled` nela.',
@@ -56,7 +88,8 @@ const meta = {
     },
     options: {
       control: false,
-      description: 'Lista de `{ value, label, disabled? }`.',
+      description:
+        'Lista de `{ value, label, icon?, disabled? }`. O ícone aparece também no campo.',
       table: { type: { summary: 'SelectOption[]' } },
     },
   },
@@ -74,9 +107,9 @@ const meta = {
           'Escolha de um valor numa lista (padrão ARIA listbox), sobre o Select do Radix:',
           'teclado (setas, Enter, Esc, digitar para buscar), foco e leitor de tela vêm prontos.',
           '',
-          'O gatilho segue o Button `code`. Aberto, sem valor e opção marcada são atributos do',
-          'Radix (`data-state`, `data-placeholder`), não props. A referência visual ainda não tem',
-          'campo de seleção: este visual é proposta para revisão do design.',
+          'No hover a borda esquenta para `brand-soft`; aberto, ela fica `brand` e a seta gira.',
+          'A lista cresce a partir do campo, e o item em destaque ganha uma barra na borda esquerda.',
+          'A referência visual ainda não tem campo de seleção: este visual é proposta para revisão do design.',
         ].join('\n'),
       },
     },
@@ -89,11 +122,27 @@ type Story = StoryObj<typeof meta>
 const SIZES = ['large', 'medium', 'small'] as const
 const RADII: ListRadius[] = ['0', '1', '2', '3', '4', '5', 'full']
 
-/** Use os controles ao lado para trocar tamanho e arredondamento. */
+/** Redes com o símbolo de cada uma. Use os controles ao lado para trocar tamanho e raio. */
 export const Playground: Story = {}
 
-/** Com um valor já escolhido. */
+/** O halo pulsa até a pessoa abrir o campo: use quando escolher a rede é o próximo passo. */
+export const Atencao: Story = { args: { attention: true } }
+
+/** Com uma rede já escolhida: o símbolo vai para o campo junto com o nome. */
 export const ComValor: Story = { args: { defaultValue: 'polygon' } }
+
+/** Só texto, sem imagem. */
+export const SemImagens: Story = {
+  args: {
+    placeholder: 'Escolha o período',
+    'aria-label': 'Período',
+    options: [
+      { value: '7d', label: 'Últimos 7 dias' },
+      { value: '30d', label: 'Últimos 30 dias' },
+      { value: '90d', label: 'Últimos 90 dias' },
+    ],
+  },
+}
 
 /** Desabilitado. */
 export const Desabilitado: Story = { args: { disabled: true, defaultValue: 'polygon' } }
@@ -103,7 +152,13 @@ export const Tamanhos: Story = {
   render: (args: SelectProps) => (
     <div className="flex flex-col gap-4">
       {SIZES.map((size) => (
-        <Select key={size} {...args} size={size} aria-label={`Rede (${size})`} />
+        <Select
+          key={size}
+          {...args}
+          size={size}
+          defaultValue="polygon"
+          aria-label={`Rede (${size})`}
+        />
       ))}
     </div>
   ),
@@ -132,18 +187,27 @@ export const Arredondamento: Story = {
  * e as classes saem do próprio componente: nada aqui é redigitado.
  */
 export const Lista: Story = {
-  render: ({ size, radius }: SelectProps) => (
-    <div className={listPopupVariants({ radius })}>
-      <div className={listItemVariants({ size, radius })}>Opção normal</div>
-      <div className={listItemVariants({ size, radius })} data-highlighted="">
-        Em foco (teclado ou mouse)
+  render: ({ size, radius }: SelectProps) => {
+    const item = listItemVariants({ size, radius })
+    return (
+      <div className={listPopupVariants({ radius })}>
+        <div className={item}>
+          <NetworkEthereum variant="branded" />
+          Opção normal
+        </div>
+        <div className={item} data-highlighted="">
+          <NetworkBase variant="branded" />
+          Em destaque (teclado ou mouse)
+        </div>
+        <div className={item} data-state="checked">
+          <NetworkPolygon variant="branded" />
+          Selecionada
+        </div>
+        <div className={item} data-disabled="">
+          <NetworkAvalanche variant="branded" />
+          Desabilitada
+        </div>
       </div>
-      <div className={listItemVariants({ size, radius })} data-state="checked">
-        Selecionada
-      </div>
-      <div className={listItemVariants({ size, radius })} data-disabled="">
-        Desabilitada
-      </div>
-    </div>
-  ),
+    )
+  },
 }
