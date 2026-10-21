@@ -5,30 +5,36 @@ import type { StorybookConfig } from '@storybook/react-vite'
 const STATE_PREFIXES = ['hover:', 'active:', 'focus-visible:']
 
 /**
- * A story Matriz mostra Hovered, Pressed e Focused lado a lado. Como são
- * pseudo-classes, ela força o estado removendo o prefixo da classe em tempo de
+ * As stories Matriz mostram Hovered, Pressed e Focused lado a lado. Como são
+ * pseudo-classes, elas forçam o estado removendo o prefixo da classe em tempo de
  * execução: `hover:shadow-4` vira `shadow-4`.
  *
  * O Tailwind só gera o que encontra no código-fonte, e essas versões sem prefixo
  * não aparecem em arquivo nenhum -- `shadow-6` e `outline-brand`, por exemplo,
  * saíam faltando e os estados não apareciam.
  *
- * A lista é derivada do próprio cva do componente, então ela não desatualiza
+ * A lista é derivada do próprio cva dos componentes, então ela não desatualiza
  * quando alguém adiciona um estado novo.
  */
 async function generateForcedStateSource() {
-  const { buttonVariants } = await import('@devwebdex/ui')
-  const bare = new Set<string>()
+  const { buttonVariants, inputFieldVariants } = await import('@devwebdex/ui')
+  const classLists: string[] = []
 
   for (const size of ['large', 'medium', 'small'] as const) {
     for (const color of ['brand', 'code'] as const) {
       for (const variant of ['contained', 'outlined', 'text'] as const) {
-        for (const utility of buttonVariants({ size, color, variant }).split(/\s+/)) {
-          const prefix = STATE_PREFIXES.find((candidate) => utility.startsWith(candidate))
-          if (prefix) bare.add(utility.slice(prefix.length))
-        }
+        classLists.push(buttonVariants({ size, color, variant }))
       }
     }
+  }
+  for (const status of ['default', 'error', 'success'] as const) {
+    classLists.push(inputFieldVariants({ status }))
+  }
+
+  const bare = new Set<string>()
+  for (const utility of classLists.join(' ').split(/\s+/)) {
+    const prefix = STATE_PREFIXES.find((candidate) => utility.startsWith(candidate))
+    if (prefix) bare.add(utility.slice(prefix.length))
   }
 
   const target = fileURLToPath(new URL('../src/forced-states.generated.css', import.meta.url))
