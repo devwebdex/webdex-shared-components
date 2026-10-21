@@ -43,9 +43,9 @@ const selectTriggerVariants = cva(
         '5': 'rounded-5',
         full: 'rounded-full',
       },
-      /** Halo pulsante para chamar a atenção; some quando a lista abre. */
+      /** Halo pulsante para chamar a atenção; some ao abrir e não volta depois de escolhido um valor. */
       attention: {
-        true: attentionClass,
+        true: [attentionClass, 'not-data-placeholder:after:hidden'],
         false: '',
       },
     },

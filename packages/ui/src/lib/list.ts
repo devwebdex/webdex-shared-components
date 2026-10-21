@@ -3,7 +3,7 @@ import { cva } from 'class-variance-authority'
 /**
  * Lista suspensa compartilhada pelo Select e pelo Menu: a caixa que abre e os itens dela.
  *
- * Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `data-disabled`,
+ * Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `aria-disabled`,
  * `data-state`), escritos como classes literais para o Tailwind encontrá-las no código.
  *
  * VALORES SEM TOKEN: altura de linha (22, 24, 26px), como no Button, porque os tokens não têm
@@ -21,14 +21,16 @@ export type ListRadius = '0' | '1' | '2' | '3' | '4' | '5' | 'full'
 // arredonda a caixa até o maior token (24px) e deixa a pílula para os itens.
 //
 // A abertura cresce a partir do gatilho (o componente define o `origin` com a variável do Radix)
-// usando @starting-style: só CSS, sem @keyframes, que o pacote não envia. O fechamento é imediato.
+// usando @starting-style. O fechamento usa o `animate-list-out` dos tokens: o Radix espera a
+// animação terminar antes de desmontar a lista.
 export const listPopupVariants = cva(
   [
     'z-50 overflow-y-auto p-1',
     'bg-background text-text-primary font-sans shadow-elevation-6',
     'inset-ring-1 inset-ring-line-default',
     'transition-[opacity,scale] duration-150 ease-out starting:opacity-0 starting:scale-97',
-    'motion-reduce:transition-none',
+    'data-[state=closed]:animate-list-out',
+    'motion-reduce:transition-none motion-reduce:data-[state=closed]:animate-none',
   ],
   {
     variants: {
@@ -55,7 +57,8 @@ export const listItemVariants = cva(
     'data-highlighted:bg-brand-soft/10 data-[state=checked]:text-brand',
     'before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:rounded-full',
     'before:opacity-0 before:transition-opacity data-highlighted:before:opacity-100',
-    'data-disabled:cursor-not-allowed data-disabled:text-text-disabled',
+    // aria-disabled, não data-disabled: o cmdk (Combobox) põe data-disabled="false" em todo item.
+    'aria-disabled:cursor-not-allowed aria-disabled:text-text-disabled',
     '[&_svg]:shrink-0',
   ],
   {

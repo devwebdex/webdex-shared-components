@@ -2,7 +2,7 @@
 
 import type { VariantProps } from 'class-variance-authority'
 import { DropdownMenu } from 'radix-ui'
-import type { ComponentProps, ReactElement, ReactNode } from 'react'
+import { type ComponentProps, type ReactElement, type ReactNode, useState } from 'react'
 import { cn } from '../../lib/cn.js'
 import { ChevronDown, chevronClass } from '../../lib/icons.js'
 import {
@@ -41,7 +41,7 @@ export type MenuProps = Omit<ComponentProps<typeof DropdownMenu.Root>, 'children
     trigger?: ReactElement
     items: MenuItem[]
     align?: 'start' | 'center' | 'end'
-    /** Halo pulsante no gatilho padrão para chamar a atenção; some quando o menu abre. */
+    /** Halo pulsante no gatilho padrão para chamar a atenção; some de vez depois da primeira abertura. */
     attention?: boolean
     className?: string
   }
@@ -55,17 +55,26 @@ export function Menu({
   align = 'start',
   attention = false,
   className,
+  onOpenChange,
   ...props
 }: MenuProps) {
+  // O Menu não tem valor para dizer que a pessoa já agiu: o halo para na primeira abertura.
+  const [opened, setOpened] = useState(false)
   return (
-    <DropdownMenu.Root {...props}>
+    <DropdownMenu.Root
+      {...props}
+      onOpenChange={(open) => {
+        if (open) setOpened(true)
+        onOpenChange?.(open)
+      }}
+    >
       <DropdownMenu.Trigger asChild>
         {trigger ?? (
           <Button
             color="code"
             size={size}
             iconRight={<ChevronDown className={chevronClass} />}
-            className={cn('relative', attention && attentionClass)}
+            className={cn('relative', attention && !opened && attentionClass)}
           >
             {label}
           </Button>

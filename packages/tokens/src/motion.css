@@ -1,0 +1,15 @@
+/*
+ * Movimento. O formato DTCG não tem @keyframes, então este arquivo é escrito à mão e o build o
+ * anexa ao dist/theme.css. Quem consome usa as classes `animate-*`, como nos outros tokens.
+ */
+@theme {
+  /* Fechamento das listas suspensas (Select, Menu): o Radix espera a animação antes de desmontar. */
+  --animate-list-out: list-out 120ms ease-in forwards;
+
+  @keyframes list-out {
+    to {
+      opacity: 0;
+      scale: 97%;
+    }
+  }
+}
