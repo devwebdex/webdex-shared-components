@@ -59,7 +59,7 @@ const actions: MenuItem[] = [
 ]
 
 const meta = {
-  title: 'Componentes/Menu',
+  title: 'Componentes/Dropdown/Menu',
   component: Menu,
   args: {
     label: 'Ações',
@@ -142,10 +142,11 @@ const RADII: ListRadius[] = ['0', '1', '2', '3', '4', '5', 'full']
 export const Playground: Story = {}
 
 /** O halo pulsa até a pessoa abrir o menu. */
-export const Atencao: Story = { args: { attention: true } }
+export const Atencao: Story = { name: 'Atenção', args: { attention: true } }
 
 /** Ações só com texto. */
 export const SemIcones: Story = {
+  name: 'Sem ícones',
   args: {
     items: [
       { label: 'Editar' },
@@ -158,6 +159,7 @@ export const SemIcones: Story = {
 
 /** Qualquer elemento serve de gatilho, por exemplo um Button da marca. */
 export const GatilhoProprio: Story = {
+  name: 'Gatilho próprio',
   args: { trigger: <Button>Nova transação</Button> },
 }
 

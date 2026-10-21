@@ -41,7 +41,7 @@ const networks: SelectOption[] = [
 ]
 
 const meta = {
-  title: 'Componentes/Select',
+  title: 'Componentes/Dropdown/Select',
   component: Select,
   args: {
     options: networks,
@@ -126,13 +126,14 @@ const RADII: ListRadius[] = ['0', '1', '2', '3', '4', '5', 'full']
 export const Playground: Story = {}
 
 /** O halo pulsa até a pessoa abrir o campo: use quando escolher a rede é o próximo passo. */
-export const Atencao: Story = { args: { attention: true } }
+export const Atencao: Story = { name: 'Atenção', args: { attention: true } }
 
 /** Com uma rede já escolhida: o símbolo vai para o campo junto com o nome. */
-export const ComValor: Story = { args: { defaultValue: 'polygon' } }
+export const ComValor: Story = { name: 'Com valor', args: { defaultValue: 'polygon' } }
 
 /** Só texto, sem imagem. */
 export const SemImagens: Story = {
+  name: 'Sem imagens',
   args: {
     placeholder: 'Escolha o período',
     'aria-label': 'Período',

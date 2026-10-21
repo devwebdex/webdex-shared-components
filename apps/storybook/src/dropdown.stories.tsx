@@ -92,13 +92,14 @@ const RADII: ListRadius[] = ['0', '1', '2', '3', '4', '5', 'full']
 const SIZES = ['large', 'medium', 'small'] as const
 
 const meta = {
-  title: 'Componentes/Dropdown',
+  title: 'Componentes/Dropdown/Visão geral',
+  id: 'componentes-dropdown-visao-geral',
   parameters: {
     layout: 'fullscreen',
     docs: {
       description: {
         component:
-          'Todas as variações do Select e do Menu numa página, para revisão. Cada uma tem a story própria em Componentes/Select e Componentes/Menu, com os controles.',
+          'Todas as variações do Select e do Menu numa página, para revisão. Cada uma tem a story própria em Dropdown/Select e Dropdown/Menu, com os controles.',
       },
     },
   },
@@ -121,6 +122,7 @@ function Section({ title, hint, children }: { title: string; hint: string; child
 
 /** Abra cada campo e cada menu: a lista cresce a partir do gatilho e a seta gira. */
 export const Variacoes: Story = {
+  name: 'Variações',
   render: () => (
     <div className="flex flex-col gap-8 p-6">
       <div className="grid gap-8 md:grid-cols-2">
