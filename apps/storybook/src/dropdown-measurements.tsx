@@ -1,4 +1,6 @@
 import {
+  Combobox,
+  type ComboboxOption,
   listItemVariants,
   listPopupVariants,
   Menu,
@@ -10,7 +12,7 @@ import type { ReactNode } from 'react'
 import { boxRows, type MeasureColumn, type MeasureRow, MeasureTable } from './measurements.js'
 
 /**
- * Medidas do Select e do Menu, no formato da Medidas do Button. O campo e o gatilho são os
+ * Medidas do Select, do Combobox e do Menu, no formato da Medidas do Button. O campo e o gatilho são os
  * componentes reais; a lista aberta vive num portal e só existe com o clique, então é medida
  * com as mesmas classes que o componente aplica (listPopupVariants e listItemVariants).
  */
@@ -34,7 +36,10 @@ const popupRows: MeasureRow[] = [
   {
     property: 'borda (inset ring)',
     namespace: null,
-    read: (s) => s.getPropertyValue('--tw-inset-ring-shadow').match(/(\d+px)\s*\S*$/)?.[1] ?? '—',
+    read: (s) =>
+      s
+        .getPropertyValue('--tw-inset-ring-shadow')
+        .match(/inset\s+0\S*\s+0\S*\s+0\S*\s+(\d+px)/)?.[1] ?? '—',
   },
 ]
 
@@ -78,6 +83,21 @@ const popupColumns = (icon: ReactNode, label: string): MeasureColumn[] => [
   },
 ]
 
+/** Campo real nos três tamanhos; mede o gatilho, que tem papel de combobox nos dois. */
+function fieldColumns(field: (size: (typeof SIZES)[number]) => ReactNode): MeasureColumn[] {
+  return SIZES.map((size) => ({
+    label: size,
+    render: (ref) => (
+      <div
+        className="w-64"
+        ref={(element) => ref(element?.querySelector<HTMLElement>('[role="combobox"]') ?? null)}
+      >
+        {field(size)}
+      </div>
+    ),
+  }))
+}
+
 export function SelectMeasurements({
   options,
   icon,
@@ -85,32 +105,45 @@ export function SelectMeasurements({
   options: SelectOption[]
   icon: ReactNode
 }) {
-  const fieldColumns: MeasureColumn[] = SIZES.map((size) => ({
-    label: size,
-    render: (ref) => (
-      <div
-        className="w-64"
-        ref={(element) => ref(element?.querySelector<HTMLElement>('[role="combobox"]') ?? null)}
-      >
-        <Select
-          options={options}
-          defaultValue="polygon"
-          size={size}
-          aria-label={`Rede (${size})`}
-        />
-      </div>
-    ),
-  }))
+  const columns = fieldColumns((size) => (
+    <Select options={options} defaultValue="polygon" size={size} aria-label={`Rede (${size})`} />
+  ))
   return (
     <div className="flex flex-col gap-10">
       <Part title="Campo" hint="O gatilho que fica na página, nos três tamanhos.">
-        <MeasureTable columns={fieldColumns} rows={boxRows} />
+        <MeasureTable columns={columns} rows={boxRows} />
       </Part>
       <Part title="Item da lista" hint="Cada opção da lista aberta, nos três tamanhos.">
         <MeasureTable columns={itemColumns(icon, 'Polygon')} rows={itemRows} />
       </Part>
       <Part title="Caixa da lista" hint="A caixa que abre; não muda com o tamanho.">
         <MeasureTable columns={popupColumns(icon, 'Polygon')} rows={popupRows} />
+      </Part>
+    </div>
+  )
+}
+
+/**
+ * O Combobox tem o gatilho e o item do Select. A caixa muda: a barra de busca no topo tem
+ * tamanho fixo e o respiro fica na lista, não na caixa; ela só existe aberta, num portal.
+ */
+export function ComboboxMeasurements({
+  options,
+  icon,
+}: {
+  options: ComboboxOption[]
+  icon: ReactNode
+}) {
+  const columns = fieldColumns((size) => (
+    <Combobox options={options} defaultValue="polygon" size={size} aria-label={`Rede (${size})`} />
+  ))
+  return (
+    <div className="flex flex-col gap-10">
+      <Part title="Campo" hint="O gatilho que fica na página, nos três tamanhos.">
+        <MeasureTable columns={columns} rows={boxRows} />
+      </Part>
+      <Part title="Item da lista" hint="Cada opção da lista aberta, nos três tamanhos.">
+        <MeasureTable columns={itemColumns(icon, 'Polygon')} rows={itemRows} />
       </Part>
     </div>
   )

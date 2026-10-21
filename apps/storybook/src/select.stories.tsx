@@ -189,7 +189,7 @@ export const Arredondamento: Story = {
 
 /**
  * A lista aberta, com os estados lado a lado. Os estados são forçados pelos mesmos
- * atributos que o Radix põe no DOM (`data-highlighted`, `data-state`, `data-disabled`),
+ * atributos que o Radix põe no DOM (`data-highlighted`, `data-state`, `aria-disabled`),
  * e as classes saem do próprio componente: nada aqui é redigitado.
  */
 export const Lista: Story = {
@@ -209,7 +209,7 @@ export const Lista: Story = {
           <NetworkPolygon variant="branded" />
           Selecionada
         </div>
-        <div className={item} data-disabled="">
+        <div className={item} aria-disabled="true">
           <NetworkAvalanche variant="branded" />
           Desabilitada
         </div>

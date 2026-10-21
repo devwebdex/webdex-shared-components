@@ -49,7 +49,10 @@ export const boxRows: MeasureRow[] = [
     // A borda é inset-ring (box-shadow), não `border`: ler borderTopWidth daria 0.
     property: 'borda (inset ring)',
     namespace: null,
-    read: (s) => s.getPropertyValue('--tw-inset-ring-shadow').match(/(\d+px)\s*\S*$/)?.[1] ?? '—',
+    read: (s) =>
+      s
+        .getPropertyValue('--tw-inset-ring-shadow')
+        .match(/inset\s+0\S*\s+0\S*\s+0\S*\s+(\d+px)/)?.[1] ?? '—',
   },
   {
     property: 'altura total',

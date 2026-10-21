@@ -1,5 +1,6 @@
 import {
   Button,
+  Combobox,
   type ListRadius,
   Menu,
   type MenuItem,
@@ -99,7 +100,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Todas as variações do Select e do Menu numa página, para revisão. Cada uma tem a story própria em Dropdown/Select e Dropdown/Menu, com os controles.',
+          'Todas as variações do Select, do Combobox e do Menu numa página, para revisão. Cada um tem as stories próprias em Dropdown/Select, Dropdown/Combobox e Dropdown/Menu, com os controles.',
       },
     },
   },
@@ -136,7 +137,7 @@ export const Variacoes: Story = {
             <Select options={networks} defaultValue="polygon" aria-label="Rede escolhida" />
           </div>
         </Section>
-        <Section title="Chamar a atenção" hint="O halo pulsa até o campo ser aberto.">
+        <Section title="Chamar a atenção" hint="O halo pulsa até a rede ser escolhida.">
           <div className="w-72">
             <Select
               options={networks}
@@ -158,6 +159,17 @@ export const Variacoes: Story = {
               defaultValue="ethereum"
               aria-label="Rede (desabilitado)"
               disabled
+            />
+          </div>
+        </Section>
+        <Section title="Com busca" hint="Combobox: digite o nome da rede para filtrar a lista.">
+          <div className="w-72">
+            <Combobox
+              options={networks}
+              placeholder="Busque a rede"
+              searchPlaceholder="Buscar rede"
+              emptyMessage="Nenhuma rede encontrada."
+              aria-label="Rede (com busca)"
             />
           </div>
         </Section>

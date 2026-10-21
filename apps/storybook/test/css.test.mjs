@@ -122,7 +122,12 @@ const TONES = ['default', 'danger']
 
 /** Toda classe do Select e do Menu: gatilho (com e sem halo), seta, lista, itens e separador. */
 function listClasses() {
-  const all = new Set([listSeparatorClass, attentionClass, chevronClass].join(' ').split(/\s+/))
+  // Classes que o Select e o Combobox acrescentam ao item (marca e destaque do cmdk).
+  const extra =
+    'justify-between data-[selected=true]:bg-brand-soft/10 data-[selected=true]:before:opacity-100'
+  const all = new Set(
+    [listSeparatorClass, attentionClass, chevronClass, extra].join(' ').split(/\s+/)
+  )
   for (const radius of RADII) {
     for (const utility of listPopupVariants({ radius }).split(/\s+/)) all.add(utility)
     for (const size of SIZES) {
@@ -140,7 +145,7 @@ function listClasses() {
   return [...all].filter(Boolean)
 }
 
-test('toda classe que o Select e o Menu produzem existe no CSS compilado', () => {
+test('toda classe que o Select, o Menu e o Combobox produzem existe no CSS compilado', () => {
   const missing = listClasses().filter((className) => !css.includes(toSelector(className)))
   assert.deepEqual(
     missing,
