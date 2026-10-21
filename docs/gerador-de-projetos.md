@@ -269,8 +269,19 @@ Decidido pelo operador em 2026-10-21, ao criar o dropdown; fecha a antiga A8.
 
 - O `@devwebdex/ui` usa o **Radix** (`radix-ui`, versão fixada) para componentes com comportamento: select, menu, e depois dialog, popover, tooltip e tabs. O Radix cuida de teclado, foco, leitor de tela e posicionamento; o pacote só estiliza, com `cva`, `cn` e as classes ligadas a tokens.
 - Motivo da escolha: os outros projetos da WEbdEX (`site` e `admin` do painel) já usam Radix via shadcn/ui (estilo `radix-nova`), com `select`, `dropdown-menu`, `dialog`, `popover`, `tooltip` e `tabs` prontos. Usar a mesma base deixa o time no que já conhece e facilita trazer esses componentes para o pacote compartilhado. O Base UI foi analisado (Select com valor de qualquer tipo e Combobox no mesmo pacote), mas a vantagem não compensou a diferença em relação ao que o time usa.
-- Componente com Radix leva `'use client'`, porque os primitivos usam estado e contexto. Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `data-state`, `data-disabled`, `data-placeholder`), escritos como classes literais.
-- Primeiros componentes: `Select` e `Menu`, com os eixos `size` e `radius`, opções e ações com ícone (no Storybook, os símbolos das redes vêm do `@web3icons/react`, só como dependência de desenvolvimento), o halo `attention` para chamar a atenção e a lista compartilhada em `packages/ui/src/lib/list.ts`. Movimento sem `@keyframes` próprio, porque o pacote não envia CSS: a abertura usa `@starting-style` e o halo usa o `animate-pulse` do Tailwind; os dois param com movimento reduzido. O visual é proposta para revisão do design: a referência aprovada ainda não tem campo de seleção nem menu.
+- Componente com Radix leva `'use client'`, porque os primitivos usam estado e contexto. Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `data-state`, `data-placeholder`, `aria-disabled`), escritos como classes literais.
+- Primeiros componentes: `Select` e `Menu`, com os eixos `size` e `radius`, opções e ações com ícone (no Storybook, os símbolos das redes vêm do `@web3icons/react`, só como dependência de desenvolvimento), o halo `attention` para chamar a atenção e a lista compartilhada em `packages/ui/src/lib/list.ts`. O visual é proposta para revisão do design: a referência aprovada ainda não tem campo de seleção nem menu.
+- `Combobox`: seleção com busca, sobre o Popover do Radix e o `cmdk` (o mesmo do painel). Mesmo gatilho e mesma lista do `Select`; a busca considera o rótulo e as `keywords` de cada opção. O `cmdk` marca todo item com `data-disabled`, então a regra de desabilitado da lista usa `aria-disabled`, que os dois primitivos põem só no item desabilitado.
+- Halo: some ao abrir e, no `Select` e no `Combobox`, quando há valor; no `Menu`, que não tem valor, depois da primeira abertura.
+- Movimento: a abertura usa `@starting-style` e o halo usa o `animate-pulse` do Tailwind, sem CSS no pacote. O fechamento precisa de `@keyframes`, que o DTCG não representa: ele fica em `packages/tokens/src/motion.css` (`--animate-list-out`), que o build dos tokens anexa ao `theme.css`. O Radix espera a animação de saída antes de desmontar a lista. Tudo para com movimento reduzido.
+
+### D17. Preview e testes do `@devwebdex/ui`
+
+Registrado em 2026-10-21; fecha a antiga A6.
+
+- Preview: Storybook 10 com `@storybook/react-vite` em `apps/storybook` (pacote privado `ui-storybook`). O Vite vem como dependência dele, não do pacote. O `apps/storybook/test/css.test.mjs` confere, no site compilado, que os tokens chegaram e que toda classe produzida pelo `cva` tem regra.
+- Comportamento: Vitest com jsdom e Testing Library em `packages/ui/test`, cobrindo teclado, escolha, busca, envio em formulário e o halo. O jsdom não tem `ResizeObserver`, `scrollIntoView` nem captura de ponteiro; `test/setup.ts` cria versões vazias. Visual e animação ficam no Storybook.
+- Publicação do Storybook: workflow `.github/workflows/storybook.yml` no GitHub Pages, a cada push na `prod` ou à mão, desligado até a variável `STORYBOOK_PAGES` valer `true`. Sai da `prod` porque o ambiente `github-pages` só aceita a branch padrão, a menos que se mude a regra dele. Para habilitar, quem administra a conta `devwebdex` liga o Pages com origem "GitHub Actions" e cria a variável. Fora do GitHub Enterprise, o site do Pages é público mesmo com o repositório privado.
 
 ## Em aberto
 
@@ -279,7 +290,6 @@ Decidido pelo operador em 2026-10-21, ao criar o dropdown; fecha a antiga A8.
 | A3 | Assento Figma | O time de design precisa de assento Dev ou Full em plano Professional ou superior. A conta testada (Starter/View) tem limite de 20 chamadas por mês; a biblioteca inicial estimada consome ~125. Análise: [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md) |
 | A4 | Identidade do repositório | O nome `webdex-shared-components` não descreve um gerador |
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
-| A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
 | A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
 | A9 | Publicação | Implementada (D12); falta a primeira execução no GitHub, que acontece no merge na `prod`, e a configuração única do repositório descrita em [publicacao.md](publicacao.md) |
 | A11 | Dockerfile por app | Adiado até A9 |
