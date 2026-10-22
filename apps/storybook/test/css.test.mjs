@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
+  Alert,
   attentionClass,
   buttonVariants,
   chevronClass,
@@ -26,6 +27,8 @@ import {
   listSeparatorClass,
   selectTriggerVariants,
 } from '@devwebdex/ui'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'storybook-static', 'assets')
@@ -151,5 +154,33 @@ test('toda classe que o Select, o Menu e o Combobox produzem existe no CSS compi
     missing,
     [],
     'classes sem regra no CSS: o @source de packages/ui/src não está varrendo select/, menu/ ou lib/list.ts'
+  )
+})
+
+/**
+ * Toda classe que o Alert renderiza, em cada variante, com título e texto.
+ *
+ * Sai do HTML renderizado, não só do cva: o símbolo e o título têm classes fora do
+ * alertVariants, e são justamente as que sumiriam sem ninguém notar.
+ */
+function alertClasses() {
+  const all = new Set()
+  for (const variant of ['info', 'warning', 'error', 'success']) {
+    const html = renderToStaticMarkup(createElement(Alert, { variant, title: 'Título.' }, 'Texto.'))
+    for (const [, classes] of html.matchAll(/class="([^"]*)"/g)) {
+      for (const utility of classes.split(/\s+/)) {
+        if (utility) all.add(utility)
+      }
+    }
+  }
+  return [...all]
+}
+
+test('toda classe que o Alert produz existe no CSS compilado', () => {
+  const missing = alertClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(
+    missing,
+    [],
+    'classes do Alert sem regra no CSS: o @source de packages/ui/src não está varrendo o componente'
   )
 })
