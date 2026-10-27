@@ -17,7 +17,15 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { buttonVariants } from '@devwebdex/ui'
+import {
+  attentionClass,
+  buttonVariants,
+  chevronClass,
+  listItemVariants,
+  listPopupVariants,
+  listSeparatorClass,
+  selectTriggerVariants,
+} from '@devwebdex/ui'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'storybook-static', 'assets')
@@ -106,5 +114,42 @@ test('toda classe que o Button produz existe no CSS compilado', () => {
     `classes sem regra no CSS. Se forem versões sem prefixo (shadow-elevation-4, outline-brand),
      o @source inline gerado por .storybook/main.ts não cobriu. Se forem classes normais,
      o @source de packages/ui/src não está varrendo o componente.`
+  )
+})
+
+const RADII = ['0', '1', '2', '3', '4', '5', 'full']
+const TONES = ['default', 'danger']
+
+/** Toda classe do Select e do Menu: gatilho (com e sem halo), seta, lista, itens e separador. */
+function listClasses() {
+  // Classes que o Select e o Combobox acrescentam ao item (marca e destaque do cmdk).
+  const extra =
+    'justify-between data-[selected=true]:bg-brand-soft/10 data-[selected=true]:before:opacity-100'
+  const all = new Set(
+    [listSeparatorClass, attentionClass, chevronClass, extra].join(' ').split(/\s+/)
+  )
+  for (const radius of RADII) {
+    for (const utility of listPopupVariants({ radius }).split(/\s+/)) all.add(utility)
+    for (const size of SIZES) {
+      for (const attention of [false, true]) {
+        for (const utility of selectTriggerVariants({ size, radius, attention }).split(/\s+/)) {
+          all.add(utility)
+        }
+      }
+      for (const tone of TONES) {
+        for (const utility of listItemVariants({ size, radius, tone }).split(/\s+/))
+          all.add(utility)
+      }
+    }
+  }
+  return [...all].filter(Boolean)
+}
+
+test('toda classe que o Select, o Menu e o Combobox produzem existe no CSS compilado', () => {
+  const missing = listClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(
+    missing,
+    [],
+    'classes sem regra no CSS: o @source de packages/ui/src não está varrendo select/, menu/ ou lib/list.ts'
   )
 })

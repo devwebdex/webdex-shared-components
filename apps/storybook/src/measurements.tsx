@@ -1,10 +1,10 @@
 import { Button, type ButtonProps } from '@devwebdex/ui'
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 
 /**
  * Mede o componente já renderizado e diz, valor a valor, de qual token ele veio.
  *
- * Lê `getComputedStyle` do botão real em vez de interpretar as classes: o que
+ * Lê `getComputedStyle` do elemento real em vez de interpretar as classes: o que
  * aparece é o que o navegador aplicou, incluindo o que vier de cascata ou de
  * valor arbitrário. Depois compara cada medida com os tokens do tema, lidos de
  * `document.documentElement`, e marca o que não corresponde a nenhum.
@@ -13,9 +13,6 @@ import { useEffect, useRef, useState } from 'react'
  * Variable no Figma.
  */
 
-const SIZES = ['large', 'medium', 'small'] as const
-type Size = (typeof SIZES)[number]
-
 /** Tokens procurados, por namespace. A lista acompanha packages/tokens/src. */
 const SCALES = {
   spacing: ['1', '2', '3', '4', '5', '6', '7', '8'],
@@ -23,13 +20,24 @@ const SCALES = {
   text: ['sm', 'base', 'lg'],
 }
 
-type Row = {
+export type MeasureRow = {
   property: string
   namespace: keyof typeof SCALES | null
-  read: (style: CSSStyleDeclaration, button: HTMLButtonElement) => string
+  read: (style: CSSStyleDeclaration, element: HTMLElement) => string
 }
 
-const ROWS: Row[] = [
+/** A borda é inset-ring (box-shadow), não `border`: ler borderTopWidth daria 0. */
+export const insetRingRow: MeasureRow = {
+  property: 'borda (inset ring)',
+  namespace: null,
+  read: (s) =>
+    s
+      .getPropertyValue('--tw-inset-ring-shadow')
+      .match(/inset\s+0\S*\s+0\S*\s+0\S*\s+(\d+px)/)?.[1] ?? '—',
+}
+
+/** Medidas de uma caixa com texto e ícone: serve ao Button, ao campo do Select e aos itens da lista. */
+export const boxRows: MeasureRow[] = [
   { property: 'padding horizontal', namespace: 'spacing', read: (s) => s.paddingLeft },
   { property: 'padding vertical', namespace: 'spacing', read: (s) => s.paddingTop },
   { property: 'espaço entre ícone e texto', namespace: 'spacing', read: (s) => s.columnGap },
@@ -40,21 +48,28 @@ const ROWS: Row[] = [
   {
     property: 'tamanho do ícone',
     namespace: 'spacing',
-    read: (_s, button) => {
-      const svg = button.querySelector('svg')
-      return svg ? `${Math.round(svg.getBoundingClientRect().width)}px` : '—'
+    read: (_s, element) => {
+      // Largura do CSS, não getBoundingClientRect: a lista abre com escala (97% para 100%), e o
+      // retângulo medido no meio da transição sai 1px menor.
+      const svg = element.querySelector('svg')
+      return svg ? getComputedStyle(svg).width : '—'
     },
   },
+  insetRingRow,
   {
-    // A borda é inset-ring (box-shadow), não `border`: ler borderTopWidth daria 0.
-    property: 'borda (inset ring)',
+    property: 'altura total',
     namespace: null,
-    read: (s) => s.getPropertyValue('--tw-inset-ring-shadow').match(/(\d+px)\s*\S*$/)?.[1] ?? '—',
+    read: (_s, element) => `${Math.round(element.offsetHeight)}px`,
   },
-  { property: 'altura total', namespace: null, read: (_s, b) => `${Math.round(b.offsetHeight)}px` },
 ]
 
 type Measured = { value: string; token: string | null }
+
+export type MeasureColumn = {
+  label: string
+  /** Desenha o que será medido e entrega o elemento-alvo pelo `ref`. */
+  render: (ref: (element: HTMLElement | null) => void) => ReactNode
+}
 
 function readTheme(): Map<string, string> {
   const root = getComputedStyle(document.documentElement)
@@ -76,39 +91,51 @@ function normalize(value: string): string {
   return px ? `${Number(px[1])}px` : value
 }
 
-export function Measurements(props: ButtonProps) {
-  const refs = useRef(new Map<Size, HTMLButtonElement>())
-  const [data, setData] = useState<Record<Size, Measured[]> | null>(null)
+export function MeasureTable({ columns, rows }: { columns: MeasureColumn[]; rows: MeasureRow[] }) {
+  const refs = useRef(new Map<string, HTMLElement>())
+  const [data, setData] = useState<Record<string, Measured[]> | null>(null)
+  // Mede uma vez, depois de montar: as colunas são recriadas a cada render e, como dependência
+  // do efeito, fariam medir e renderizar em laço.
+  const input = useRef({ columns, rows })
 
   useEffect(() => {
-    const theme = readTheme()
-    const next = {} as Record<Size, Measured[]>
-    for (const size of SIZES) {
-      const button = refs.current.get(size)
-      if (!button) continue
-      const style = getComputedStyle(button)
-      next[size] = ROWS.map((row) => {
-        const value = normalize(row.read(style, button))
-        const token = row.namespace ? (theme.get(`${row.namespace}|${value}`) ?? null) : null
-        return { value, token }
-      })
+    const { columns, rows } = input.current
+    let frame = 0
+    const measure = () => {
+      const theme = readTheme()
+      const next: Record<string, Measured[]> = {}
+      for (const column of columns) {
+        const element = refs.current.get(column.label)
+        if (!element) continue
+        const style = getComputedStyle(element)
+        next[column.label] = rows.map((row) => {
+          const value = normalize(row.read(style, element))
+          const token = row.namespace ? (theme.get(`${row.namespace}|${value}`) ?? null) : null
+          return { value, token }
+        })
+      }
+      setData(next)
     }
-    setData(next)
+    // Medir no próprio efeito pega o layout pela metade: a fonte ainda não carregou e o Radix
+    // ainda não pôs o valor escolhido dentro do Select (o campo media 38px em vez de 42px).
+    void document.fonts.ready.then(() => {
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(measure)
+      })
+    })
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Os botões medidos; ficam visíveis porque medir o que está escondido mente. */}
-      <div className="flex flex-wrap items-center gap-4">
-        {SIZES.map((size) => (
-          <Button
-            key={size}
-            {...props}
-            size={size}
-            ref={(node) => {
-              if (node) refs.current.set(size, node)
-            }}
-          />
+      {/* O que é medido fica visível, porque medir o que está escondido mente. */}
+      <div className="flex flex-wrap items-start gap-4">
+        {columns.map((column) => (
+          <div key={column.label}>
+            {column.render((element) => {
+              if (element) refs.current.set(column.label, element)
+            })}
+          </div>
         ))}
       </div>
 
@@ -119,26 +146,26 @@ export function Measurements(props: ButtonProps) {
               <th className="border-b border-line-default px-3 py-2 font-mono text-xs text-text-secondary">
                 propriedade
               </th>
-              {SIZES.map((size) => (
+              {columns.map((column) => (
                 <th
-                  key={size}
+                  key={column.label}
                   className="border-b border-line-default px-3 py-2 font-mono text-xs text-brand"
                 >
-                  {size}
+                  {column.label}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {ROWS.map((row, index) => (
+            {rows.map((row, index) => (
               <tr key={row.property}>
                 <td className="border-b border-line-default px-3 py-2 text-text-secondary">
                   {row.property}
                 </td>
-                {SIZES.map((size) => {
-                  const cell = data?.[size]?.[index]
+                {columns.map((column) => {
+                  const cell = data?.[column.label]?.[index]
                   return (
-                    <td key={size} className="border-b border-line-default px-3 py-2">
+                    <td key={column.label} className="border-b border-line-default px-3 py-2">
                       <span className="font-mono">{cell?.value ?? '…'}</span>
                       {cell &&
                         (cell.token ? (
@@ -167,4 +194,14 @@ export function Measurements(props: ButtonProps) {
       </p>
     </div>
   )
+}
+
+const SIZES = ['large', 'medium', 'small'] as const
+
+export function Measurements(props: ButtonProps) {
+  const columns: MeasureColumn[] = SIZES.map((size) => ({
+    label: size,
+    render: (ref) => <Button {...props} size={size} ref={ref} />,
+  }))
+  return <MeasureTable columns={columns} rows={boxRows} />
 }

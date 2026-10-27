@@ -68,6 +68,8 @@ Convenções:
 
 Sobre estado: o que é pseudo-classe (`hover`, `active`, `focus-visible`, `disabled`) **não vira prop** — vira modificador de classe. O que é estado da aplicação (`loading`, `selected`) vira prop.
 
+Componente com comportamento (abrir, escolher, navegar pelo teclado) usa o primitivo do Radix (D16) e lê o estado dos atributos que ele põe no DOM: `data-state`, `data-highlighted`, `data-placeholder`. Com o `cmdk` (Combobox), o destaque é `data-selected="true"`. Para desabilitado, use `aria-disabled:`, não `data-disabled:` — o `cmdk` põe `data-disabled="false"` em todo item habilitado, e a regra pegaria todos; já `aria-disabled:` só casa com `"true"`.
+
 ## 4. A story
 
 ```
@@ -77,6 +79,20 @@ apps/storybook/src/<nome>.stories.tsx
 A story importa de `@devwebdex/ui`, não do arquivo interno. Assim ela exercita a superfície pública do pacote, do mesmo jeito que um projeto que o consome.
 
 O mínimo: um `Playground` com controles e uma story por eixo de variante. Declare `argTypes` com `options` e `table.type` à mão — o docgen não extrai tipo de `VariantProps`, que é um mapped type, e a tabela de controles sai vazia sem isso.
+
+Para o design conferir alturas, espaçamentos e raios, crie uma story `Medidas` com o `MeasureTable` de `apps/storybook/src/measurements.tsx`: ele mede o elemento renderizado, não o que a classe promete.
+
+## 4.1. O teste de comportamento
+
+```
+packages/ui/test/<nome>.test.tsx
+```
+
+Vitest com jsdom e Testing Library. Teste o que a pessoa faz: abrir pelo teclado, escolher, o valor que chega no `onValueChange` ou no formulário, o item desabilitado. Use `userEvent` (export nomeado de `@testing-library/user-event`) e busque elementos pelo papel ARIA (`getByRole`). Visual e animação não entram aqui: ficam no Storybook.
+
+```bash
+pnpm --filter @devwebdex/ui test
+```
 
 ## 5. Os comandos, e o que cada um protege
 
@@ -98,7 +114,7 @@ Antes de commitar:
 | `pnpm build` | compila tokens e `ui` na ordem certa. Sem isto, tudo depois olha uma saída velha |
 | `pnpm check-types` | `tsc --noEmit` em todos os pacotes |
 | `pnpm lint` | Biome na raiz e lint por pacote |
-| `pnpm test` | inclui a conferência do CSS compilado (passo 6) |
+| `pnpm test` | testes de comportamento (passo 4.1) e a conferência do CSS compilado (passo 6) |
 | `pnpm changeset` | declara o bump de versão. Sem ele o release não publica nada |
 
 ## 6. As três falhas que não gritam
@@ -109,12 +125,12 @@ Esta cadeia tem três modos de falha em que o build termina com "completed succe
 → `pnpm build` depois de todo `checkout`.
 
 **Classe montada em tempo de execução.** O Tailwind só gera o que encontra *escrito* no código. Classe concatenada em variável não existe para ele, e some do CSS sem aviso.
-→ Escreva a classe inteira e literal. Se não der, declare em `@source inline(...)` — e, de preferência, gere essa lista a partir do próprio componente, como faz o `.storybook/main.ts`.
+→ Escreva a classe inteira e literal. Se não der, declare em `@source inline(...)` — e, de preferência, gere essa lista a partir do próprio componente, como faz o `.storybook/main.ts` para a Matriz do Button, que força `hover`, `active` e `focus-visible` tirando o prefixo da classe. Só precisa mexer no `main.ts` se o componente novo tiver uma story que monte classe assim.
 
 **`pnpm --filter <pacote> build` pula o turbo.** Roda só o script daquele pacote, sem construir as dependências.
 → Use `pnpm build` ou `pnpm turbo run build --filter=<pacote>`.
 
-O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — hoje ele percorre só o Button, e o que não estiver na lista passa sem conferência.
+O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Select, o Menu e o Combobox, e o que não estiver na lista passa sem conferência.
 
 ## 7. A entrega
 
