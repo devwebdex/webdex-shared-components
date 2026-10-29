@@ -150,3 +150,11 @@ jobs:
           docker compose up -d --wait
           pnpm db:deploy
           pnpm test:e2e
+      # O compose só diz "unhealthy"; o motivo fica no log do container, que some com o runner.
+      - name: Estado e log dos containers (só na falha)
+        if: failure() && matrix.database
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail 200
+          docker inspect --format '{{.Name}}: {{json .State}}' $(docker compose ps -aq)
