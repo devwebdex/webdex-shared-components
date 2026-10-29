@@ -1,6 +1,6 @@
 {
   "name": "@devwebdex/tokens",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Design tokens WEbdEX (fonte: Variables do Figma) expostos como tema do Tailwind 4",
   "license": "UNLICENSED",
   "repository": {

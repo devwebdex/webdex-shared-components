@@ -1,6 +1,6 @@
 {
   "name": "@devwebdex/create",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gerador de projetos WEbdEX (TUI com mouse e modo não interativo)",
   "license": "UNLICENSED",
   "repository": {
