@@ -1,3 +1,4 @@
+import { appendFileSync, readFileSync } from 'node:fs'
 import StyleDictionary from 'style-dictionary'
 
 // O seletor `@theme` faz cada token virar um tema do Tailwind 4: o caminho do token
@@ -21,3 +22,7 @@ const sd = new StyleDictionary({
 })
 
 await sd.buildAllPlatforms()
+
+// O DTCG não descreve @keyframes: o movimento vem de um CSS escrito à mão, anexado ao mesmo arquivo
+// para quem consome continuar importando só o theme.css.
+appendFileSync('dist/theme.css', `\n${readFileSync('src/motion.css', 'utf8')}`)

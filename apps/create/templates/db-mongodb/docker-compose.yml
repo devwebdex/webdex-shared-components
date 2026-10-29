@@ -4,7 +4,9 @@ volumes:
 
 services:
   mongodb:
-    image: mongo:8
+    # 8.2, não 8: a 8.3 recusa iniciar em kernel 6.19 ou mais novo (SERVER-121912), como o do runner
+    # do GitHub e de distribuições recentes. Voltar para `mongo:8` quando a 8.3 subir nesses kernels.
+    image: mongo:8.2
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mongo}

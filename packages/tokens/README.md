@@ -1,8 +1,8 @@
 # @devwebdex/tokens
 
-Os valores em `src/tokens.json` são **provisórios**: servem só para o build funcionar até o time de design exportar as Variables do Figma.
+Os valores vêm das Variables do arquivo WEbdEX — Design System. Os tamanhos de fonte (`text.*`) ainda são provisórios: foram lidos do componente, não de Variable.
 
-Como gerar e nomear os tokens: [docs/ui/figma-para-componentes.md](../../docs/ui/figma-para-componentes.md).
+Como importar e nomear os tokens: [docs/ui/figma-para-tokens.md](../../docs/ui/figma-para-tokens.md).
 
 Uso no app (Tailwind 4):
 

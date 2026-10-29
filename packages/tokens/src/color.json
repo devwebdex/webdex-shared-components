@@ -1,0 +1,57 @@
+{
+  "color": {
+    "$type": "color",
+
+    "brand": { "$value": "#f5127c" },
+    "brand-deep": { "$value": "#c4085f" },
+    "brand-soft": { "$value": "#ff6ba8" },
+
+    "magenta": {
+      "10": { "$value": "#ffe7f2" },
+      "20": { "$value": "#ffbddc" },
+      "30": { "$value": "#ff92c5" },
+      "40": { "$value": "{color.brand-soft}" },
+      "50": { "$value": "#ff3d98" },
+      "60": { "$value": "{color.brand}" },
+      "70": { "$value": "{color.brand-deep}" },
+      "80": { "$value": "#a3004c" },
+      "90": { "$value": "#7b0039" },
+      "100": { "$value": "#520026" }
+    },
+
+    "coral": {
+      "10": { "$value": "#ffedef" },
+      "20": { "$value": "#ffc5ca" },
+      "30": { "$value": "#ff9da6" },
+      "40": { "$value": "#ff7582" },
+      "50": { "$value": "#ff4d5e" },
+      "60": { "$value": "#dd3848" },
+      "70": { "$value": "#bb2735" },
+      "80": { "$value": "#991925" },
+      "90": { "$value": "#770e18" },
+      "100": { "$value": "#55060d" }
+    },
+
+    "success": { "$value": "#1fc98a" },
+    "warning": { "$value": "#f0a82e" },
+    "danger": { "$value": "#ff5c40" },
+    "info": { "$value": "#5ec8f2" },
+
+    "success-bg": { "$value": "#1fc98a24" },
+    "warning-bg": { "$value": "#f0a82e24" },
+    "danger-bg": { "$value": "#ff5c4024" },
+    "info-bg": { "$value": "#5ec8f224" },
+
+    "background": { "$value": "#0c0611" },
+    "surface-card": { "$value": "#180c20a6" },
+    "surface-code": { "$value": "#ffffff0d" },
+    "surface-elevated": { "$value": "#f5127c0f" },
+
+    "text-primary": { "$value": "#fbf5f9" },
+    "text-secondary": { "$value": "#f2deeca3" },
+    "text-disabled": { "$value": "#f2deec57" },
+    "text-syntax": { "$value": "#c8b4ff" },
+
+    "line-default": { "$value": "#ffffff1a" }
+  }
+}

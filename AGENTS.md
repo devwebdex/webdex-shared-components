@@ -8,7 +8,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 - `pnpm build`: build de todos os pacotes (Turborepo)
 - `pnpm check-types`
 - `pnpm lint`: Biome no repositório inteiro + lint dos pacotes
-- `pnpm test`: testes do gerador (`bun test`)
+- `pnpm test`: testes do gerador (`bun test`), do `@devwebdex/ui` (Vitest) e do CSS do Storybook
 - `pnpm format`: aplica formatação e correções seguras do Biome
 - `pnpm agents:sync`: regenera os subagentes a partir de `ai/agents/`
 - `pnpm changeset`: registra a mudança de um pacote para o próximo release
@@ -23,7 +23,8 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 | `packages/biome-config` | config Biome compartilhada (lint e formatação) |
 | `packages/eslint-config` | ESLint mínimo para backends (promessas com informação de tipo) |
 | `packages/tokens` | design tokens DTCG → `dist/theme.css` (`@theme` do Tailwind 4) |
-| `packages/ui` | componentes React |
+| `packages/ui` | componentes React (testes em `test/`, Vitest) |
+| `apps/storybook` | preview dos componentes (Storybook) e teste do CSS compilado |
 | `ai/agents` | fonte única dos subagentes de IA |
 | `docs` | documentação e decisões |
 
@@ -31,6 +32,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 
 - TypeScript fixado em 6.0.x: o typescript-eslint ainda não suporta o 7.
 - Pacotes ESM com `module: NodeNext`: imports relativos com extensão `.js`.
+- Componente novo no `@devwebdex/ui`: siga [docs/ui/criar-componente.md](docs/ui/criar-componente.md), acrescente-o ao teste de CSS do Storybook e teste o comportamento em `packages/ui/test`.
 - Não edite `.claude/agents`, `.opencode/agents` nem `.codex/agents` à mão: edite `ai/agents/` e rode `pnpm agents:sync`.
 - Decisão nova ou mudança relevante: atualize `docs/gerador-de-projetos.md`.
 - Mudou um template? Gere um projeto com `--yes --link-packages .` e rode `pnpm build`, `pnpm check-types` e `pnpm lint` nele: os templates não passam pelo Biome deste repositório.
@@ -39,7 +41,7 @@ Monorepo da WEbdEX com o gerador de projetos (`apps/create`) e os pacotes de pad
 
 ## Subagentes
 
-- `design-to-code`: Figma → tokens e componentes. Segue [docs/ui/figma-para-componentes.md](docs/ui/figma-para-componentes.md).
+- `figma-tokens`: Variables do Figma → tokens DTCG. Segue [docs/ui/figma-para-tokens.md](docs/ui/figma-para-tokens.md). Componente não passa por ele: ver [docs/ui/criar-componente.md](docs/ui/criar-componente.md).
 
 <!-- BEGIN:turborepo-agent-rules -->
 

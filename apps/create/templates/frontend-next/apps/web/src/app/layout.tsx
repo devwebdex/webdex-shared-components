@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen bg-surface font-sans text-on-surface antialiased">
+      <body className="min-h-screen bg-background font-sans text-text-primary antialiased">
         //#if web3=evm
         <Web3Provider>{children}</Web3Provider>
         //#else

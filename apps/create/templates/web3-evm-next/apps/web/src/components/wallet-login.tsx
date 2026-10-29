@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '@devwebdex/ui'
+import { Button } from '@devwebdex/ui'
 //#if backend!=none
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 //#endif
@@ -31,11 +31,6 @@ import {
   useSwitchChain,
 } from 'wagmi'
 //#endif
-
-const button =
-  'rounded-md px-md py-md font-bold focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 disabled:opacity-50'
-const primaryButton = cn(button, 'bg-primary text-on-primary')
-const secondaryButton = cn(button, 'border border-primary text-primary')
 //#if backend!=none
 
 const sessionKey = ['auth', 'session'] as const
@@ -94,7 +89,7 @@ export function WalletLogin() {
   return (
     <section
       aria-labelledby="wallet-title"
-      className="flex flex-col gap-md rounded-md border border-primary p-md"
+      className="flex flex-col gap-4 rounded-2 border border-line-default p-4"
     >
       <h2 id="wallet-title" className="font-bold text-xl">
         Carteira
@@ -115,17 +110,12 @@ function ConnectWallet() {
   const connect = useConnect()
   return (
     <>
-      <ul aria-label="Carteiras encontradas" className="flex flex-wrap gap-md">
+      <ul aria-label="Carteiras encontradas" className="flex flex-wrap gap-4">
         {walletOptions(connectors).map((connector) => (
           <li key={connector.uid}>
-            <button
-              type="button"
-              className={primaryButton}
-              disabled={connect.isPending}
-              onClick={() => connect.mutate({ connector })}
-            >
+            <Button disabled={connect.isPending} onClick={() => connect.mutate({ connector })}>
               Conectar {walletName(connector)}
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
@@ -138,15 +128,13 @@ function SwitchNetwork({ chain }: { chain: Chain }) {
   const switchChain = useSwitchChain()
   return (
     <>
-      <div className="flex flex-wrap gap-md">
-        <button
-          type="button"
-          className={primaryButton}
+      <div className="flex flex-wrap gap-4">
+        <Button
           disabled={switchChain.isPending}
           onClick={() => switchChain.mutate({ chainId: chain.id })}
         >
           Trocar para {chain.name}
-        </button>
+        </Button>
         <DisconnectButton />
       </div>
       <ErrorMessage error={switchChain.error} />
@@ -157,14 +145,9 @@ function SwitchNetwork({ chain }: { chain: Chain }) {
 function DisconnectButton() {
   const disconnect = useDisconnect()
   return (
-    <button
-      type="button"
-      className={secondaryButton}
-      disabled={disconnect.isPending}
-      onClick={() => disconnect.mutate()}
-    >
+    <Button variant="outlined" disabled={disconnect.isPending} onClick={() => disconnect.mutate()}>
       Desconectar
-    </button>
+    </Button>
   )
 }
 //#if backend!=none
@@ -195,15 +178,10 @@ function SignIn({ address, chain }: { address: Address; chain: Chain }) {
   })
   return (
     <>
-      <div className="flex flex-wrap gap-md">
-        <button
-          type="button"
-          className={primaryButton}
-          disabled={login.isPending}
-          onClick={() => login.mutate()}
-        >
+      <div className="flex flex-wrap gap-4">
+        <Button disabled={login.isPending} onClick={() => login.mutate()}>
           {login.isPending ? 'Assinando…' : 'Entrar com a carteira'}
-        </button>
+        </Button>
         <DisconnectButton />
       </div>
       <ErrorMessage error={login.error} />
@@ -223,15 +201,10 @@ function SignOut() {
   })
   return (
     <>
-      <div className="flex flex-wrap gap-md">
-        <button
-          type="button"
-          className={secondaryButton}
-          disabled={logout.isPending}
-          onClick={() => logout.mutate()}
-        >
+      <div className="flex flex-wrap gap-4">
+        <Button variant="outlined" disabled={logout.isPending} onClick={() => logout.mutate()}>
           Sair
-        </button>
+        </Button>
       </div>
       <ErrorMessage error={logout.error} />
     </>

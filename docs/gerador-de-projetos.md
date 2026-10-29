@@ -44,7 +44,7 @@ Perguntado pela TUI:
 |---|---|
 | Arquitetura | monólito modular (microserviços aparecem como "em breve") |
 | Backend | nenhum, Nest, Express, Fastify, AdonisJS |
-| Banco | PostgreSQL 17, MySQL 8.4, MongoDB 8 (MongoDB não vale para o Adonis) |
+| Banco | PostgreSQL 17, MySQL 8.4, MongoDB 8.2 (MongoDB não vale para o Adonis) |
 | ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express/Fastify: Prisma ou Drizzle (SQL), Mongoose (MongoDB, fixo) |
 | Filas | nenhuma, BullMQ + Redis 8 (só com backend) |
 | Frontend | nenhum, Next, Vite + React, Inertia + React (só com Adonis) |
@@ -116,7 +116,9 @@ Decisão:
 
 ### D7. Componentes e tokens: responsabilidade do time de design
 
-- O time de design cria tokens e componentes com o subagente `design-to-code`, seguindo [ui/figma-para-componentes.md](ui/figma-para-componentes.md). O time de dev mantém a fundação (pacotes, build, convenções).
+> **Alterada em 2026-10-19.** O componente passou a nascer em código, e o Figma virou etapa de revisão: [ui/html-primeiro.md](ui/html-primeiro.md). O resto desta decisão continua valendo.
+
+- O time de design define a linguagem visual; o componente é implementado em código e revisado por ele depois, seguindo [ui/criar-componente.md](ui/criar-componente.md). Os tokens vêm das Variables do Figma pelo subagente `figma-tokens`, seguindo [ui/figma-para-tokens.md](ui/figma-para-tokens.md).
 - Componentes são distribuídos como pacote npm `@devwebdex/ui`, publicado a partir de `packages/ui` deste monorepo. A opção de registry com cópia (estilo shadcn) foi descartada: correções não chegariam aos projetos.
 - Tokens no formato DTCG em `packages/tokens/src/`. O Style Dictionary gera `dist/theme.css` com bloco `@theme`, então os nomes dos tokens seguem os namespaces do Tailwind 4 (`color`, `radius`, `spacing`, `font`, `text`...).
 - Componentes: variantes com `class-variance-authority`, classes mescladas por `cn` (`clsx` + `tailwind-merge`), só classes ligadas a tokens.
@@ -236,6 +238,7 @@ Pedido pelo operador em 2026-10-14 ("1; 2; 3; 4; 5"). Versões e comportamentos 
 
 - **Fastify 5.12** com `@fastify/cors`: mesma convenção de módulos do Express (D11), com cada módulo virando plugin com prefixo; testes por `app.inject()`. Express e Fastify compartilham a camada `backend-node-common` e as integrações `node-<orm>`.
 - **MongoDB 8 + Mongoose 9**: o Prisma 7 não suporta MongoDB (a linha 6 ficaria sem caminho de upgrade), por isso Mongoose é o ORM fixo para MongoDB. MongoDB não é oferecido no Adonis, cujo Lucid é só SQL. Sem migrações: `pnpm db:migrate` e `pnpm db:deploy` não fazem nada (os scripts da raiz usam `--if-present`).
+- Imagem fixada em `mongo:8.2` em 2026-10-29. A `mongo:8` passou a trazer a 8.3, que recusa iniciar em kernel 6.19 ou mais novo ([SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912)): `MongoDB cannot start: Linux kernel versions 6.19 and newer has a known incompatibility`. O runner do GitHub (Ubuntu 26.04, kernel 7.0) recusou a 8.3.13 e subiu a 8.2.12, a 8.0.4 e a 7.0.45. A variável `GLIBC_TUNABLES=glibc.pthread.rseq=1` também faz a 8.3 subir, mas não tem respaldo oficial e os relatos se contradizem sobre ela (ver R9).
 - **Vite 8 + React 19** em `apps/web`, porta 3000 (a origem que os backends liberam no CORS), Tailwind 4 por `@tailwindcss/vite`, tokens e `@devwebdex/ui`.
 - **Inertia 3 + React** só com AdonisJS: o Inertia precisa de um backend que renderize as páginas, e o adaptador oficial (`@adonisjs/inertia` 5) é do Adonis. As páginas ficam em `apps/api/inertia/`; o kernel não força JSON e o registro tipado das páginas é gerado pelos hooks do Adonis, por isso o `check-types` do `apps/api` depende do build.
 - **BullMQ 6 + Redis 8**: a API enfileira e um worker, processo separado, processa (`pnpm dev:worker` em desenvolvimento; `pnpm --filter api worker` a partir do build). Fila de exemplo `mail`; `GET /health` passa a conferir o Redis. Padrão do projeto gerado: `docs/standards/queues-bullmq.md`.
@@ -261,6 +264,26 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
   - Uma flag de eixo que não se aplica às outras escolhas (ex.: `--session` sem `--web3 evm`) é recusada pelo CLI, em vez de ir para o manifesto sem efeito.
   - Verificado em 2026-10-15: contra a API rodando, com o cliente real da rede (RPC da Amoy) e uma conta local assinando, o fluxo nonce, verify, `me`, `/access/admin` (403 sem contrato), logout e repetição da assinatura (401) passou no Nest com cookie, no Fastify com token e no Adonis com cookie. No navegador foram conferidos o carregamento, o CORS com credenciais e a recusa de assinatura inválida. Falta conectar uma carteira de verdade no navegador (R8).
 
+### D16. Primitivos acessíveis: Radix
+
+Decidido pelo operador em 2026-10-21, ao criar o dropdown; fecha a antiga A8.
+
+- O `@devwebdex/ui` usa o **Radix** (`radix-ui`, versão fixada) para componentes com comportamento: select, menu, e depois dialog, popover, tooltip e tabs. O Radix cuida de teclado, foco, leitor de tela e posicionamento; o pacote só estiliza, com `cva`, `cn` e as classes ligadas a tokens.
+- Motivo da escolha: os outros projetos da WEbdEX (`site` e `admin` do painel) já usam Radix via shadcn/ui (estilo `radix-nova`), com `select`, `dropdown-menu`, `dialog`, `popover`, `tooltip` e `tabs` prontos. Usar a mesma base deixa o time no que já conhece e facilita trazer esses componentes para o pacote compartilhado. O Base UI foi analisado (Select com valor de qualquer tipo e Combobox no mesmo pacote), mas a vantagem não compensou a diferença em relação ao que o time usa.
+- Componente com Radix leva `'use client'`, porque os primitivos usam estado e contexto. Os estados vêm dos atributos que o Radix põe no DOM (`data-highlighted`, `data-state`, `data-placeholder`, `aria-disabled`), escritos como classes literais.
+- Primeiros componentes: `Select` e `Menu`, com os eixos `size` e `radius` (no `Menu`, o raio vale só para a lista: o gatilho padrão é o Button, com o raio dele), opções e ações com ícone (no Storybook, os símbolos das redes vêm do `@web3icons/react`, só como dependência de desenvolvimento), o halo `attention` para chamar a atenção e a lista compartilhada em `packages/ui/src/lib/list.ts`. O visual é proposta para revisão do design: a referência aprovada ainda não tem campo de seleção nem menu.
+- `Combobox`: seleção com busca, sobre o Popover do Radix e o `cmdk` (o mesmo do painel). Mesmo gatilho e mesma lista do `Select`; a busca considera o rótulo e as `keywords` de cada opção. O `cmdk` marca o destaque com `data-selected="true"`, e o Combobox acrescenta classes para ele. O `cmdk` também põe `data-disabled` e `aria-disabled` em todo item, com `"false"` nos habilitados. A regra de desabilitado da lista usa `aria-disabled:`, porque essa variante do Tailwind só casa com `"true"`; uma regra `data-disabled:` pegaria todos os itens.
+- Halo: some ao abrir e, no `Select` e no `Combobox`, quando há valor; no `Menu`, que não tem valor, depois da primeira abertura.
+- Movimento: a abertura usa `@starting-style` e o halo usa o `animate-pulse` do Tailwind, sem CSS no pacote. O fechamento precisa de `@keyframes`, que o DTCG não representa: ele fica em `packages/tokens/src/motion.css` (`--animate-list-out`), que o build dos tokens anexa ao `theme.css`. O Radix espera a animação de saída antes de desmontar a lista. Tudo para com movimento reduzido.
+
+### D17. Preview e testes do `@devwebdex/ui`
+
+Registrado em 2026-10-21; fecha a antiga A6.
+
+- Preview: Storybook 10 com `@storybook/react-vite` em `apps/storybook` (pacote privado `ui-storybook`). O Vite vem como dependência dele, não do pacote. O `apps/storybook/test/css.test.mjs` confere, no site compilado, que os tokens chegaram e que toda classe produzida pelo `cva` tem regra.
+- Comportamento: Vitest com jsdom e Testing Library em `packages/ui/test`, cobrindo teclado, escolha, busca, envio em formulário e o halo. O jsdom não tem `ResizeObserver`, `scrollIntoView` nem captura de ponteiro; `test/setup.ts` cria versões vazias. Visual e animação ficam no Storybook.
+- Publicação do Storybook: workflow `.github/workflows/storybook.yml` no GitHub Pages, a cada push na `prod` ou à mão, desligado até a variável `STORYBOOK_PAGES` valer `true`. Sai da `prod` porque o ambiente `github-pages` só aceita a branch padrão, a menos que se mude a regra dele. Para habilitar, quem administra a conta `devwebdex` liga o Pages com origem "GitHub Actions" e cria a variável. Fora do GitHub Enterprise, o site do Pages é público mesmo com o repositório privado.
+
 ## Em aberto
 
 | # | Tema | Pendência |
@@ -268,14 +291,11 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
 | A3 | Assento Figma | O time de design precisa de assento Dev ou Full em plano Professional ou superior. A conta testada (Starter/View) tem limite de 20 chamadas por mês; a biblioteca inicial estimada consome ~125. Análise: [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md) |
 | A4 | Identidade do repositório | O nome `webdex-shared-components` não descreve um gerador |
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
-| A6 | Preview de componentes | Ambiente para renderizar e validar visualmente os componentes contra o Figma (ex.: Storybook ou Ladle) |
 | A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
-| A8 | Primitivos acessíveis | Biblioteca para dialog, menu, select, popover, tooltip e tabs (ex.: Radix ou Base UI). Até decidir, esses componentes não são implementados |
 | A9 | Publicação | Implementada (D12); falta a primeira execução no GitHub, que acontece no merge na `prod`, e a configuração única do repositório descrita em [publicacao.md](publicacao.md) |
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
 | A14 | Organização no GitHub | `devwebdex` é conta de usuário: colaboradores não administram o repositório nem os pacotes, e não há times ou papéis. Avaliar criar uma organização da WEbdEX ou converter a conta (o GitHub permite converter usuário em organização) |
-| A16 | Botão no `@devwebdex/ui` | O componente da carteira usa botões locais, porque o `@devwebdex/ui` ainda não tem `Button`. O padrão de frontend manda pedir o componente ao time de design; quando ele existir, trocar nas três cópias (Next, Vite e Inertia) |
 
 ## Riscos conhecidos
 
@@ -290,4 +310,5 @@ Pedido pelo operador em 2026-10-15: a WEbdEX faz muitos projetos web3, na rede P
   - Nenhuma carteira de navegador (MetaMask, WalletConnect) assinou de verdade: os testes usam conta local e o conector `mock`. Teste com MetaMask na Amoy antes do primeiro projeto em produção.
   - `GET /auth/nonce` grava uma linha por chamada e não tem limite de taxa: um projeto exposto precisa de rate limit e de limpeza periódica das tabelas `auth_nonces` e `auth_sessions`.
   - O conector `walletConnect` exige `@walletconnect/ethereum-provider`, que entra no `package.json` de todo projeto web3 e traz uma árvore grande de dependências (com avisos de peer `typescript@^5`). O conector só é ativado com `projectId`.
-  - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`.
+  - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`. Os botões dele são o `Button` do `@devwebdex/ui` desde a 0.2.0 (a pendência A16 saiu).
+- **R9** MongoDB preso na 8.2 por incompatibilidade da 8.3 com kernel 6.19 ou mais novo (D14). Voltar para `mongo:8` quando uma 8.3 subir nesses kernels: rode `docker run --rm -e MONGO_INITDB_ROOT_USERNAME=mongo -e MONGO_INITDB_ROOT_PASSWORD=mongo mongo:8` numa máquina com kernel 6.19 ou mais novo e confira que não aparece o erro do SERVER-121912. Projetos gerados antes de 2026-10-29 usam `mongo:8` e não sobem nesses kernels: troque a imagem para `mongo:8.2` no `docker-compose.yml`.
