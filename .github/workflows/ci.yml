@@ -13,6 +13,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # TEMPORÁRIO: testa quais imagens do MongoDB iniciam no kernel do runner (SERVER-121912).
+  mongo-probe:
+    name: Sonda do MongoDB no runner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kernel e candidatas
+        run: |
+          uname -r
+          probe() {
+            local label=$1; shift
+            docker rm -f probe >/dev/null 2>&1 || true
+            docker run -d --name probe -e MONGO_INITDB_ROOT_USERNAME=mongo -e MONGO_INITDB_ROOT_PASSWORD=mongo "$@" >/dev/null
+            sleep 15
+            local version state ping
+            version=$(docker exec probe mongod --version 2>/dev/null | head -1 || true)
+            state=$(docker inspect probe --format '{{.State.Status}} restarts={{.RestartCount}} exit={{.State.ExitCode}}')
+            ping=$(docker exec probe mongosh --quiet --eval "db.adminCommand('ping').ok" 2>&1 | tail -1 || true)
+            echo "== $label | $version | $state | ping=$ping"
+            docker logs probe 2>&1 | grep -m1 '"s":"F"' || true
+          }
+          probe "mongo:8" mongo:8
+          probe "mongo:8 rseq=0" -e GLIBC_TUNABLES=glibc.pthread.rseq=0 mongo:8
+          probe "mongo:8 rseq=1" -e GLIBC_TUNABLES=glibc.pthread.rseq=1 mongo:8
+          probe "mongo:8.2" mongo:8.2
+          probe "mongo:8.0.4" mongo:8.0.4
+          probe "mongo:7" mongo:7
+
   checks:
     name: Lint, tipos e testes
     runs-on: ubuntu-latest
