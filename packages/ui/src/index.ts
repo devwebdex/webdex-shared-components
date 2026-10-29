@@ -1,3 +1,4 @@
+export * from './components/alert/index.js'
 export * from './components/button/index.js'
 export * from './components/combobox/index.js'
 export * from './components/menu/index.js'
