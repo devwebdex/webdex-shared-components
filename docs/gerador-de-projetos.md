@@ -44,7 +44,7 @@ Perguntado pela TUI:
 |---|---|
 | Arquitetura | monólito modular (microserviços aparecem como "em breve") |
 | Backend | nenhum, Nest, Express, Fastify, AdonisJS |
-| Banco | PostgreSQL 17, MySQL 8.4, MongoDB 8 (MongoDB não vale para o Adonis) |
+| Banco | PostgreSQL 17, MySQL 8.4, MongoDB 8.2 (MongoDB não vale para o Adonis) |
 | ORM | Adonis: Lucid (fixo, a TUI pula a pergunta). Nest/Express/Fastify: Prisma ou Drizzle (SQL), Mongoose (MongoDB, fixo) |
 | Filas | nenhuma, BullMQ + Redis 8 (só com backend) |
 | Frontend | nenhum, Next, Vite + React, Inertia + React (só com Adonis) |
@@ -238,6 +238,7 @@ Pedido pelo operador em 2026-10-14 ("1; 2; 3; 4; 5"). Versões e comportamentos 
 
 - **Fastify 5.12** com `@fastify/cors`: mesma convenção de módulos do Express (D11), com cada módulo virando plugin com prefixo; testes por `app.inject()`. Express e Fastify compartilham a camada `backend-node-common` e as integrações `node-<orm>`.
 - **MongoDB 8 + Mongoose 9**: o Prisma 7 não suporta MongoDB (a linha 6 ficaria sem caminho de upgrade), por isso Mongoose é o ORM fixo para MongoDB. MongoDB não é oferecido no Adonis, cujo Lucid é só SQL. Sem migrações: `pnpm db:migrate` e `pnpm db:deploy` não fazem nada (os scripts da raiz usam `--if-present`).
+- Imagem fixada em `mongo:8.2` em 2026-10-29. A `mongo:8` passou a trazer a 8.3, que recusa iniciar em kernel 6.19 ou mais novo ([SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912)): `MongoDB cannot start: Linux kernel versions 6.19 and newer has a known incompatibility`. O runner do GitHub (Ubuntu 26.04, kernel 7.0) recusou a 8.3.13 e subiu a 8.2.12, a 8.0.4 e a 7.0.45. A variável `GLIBC_TUNABLES=glibc.pthread.rseq=1` também faz a 8.3 subir, mas não tem respaldo oficial e os relatos se contradizem sobre ela (ver R9).
 - **Vite 8 + React 19** em `apps/web`, porta 3000 (a origem que os backends liberam no CORS), Tailwind 4 por `@tailwindcss/vite`, tokens e `@devwebdex/ui`.
 - **Inertia 3 + React** só com AdonisJS: o Inertia precisa de um backend que renderize as páginas, e o adaptador oficial (`@adonisjs/inertia` 5) é do Adonis. As páginas ficam em `apps/api/inertia/`; o kernel não força JSON e o registro tipado das páginas é gerado pelos hooks do Adonis, por isso o `check-types` do `apps/api` depende do build.
 - **BullMQ 6 + Redis 8**: a API enfileira e um worker, processo separado, processa (`pnpm dev:worker` em desenvolvimento; `pnpm --filter api worker` a partir do build). Fila de exemplo `mail`; `GET /health` passa a conferir o Redis. Padrão do projeto gerado: `docs/standards/queues-bullmq.md`.
@@ -310,3 +311,4 @@ Registrado em 2026-10-21; fecha a antiga A6.
   - `GET /auth/nonce` grava uma linha por chamada e não tem limite de taxa: um projeto exposto precisa de rate limit e de limpeza periódica das tabelas `auth_nonces` e `auth_sessions`.
   - O conector `walletConnect` exige `@walletconnect/ethereum-provider`, que entra no `package.json` de todo projeto web3 e traz uma árvore grande de dependências (com avisos de peer `typescript@^5`). O conector só é ativado com `projectId`.
   - O componente da carteira existe em três cópias (Next, Vite e Inertia). Mudança de lógica precisa ir às três; se divergirem, extrair para um pacote `@devwebdex/*`. Os botões dele são o `Button` do `@devwebdex/ui` desde a 0.2.0 (a pendência A16 saiu).
+- **R9** MongoDB preso na 8.2 por incompatibilidade da 8.3 com kernel 6.19 ou mais novo (D14). Voltar para `mongo:8` quando uma 8.3 subir nesses kernels: rode `docker run --rm -e MONGO_INITDB_ROOT_USERNAME=mongo -e MONGO_INITDB_ROOT_PASSWORD=mongo mongo:8` numa máquina com kernel 6.19 ou mais novo e confira que não aparece o erro do SERVER-121912. Projetos gerados antes de 2026-10-29 usam `mongo:8` e não sobem nesses kernels: troque a imagem para `mongo:8.2` no `docker-compose.yml`.
