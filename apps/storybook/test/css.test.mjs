@@ -22,6 +22,7 @@ import {
   attentionClass,
   buttonVariants,
   chevronClass,
+  inputFieldVariants,
   listItemVariants,
   listPopupVariants,
   listSeparatorClass,
@@ -36,6 +37,7 @@ const outDir = join(root, 'storybook-static', 'assets')
 const SIZES = ['large', 'medium', 'small']
 const COLORS = ['brand', 'code']
 const VARIANTS = ['contained', 'outlined', 'text']
+const STATUSES = ['default', 'error', 'success']
 const STATE_PREFIXES = ['hover:', 'active:', 'focus-visible:']
 
 function readCss() {
@@ -54,22 +56,32 @@ function toSelector(className) {
   return `.${className.replace(/[^a-zA-Z0-9_-]/g, (char) => `\\${char}`)}`
 }
 
-/** Toda classe que o Button produz, mais as versões sem prefixo que a Matriz força. */
-function buttonClasses() {
+/** Toda classe da lista, mais as versões sem prefixo que as stories Matriz forçam. */
+function withForcedStates(classLists) {
   const all = new Set()
+  for (const utility of classLists.join(' ').split(/\s+/)) {
+    if (!utility) continue
+    all.add(utility)
+    const prefix = STATE_PREFIXES.find((candidate) => utility.startsWith(candidate))
+    if (prefix) all.add(utility.slice(prefix.length))
+  }
+  return [...all]
+}
+
+function buttonClasses() {
+  const lists = []
   for (const size of SIZES) {
     for (const color of COLORS) {
       for (const variant of VARIANTS) {
-        for (const utility of buttonVariants({ size, color, variant }).split(/\s+/)) {
-          if (!utility) continue
-          all.add(utility)
-          const prefix = STATE_PREFIXES.find((candidate) => utility.startsWith(candidate))
-          if (prefix) all.add(utility.slice(prefix.length))
-        }
+        lists.push(buttonVariants({ size, color, variant }))
       }
     }
   }
-  return [...all]
+  return withForcedStates(lists)
+}
+
+function inputFieldClasses() {
+  return withForcedStates(STATUSES.map((status) => inputFieldVariants({ status })))
 }
 
 const css = readCss()
@@ -183,4 +195,30 @@ test('toda classe que o Alert produz existe no CSS compilado', () => {
     [],
     'classes do Alert sem regra no CSS: o @source de packages/ui/src não está varrendo o componente'
   )
+})
+
+test('toda classe que o InputField produz existe no CSS compilado', () => {
+  const missing = inputFieldClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(
+    missing,
+    [],
+    `classes sem regra no CSS. Se forem versões sem prefixo (border-white/22, ring-brand/12),
+     o @source inline gerado por .storybook/main.ts não cobriu. Se forem classes normais,
+     o @source de packages/ui/src não está varrendo o componente.`
+  )
+})
+
+test('as classes literais do TextField existem no CSS compilado', () => {
+  // O TextField não tem cva com eixos para percorrer: as classes dele são escritas
+  // direto no JSX. A lista é a que tem valor arbitrário ou token, que é onde um
+  // @source errado ou um tema faltando aparecem.
+  const expected = [
+    'text-[11.5px]',
+    'leading-[16px]',
+    'text-danger',
+    'text-success',
+    'text-text-disabled',
+  ]
+  const missing = expected.filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(missing, [], 'classes do TextField sem regra no CSS')
 })

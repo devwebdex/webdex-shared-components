@@ -130,7 +130,7 @@ Esta cadeia tem três modos de falha em que o build termina com "completed succe
 **`pnpm --filter <pacote> build` pula o turbo.** Roda só o script daquele pacote, sem construir as dependências.
 → Use `pnpm build` ou `pnpm turbo run build --filter=<pacote>`.
 
-O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Select, o Menu e o Combobox, e o que não estiver na lista passa sem conferência.
+O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Select, o Menu, o Combobox, o InputField e o TextField, e o que não estiver na lista passa sem conferência. O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados.
 
 ## 7. A entrega
 
