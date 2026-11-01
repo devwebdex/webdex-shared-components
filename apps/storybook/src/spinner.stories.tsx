@@ -2,11 +2,13 @@ import { Spinner, type SpinnerProps } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 const SIZES = ['small', 'medium', 'large'] as const
+const VARIANTS = ['pixel', 'ring', 'dots'] as const
+const TONES = ['brand', 'current'] as const
 
 const meta = {
   title: 'Componentes/Loading/Spinner',
   component: Spinner,
-  args: { size: 'medium', label: 'Carregando' },
+  args: { size: 'medium', variant: 'pixel', tone: 'brand', label: 'Carregando' },
   // O docgen não extrai tipo de VariantProps, que é um mapped type: sem declarar
   // `table.type` à mão, a coluna de tipo do painel de controles fica vazia.
   argTypes: {
@@ -18,6 +20,25 @@ const meta = {
       table: {
         type: { summary: "'small' | 'medium' | 'large'" },
         defaultValue: { summary: 'medium' },
+      },
+    },
+    variant: {
+      control: { type: 'inline-radio' },
+      options: VARIANTS,
+      description:
+        'pixel: o losango da marca. ring: círculo girando, mais discreto. dots: três pontos, ao lado de texto.',
+      table: {
+        type: { summary: "'pixel' | 'ring' | 'dots'" },
+        defaultValue: { summary: 'pixel' },
+      },
+    },
+    tone: {
+      control: { type: 'inline-radio' },
+      options: TONES,
+      description: 'brand: as cores da marca. current: a cor do texto em volta.',
+      table: {
+        type: { summary: "'brand' | 'current'" },
+        defaultValue: { summary: 'brand' },
       },
     },
     label: {
@@ -46,6 +67,25 @@ type Story = StoryObj<typeof meta>
 
 /** Use os controles ao lado para trocar o tamanho e o rótulo. */
 export const Playground: Story = {}
+
+/** Os três desenhos nas duas cores. Em `current`, o spinner herda a cor do texto em volta. */
+export const Variantes: Story = {
+  render: (args: SpinnerProps) => (
+    <div className="flex flex-col gap-6">
+      {TONES.map((tone) => (
+        <div key={tone} className="flex items-center gap-8">
+          <span className="w-24 font-mono text-sm text-text-secondary">tone = {tone}</span>
+          {VARIANTS.map((variant) => (
+            <div key={variant} className="flex flex-col items-center gap-2 text-text-primary">
+              <Spinner {...args} variant={variant} tone={tone} size="medium" />
+              <span className="font-mono text-sm text-text-secondary">{variant}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
+}
 
 /** Os três tamanhos, lado a lado. */
 export const Tamanhos: Story = {

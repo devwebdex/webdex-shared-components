@@ -30,6 +30,41 @@ describe('Spinner', () => {
   })
 })
 
+describe('Spinner variantes', () => {
+  it('desenha o círculo com trilho e arco girando', () => {
+    const { container } = render(<Spinner variant="ring" />)
+    const svg = container.querySelector('svg')
+    expect(svg?.querySelectorAll('circle')).toHaveLength(2)
+    expect(svg?.getAttribute('class')).toContain('animate-spin')
+    expect(screen.getByRole('status').textContent).toBe('Carregando')
+  })
+
+  it('desenha três pontos acendendo em sequência', () => {
+    const { container } = render(<Spinner variant="dots" />)
+    const dots = Array.from(container.querySelectorAll('circle'))
+    expect(dots).toHaveLength(3)
+    expect(dots.map((dot) => dot.getAttribute('class'))).toEqual([
+      expect.not.stringContaining('animation-delay'),
+      expect.stringContaining('[animation-delay:0.14s]'),
+      expect.stringContaining('[animation-delay:0.28s]'),
+    ])
+  })
+
+  it('usa a cor do texto em volta com tone current', () => {
+    const { container } = render(
+      <>
+        <Spinner tone="current" />
+        <Spinner variant="ring" tone="current" />
+        <Spinner variant="dots" tone="current" />
+      </>
+    )
+    const shapes = Array.from(container.querySelectorAll('rect, circle'))
+    for (const shape of shapes) {
+      expect(shape.getAttribute('class')).toMatch(/(fill|stroke)-current/)
+    }
+  })
+})
+
 describe('Button loading', () => {
   it('fica ocupado, mantém o nome e ignora o clique', async () => {
     const onClick = vi.fn()

@@ -12,7 +12,7 @@ import { cn } from '../../lib/cn.js'
  * O design system ainda não tem bloco de skeleton: o visual é proposta para revisão do design.
  */
 
-const skeletonClass = 'bg-surface-code animate-pulse motion-reduce:animate-none'
+const skeletonClass = 'bg-text-primary/20 animate-pulse motion-reduce:animate-none'
 
 /** Forma livre: defina tamanho e raio com `className` (ex.: `h-32 w-full rounded-2`). */
 export function Skeleton({ className, ...props }: ComponentProps<'div'>) {

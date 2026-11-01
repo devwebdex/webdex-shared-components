@@ -3,17 +3,25 @@ import type { ComponentProps } from 'react'
 import { cn } from '../../lib/cn.js'
 
 /**
- * Spinner do design system WEbdEX: o losango pixelado que se monta do centro para fora, do bloco
- * "Spinner de compilação e loading" (`docs/ui/webdex-design-system.html`). É a assinatura de
- * loading da marca; a formação do símbolo completo fica para splash e telas de abertura.
+ * Spinner do design system WEbdEX, em três desenhos:
  *
- * A grade é 5x5, com células de 12px e espaço de 3px (viewBox 72). Três anéis, cada um com a
- * sua cor e o seu atraso: o centro em brand-deep, o anel do meio em brand e o externo em coral.
- * A animação é o `animate-pixel-cell` dos tokens; com movimento reduzido, o losango fica parado.
+ * - `pixel` (padrão): o losango pixelado que se monta do centro para fora, do bloco "Spinner de
+ *   compilação e loading" (`docs/ui/webdex-design-system.html`). É a assinatura de loading da
+ *   marca. Grade 5x5, células de 12px e espaço de 3px (viewBox 72); três anéis, cada um com a sua
+ *   cor e o seu atraso: o centro em brand-deep, o anel do meio em brand e o externo em coral.
+ * - `ring`: o círculo clássico, com trilho e arco girando, para quando o losango chamaria atenção
+ *   demais (ex.: dentro de uma tabela).
+ * - `dots`: três pontos acendendo em sequência, para indicar espera ao lado de um texto.
  *
- * VALORES SEM TOKEN: os tamanhos medium (72px) e large (106px), os dois do design system, e o
- * raio de 2px da célula, em unidades do viewBox.
+ * `pixel` e `dots` usam o `animate-pixel-cell` dos tokens; `ring`, o `animate-spin` do Tailwind.
+ * Com movimento reduzido, tudo fica parado.
+ *
+ * VALORES SEM TOKEN: os tamanhos medium (72px) e large (106px), os dois do design system; as
+ * medidas internas de cada desenho, em unidades do viewBox.
  */
+
+export type SpinnerVariant = 'pixel' | 'ring' | 'dots'
+export type SpinnerTone = 'brand' | 'current'
 
 type Ring = 0 | 1 | 2
 
@@ -46,18 +54,63 @@ const RING_FILL: Record<Ring, string> = {
   2: 'fill-coral-50',
 }
 
-// Sem os tokens, a célula fica parada em 90%, como no movimento reduzido: o losango aparece
-// em vez de sumir.
+// Fora da animação (tokens antigos ou movimento reduzido), a célula fica em 90%: o desenho
+// aparece parado em vez de sumir.
 const cellClass = 'opacity-90 animate-pixel-cell motion-reduce:animate-none'
 
 export type SpinnerGlyphProps = {
-  /** `brand`: as três cores da marca. `current`: a cor do texto, para ficar sobre o gradiente do Button. */
-  tone?: 'brand' | 'current'
+  variant?: SpinnerVariant
+  /** `brand`: as cores da marca. `current`: a cor do texto, para ficar sobre o gradiente do Button. */
+  tone?: SpinnerTone
   className?: string
 }
 
-/** O losango sozinho, sem papel para leitor de tela. Usado pelo Spinner e pelo Button `loading`. */
-export function SpinnerGlyph({ tone = 'brand', className }: SpinnerGlyphProps) {
+/** O desenho sozinho, sem papel para leitor de tela. Usado pelo Spinner e pelo Button `loading`. */
+export function SpinnerGlyph({ variant = 'pixel', tone = 'brand', className }: SpinnerGlyphProps) {
+  const current = tone === 'current'
+  if (variant === 'ring') {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        strokeWidth={2.5}
+        aria-hidden="true"
+        focusable="false"
+        className={cn('animate-spin motion-reduce:animate-none', className)}
+      >
+        <circle
+          cx={12}
+          cy={12}
+          r={10}
+          className={current ? 'stroke-current opacity-25' : 'stroke-line-default'}
+        />
+        {/* Um quarto da volta (2πr ≈ 62,8): o arco que gira. */}
+        <circle
+          cx={12}
+          cy={12}
+          r={10}
+          strokeLinecap="round"
+          strokeDasharray="16 47"
+          className={current ? 'stroke-current' : 'stroke-brand'}
+        />
+      </svg>
+    )
+  }
+  if (variant === 'dots') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className}>
+        {([0, 1, 2] as const).map((dot) => (
+          <circle
+            key={dot}
+            cx={4 + dot * 8}
+            cy={12}
+            r={3}
+            className={cn(cellClass, RING_DELAY[dot], current ? 'fill-current' : 'fill-brand')}
+          />
+        ))}
+      </svg>
+    )
+  }
   return (
     <svg viewBox="0 0 72 72" aria-hidden="true" focusable="false" className={className}>
       {CELLS.map(([column, row, ring]) => (
@@ -68,11 +121,7 @@ export function SpinnerGlyph({ tone = 'brand', className }: SpinnerGlyphProps) {
           width={12}
           height={12}
           rx={2}
-          className={cn(
-            cellClass,
-            RING_DELAY[ring],
-            tone === 'brand' ? RING_FILL[ring] : 'fill-current'
-          )}
+          className={cn(cellClass, RING_DELAY[ring], current ? 'fill-current' : RING_FILL[ring])}
         />
       ))}
     </svg>
@@ -92,14 +141,24 @@ const spinnerVariants = cva('inline-flex shrink-0', {
 
 export type SpinnerProps = ComponentProps<'span'> &
   VariantProps<typeof spinnerVariants> & {
+    /** `pixel`: o losango da marca. `ring`: círculo girando. `dots`: três pontos. */
+    variant?: SpinnerVariant
+    tone?: SpinnerTone
     /** Texto para leitor de tela; diga o que está carregando quando der (ex.: "Compilando contrato"). */
     label?: string
   }
 
-export function Spinner({ size, label = 'Carregando', className, ...props }: SpinnerProps) {
+export function Spinner({
+  size,
+  variant,
+  tone,
+  label = 'Carregando',
+  className,
+  ...props
+}: SpinnerProps) {
   return (
     <span role="status" className={cn(spinnerVariants({ size }), className)} {...props}>
-      <SpinnerGlyph className="size-full" />
+      <SpinnerGlyph className="size-full" {...(variant && { variant })} {...(tone && { tone })} />
       <span className="sr-only">{label}</span>
     </span>
   )

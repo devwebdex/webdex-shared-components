@@ -236,6 +236,9 @@ function loadingClasses() {
   const sizes = ['small', 'medium', 'large']
   const cases = [
     ...sizes.map((size) => [Spinner, { size }]),
+    ...['pixel', 'ring', 'dots'].flatMap((variant) =>
+      ['brand', 'current'].map((tone) => [Spinner, { variant, tone }])
+    ),
     ...sizes.map((size) => [Button, { size, loading: true, children: 'Salvar' }]),
     ...sizes.map((size) => [SkeletonAvatar, { size }]),
     [SkeletonText, { lines: 3 }],
