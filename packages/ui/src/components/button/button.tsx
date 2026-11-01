@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../../lib/cn.js'
+import { SpinnerGlyph } from '../spinner/spinner.js'
 
 /**
  * Button do design system WEbdEX.
@@ -34,6 +35,12 @@ import { cn } from '../../lib/cn.js'
  *   `inset-ring` é box-shadow, então não afeta o layout.
  * - O wrapper vertical do auto-layout do Figma foi omitido: ele envolve uma única
  *   linha e não muda o resultado.
+ *
+ * LOADING não é um estado do Figma, é estado da aplicação: por isso é prop. O botão
+ * fica com `aria-busy` e `aria-disabled`, mas não com `disabled`, que tiraria o foco
+ * dele no meio do envio; em vez disso, o clique é ignorado e o `submit` não dispara.
+ * O conteúdo fica transparente, mas segue no layout e no nome acessível, então a
+ * largura não muda; o losango do Spinner aparece no centro, na cor do texto.
  */
 const buttonVariants = cva(
   [
@@ -140,6 +147,8 @@ export type ButtonProps = Omit<ComponentProps<'button'>, 'color'> &
     iconLeft?: ReactNode
     /** Ícone depois do rótulo. */
     iconRight?: ReactNode
+    /** Ação em andamento: mostra o spinner no lugar do conteúdo e ignora cliques. */
+    loading?: boolean
   }
 
 export function Button({
@@ -149,19 +158,45 @@ export function Button({
   variant,
   iconLeft,
   iconRight,
+  loading = false,
   type = 'button',
+  onClick,
+  'aria-disabled': ariaDisabled,
   children,
   ...props
 }: ButtonProps) {
   return (
     <button
-      type={type}
-      className={cn(buttonVariants({ size, color, variant }), className)}
       {...props}
+      // `button`, não `submit`: um botão `aria-disabled` ainda recebe clique e Enter.
+      type={loading ? 'button' : type}
+      onClick={loading ? undefined : onClick}
+      aria-disabled={loading || ariaDisabled}
+      aria-busy={loading || undefined}
+      className={cn(
+        buttonVariants({ size, color, variant }),
+        loading && 'relative cursor-wait',
+        className
+      )}
     >
-      {iconLeft}
-      {children}
-      {iconRight}
+      {loading ? (
+        <>
+          <span className="inline-flex items-center gap-2 opacity-0">
+            {iconLeft}
+            {children}
+            {iconRight}
+          </span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <SpinnerGlyph tone="current" />
+          </span>
+        </>
+      ) : (
+        <>
+          {iconLeft}
+          {children}
+          {iconRight}
+        </>
+      )}
     </button>
   )
 }

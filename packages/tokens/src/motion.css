@@ -13,4 +13,22 @@
       scale: 97%;
     }
   }
+
+  /* Célula do spinner losango (bloco "Spinner de compilação e loading" do design system).
+     `backwards` aplica o primeiro quadro durante o atraso de cada anel: sem ele, a célula
+     apareceria acesa até a vez dela. */
+  --animate-pixel-cell: pixel-cell 1.8s infinite backwards;
+
+  @keyframes pixel-cell {
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    18% {
+      opacity: 1;
+    }
+    55% {
+      opacity: 0.35;
+    }
+  }
 }

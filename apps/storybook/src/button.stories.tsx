@@ -1,5 +1,6 @@
 import { Button, type ButtonProps, buttonVariants } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { useState } from 'react'
 import { Measurements } from './measurements.js'
 
 const Wallet = () => (
@@ -74,6 +75,12 @@ const meta = {
       control: { type: 'boolean' },
       description: 'Atributo nativo do botão. Remove o gradiente e a sombra.',
       table: { type: { summary: 'boolean' } },
+    },
+    loading: {
+      control: { type: 'boolean' },
+      description:
+        'Ação em andamento: o losango do Spinner no lugar do conteúdo, sem mudar a largura. Fica focável e ignora cliques.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
     },
     children: {
       control: { type: 'text' },
@@ -150,6 +157,42 @@ export const Tamanhos: Story = {
       ))}
     </div>
   ),
+}
+
+/**
+ * `loading` nas seis combinações e nos três tamanhos. O botão mantém a largura: o rótulo fica
+ * transparente, mas segue no layout e no nome acessível.
+ */
+export const Carregando: Story = {
+  args: { loading: true },
+  render: (args) => (
+    <div className="flex flex-col gap-8">
+      <Grade {...args} />
+      <div className="flex flex-wrap items-center gap-4">
+        {SIZES.map((size) => (
+          <Button key={size} {...args} size={size} />
+        ))}
+      </div>
+    </div>
+  ),
+}
+
+/** Clique para ver o ciclo: o botão carrega por 2 segundos e volta. */
+export const CarregandoAoClicar: Story = {
+  name: 'Carregando ao clicar',
+  render: function Render(args) {
+    const [loading, setLoading] = useState(false)
+    return (
+      <Button
+        {...args}
+        loading={loading}
+        onClick={() => {
+          setLoading(true)
+          setTimeout(() => setLoading(false), 2000)
+        }}
+      />
+    )
+  },
 }
 
 // --------------------------------------------------------------------------
