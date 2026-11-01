@@ -82,6 +82,50 @@ describe('Button loading', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
+  it('troca o rótulo e o nome acessível pelo loadingText', () => {
+    render(
+      <Button loading loadingText="Salvando…">
+        Salvar
+      </Button>
+    )
+    expect(screen.getByRole('button', { name: 'Salvando…' })).toBeTruthy()
+  })
+
+  it('põe o spinner no lugar do ícone do lado pedido', () => {
+    const left = <svg data-testid="esquerda" />
+    const right = <svg data-testid="direita" />
+    const { rerender } = render(
+      <Button loading iconLeft={left} iconRight={right}>
+        Salvar
+      </Button>
+    )
+    // start (padrão): o spinner circular troca o ícone da esquerda; o da direita fica.
+    expect(screen.queryByTestId('esquerda')).toBeNull()
+    expect(screen.getByTestId('direita')).toBeTruthy()
+    expect(screen.getByRole('button').firstElementChild?.getAttribute('class')).toContain(
+      'animate-spin'
+    )
+
+    rerender(
+      <Button loading loadingPosition="end" iconLeft={left} iconRight={right}>
+        Salvar
+      </Button>
+    )
+    expect(screen.getByTestId('esquerda')).toBeTruthy()
+    expect(screen.queryByTestId('direita')).toBeNull()
+  })
+
+  it('no centro, esconde o rótulo sem tirá-lo do nome acessível', () => {
+    render(
+      <Button loading loadingPosition="center" loadingIndicator="pixel">
+        Salvar
+      </Button>
+    )
+    const button = screen.getByRole('button', { name: 'Salvar' })
+    expect(button.querySelector('.opacity-0')?.textContent).toBe('Salvar')
+    expect(button.querySelectorAll('rect')).toHaveLength(13)
+  })
+
   it('não envia o formulário enquanto carrega', async () => {
     const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault())
     render(

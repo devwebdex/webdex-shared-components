@@ -240,6 +240,12 @@ function loadingClasses() {
       ['brand', 'current'].map((tone) => [Spinner, { variant, tone }])
     ),
     ...sizes.map((size) => [Button, { size, loading: true, children: 'Salvar' }]),
+    ...['ring', 'pixel', 'dots'].flatMap((loadingIndicator) =>
+      ['start', 'end', 'center'].map((loadingPosition) => [
+        Button,
+        { loading: true, loadingIndicator, loadingPosition, children: 'Salvar' },
+      ])
+    ),
     ...sizes.map((size) => [SkeletonAvatar, { size }]),
     [SkeletonText, { lines: 3 }],
     [SkeletonCard, {}],

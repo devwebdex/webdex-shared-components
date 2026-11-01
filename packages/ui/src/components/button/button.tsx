@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '../../lib/cn.js'
-import { SpinnerGlyph } from '../spinner/spinner.js'
+import { SpinnerGlyph, type SpinnerVariant } from '../spinner/spinner.js'
 
 /**
  * Button do design system WEbdEX.
@@ -39,8 +39,8 @@ import { SpinnerGlyph } from '../spinner/spinner.js'
  * LOADING não é um estado do Figma, é estado da aplicação: por isso é prop. O botão
  * fica com `aria-busy` e `aria-disabled`, mas não com `disabled`, que tiraria o foco
  * dele no meio do envio; em vez disso, o clique é ignorado e o `submit` não dispara.
- * O conteúdo fica transparente, mas segue no layout e no nome acessível, então a
- * largura não muda; o losango do Spinner aparece no centro, na cor do texto.
+ * O spinner vem na cor do texto e, por padrão, entra no lugar do ícone da esquerda
+ * com o rótulo visível; `loadingPosition="center"` esconde o rótulo sem mudar a largura.
  */
 const buttonVariants = cva(
   [
@@ -147,8 +147,17 @@ export type ButtonProps = Omit<ComponentProps<'button'>, 'color'> &
     iconLeft?: ReactNode
     /** Ícone depois do rótulo. */
     iconRight?: ReactNode
-    /** Ação em andamento: mostra o spinner no lugar do conteúdo e ignora cliques. */
+    /** Ação em andamento: mostra o spinner e ignora cliques. */
     loading?: boolean
+    /** Desenho do spinner: `ring` (círculo, padrão), `pixel` (losango da marca) ou `dots`. */
+    loadingIndicator?: SpinnerVariant
+    /**
+     * Onde o spinner aparece: `start` no lugar do ícone da esquerda (padrão), `end` no da
+     * direita, `center` no meio com o rótulo escondido, sem mudar a largura do botão.
+     */
+    loadingPosition?: 'start' | 'end' | 'center'
+    /** Rótulo durante o carregamento (ex.: "Salvando…"); vira também o nome acessível. */
+    loadingText?: ReactNode
   }
 
 export function Button({
@@ -159,6 +168,9 @@ export function Button({
   iconLeft,
   iconRight,
   loading = false,
+  loadingIndicator = 'ring',
+  loadingPosition = 'start',
+  loadingText,
   type = 'button',
   onClick,
   'aria-disabled': ariaDisabled,
@@ -175,21 +187,19 @@ export function Button({
       aria-busy={loading || undefined}
       className={cn(
         buttonVariants({ size, color, variant }),
-        loading && 'relative cursor-wait',
+        loading && 'cursor-wait',
+        loading && loadingPosition === 'center' && 'relative',
         className
       )}
     >
       {loading ? (
-        <>
-          <span className="inline-flex items-center gap-2 opacity-0">
-            {iconLeft}
-            {children}
-            {iconRight}
-          </span>
-          <span className="absolute inset-0 flex items-center justify-center">
-            <SpinnerGlyph tone="current" />
-          </span>
-        </>
+        <LoadingContent
+          indicator={loadingIndicator}
+          position={loadingPosition}
+          iconLeft={iconLeft}
+          iconRight={iconRight}
+          label={loadingText ?? children}
+        />
       ) : (
         <>
           {iconLeft}
@@ -198,6 +208,48 @@ export function Button({
         </>
       )}
     </button>
+  )
+}
+
+function LoadingContent({
+  indicator,
+  position,
+  iconLeft,
+  iconRight,
+  label,
+}: {
+  indicator: SpinnerVariant
+  position: 'start' | 'end' | 'center'
+  iconLeft: ReactNode
+  iconRight: ReactNode
+  label: ReactNode
+}) {
+  const spinner = <SpinnerGlyph variant={indicator} tone="current" />
+  if (position === 'center') {
+    // O conteúdo fica transparente, mas segue no layout e no nome acessível.
+    return (
+      <>
+        <span className="inline-flex items-center gap-2 opacity-0">
+          {iconLeft}
+          {label}
+          {iconRight}
+        </span>
+        <span className="absolute inset-0 flex items-center justify-center">{spinner}</span>
+      </>
+    )
+  }
+  return position === 'start' ? (
+    <>
+      {spinner}
+      {label}
+      {iconRight}
+    </>
+  ) : (
+    <>
+      {iconLeft}
+      {label}
+      {spinner}
+    </>
   )
 }
 

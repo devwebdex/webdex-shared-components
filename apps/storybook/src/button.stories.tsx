@@ -78,9 +78,29 @@ const meta = {
     },
     loading: {
       control: { type: 'boolean' },
-      description:
-        'Ação em andamento: o losango do Spinner no lugar do conteúdo, sem mudar a largura. Fica focável e ignora cliques.',
+      description: 'Ação em andamento: mostra o spinner, fica focável e ignora cliques.',
       table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    loadingIndicator: {
+      control: { type: 'inline-radio' },
+      options: ['ring', 'pixel', 'dots'],
+      description: 'Desenho do spinner: círculo, losango da marca ou três pontos.',
+      table: { type: { summary: "'ring' | 'pixel' | 'dots'" }, defaultValue: { summary: 'ring' } },
+    },
+    loadingPosition: {
+      control: { type: 'inline-radio' },
+      options: ['start', 'end', 'center'],
+      description:
+        'start e end trocam o ícone daquele lado pelo spinner; center esconde o rótulo sem mudar a largura.',
+      table: {
+        type: { summary: "'start' | 'end' | 'center'" },
+        defaultValue: { summary: 'start' },
+      },
+    },
+    loadingText: {
+      control: { type: 'text' },
+      description: 'Rótulo durante o carregamento (ex.: "Conectando…"); vira o nome acessível.',
+      table: { type: { summary: 'ReactNode' } },
     },
     children: {
       control: { type: 'text' },
@@ -159,12 +179,40 @@ export const Tamanhos: Story = {
   ),
 }
 
+const INDICATORS = ['ring', 'pixel', 'dots'] as const
+const POSITIONS = ['start', 'end', 'center'] as const
+
 /**
- * `loading` nas seis combinações e nos três tamanhos. O botão mantém a largura: o rótulo fica
- * transparente, mas segue no layout e no nome acessível.
+ * Os três desenhos de spinner nas três posições. `start` e `end` trocam o ícone daquele lado
+ * pelo spinner, com o rótulo visível; `center` esconde o rótulo e mantém a largura.
  */
 export const Carregando: Story = {
-  args: { loading: true },
+  args: { loading: true, loadingText: 'Conectando…' },
+  render: (args) => (
+    <div className="flex flex-col gap-6">
+      {POSITIONS.map((position) => (
+        <section key={position} className="flex flex-col gap-3">
+          <h3 className="font-mono text-sm text-text-secondary">loadingPosition = {position}</h3>
+          <div className="flex flex-wrap items-center gap-4">
+            {INDICATORS.map((indicator) => (
+              <Button
+                key={indicator}
+                {...args}
+                loadingPosition={position}
+                loadingIndicator={indicator}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  ),
+}
+
+/** Carregando nas seis combinações de cor e variante e nos três tamanhos. */
+export const CarregandoVariantes: Story = {
+  name: 'Carregando nas variantes',
+  args: { loading: true, loadingText: 'Conectando…' },
   render: (args) => (
     <div className="flex flex-col gap-8">
       <Grade {...args} />
@@ -177,9 +225,10 @@ export const Carregando: Story = {
   ),
 }
 
-/** Clique para ver o ciclo: o botão carrega por 2 segundos e volta. */
+/** Clique para ver o ciclo: o botão conecta por 2 segundos e volta. */
 export const CarregandoAoClicar: Story = {
   name: 'Carregando ao clicar',
+  args: { loadingText: 'Conectando…' },
   render: function Render(args) {
     const [loading, setLoading] = useState(false)
     return (
