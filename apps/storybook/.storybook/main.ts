@@ -17,7 +17,7 @@ const STATE_PREFIXES = ['hover:', 'active:', 'focus-visible:']
  * quando alguém adiciona um estado novo.
  */
 async function generateForcedStateSource() {
-  const { buttonVariants, inputFieldVariants } = await import('@devwebdex/ui')
+  const { buttonVariants, inputFieldVariants, paginationItemClass } = await import('@devwebdex/ui')
   const classLists: string[] = []
 
   for (const size of ['large', 'medium', 'small'] as const) {
@@ -30,6 +30,8 @@ async function generateForcedStateSource() {
   for (const status of ['default', 'error', 'success'] as const) {
     classLists.push(inputFieldVariants({ status }))
   }
+  // A story Estados da Pagination força hover e foco no item.
+  classLists.push(paginationItemClass)
 
   const bare = new Set<string>()
   for (const utility of classLists.join(' ').split(/\s+/)) {
