@@ -1,5 +1,12 @@
 import { Button, Card } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import {
+  NetworkArbitrumOne,
+  NetworkPolygon,
+  TokenETH,
+  TokenUSDC,
+  TokenUSDT,
+} from '@web3icons/react'
 import type { ReactNode } from 'react'
 import { type MeasureColumn, type MeasureRow, MeasureTable } from './measurements.js'
 
@@ -42,6 +49,7 @@ const meta = {
     },
   },
   // O Card ocupa a largura de quem o contém; a moldura dá uma largura de leitura.
+  // `largura: 'cheia'` libera as stories em grade.
   decorators: [
     (Story, context) => (
       <div className={context.parameters.largura === 'cheia' ? 'w-full' : 'w-full max-w-md'}>
@@ -75,6 +83,33 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/**
+ * Contorno para sangrar a mídia até a borda: desfaz o `p-4` do card e repete o raio no topo.
+ *
+ * Ele se repete em toda composição abaixo, e é esse o argumento para virar API: as três
+ * referências que o design mandou (MDBootstrap, cards de produto, card de tênis) têm a imagem
+ * encostada na borda. Enquanto não existir uma área de mídia no componente, cada tela refaz
+ * essa conta — e erra o raio quando o Card mudar de `radius.3`.
+ */
+const MIDIA = '-mt-4 -mx-4 mb-3 block w-[calc(100%+2rem)] rounded-t-3'
+
+/**
+ * Faixa de mídia com o símbolo do ativo. Os símbolos vêm do `@web3icons/react`, que já era
+ * dependência de desenvolvimento do Storybook para as redes do Dropdown — então são os
+ * ícones de verdade de USDT, ETH e USDC, não desenho de exemplo.
+ *
+ * O fundo sai dos tokens (`coral.50` → `brand`), não de hex escrito à mão.
+ */
+function Faixa({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={`${MIDIA} flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14`}
+    >
+      {children}
+    </div>
+  )
+}
+
 /** Use os controles ao lado para trocar os estados e o texto. */
 export const Playground: Story = {}
 
@@ -101,207 +136,6 @@ export const Estados: Story = {
   ),
 }
 
-/**
- * As três partes são independentes: o card funciona só com conteúdo, só com header, ou com
- * os três. O hash sem espaço quebra em vez de vazar da caixa.
- */
-export const Conteudo: Story = {
-  name: 'Conteúdo',
-  render: () => (
-    <div className="flex flex-col gap-4">
-      <Card title="Só header e conteúdo">
-        O rodapé de ações só aparece quando `actions` é passado.
-      </Card>
-      <Card>Só conteúdo: sem header, sem ações.</Card>
-      <Card
-        title="Com ações"
-        actions={
-          <>
-            <Button variant="text" size="small">
-              Cancelar
-            </Button>
-            <Button size="small">Publicar</Button>
-          </>
-        }
-      >
-        As ações ficam à direita, no rodapé.
-      </Card>
-      <Card title="Transação enviada">
-        Hash 0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
-      </Card>
-    </div>
-  ),
-}
-
-/**
- * Densidade de texto. O card não tem altura fixa: cresce com o conteúdo, e o `p-4` da caixa
- * e o `gap-3` entre as partes continuam os mesmos nos três.
- */
-export const Texto: Story = {
-  render: () => (
-    <div className="flex flex-col gap-4">
-      <Card title="Curto">Depósito confirmado.</Card>
-      <Card title="Médio">
-        Cofre publicado na Polygon em 0x3fA9…c21B. 12 depósitos nas últimas 24 horas, com rendimento
-        médio de 4,2% ao ano.
-      </Card>
-      <Card title="Longo">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-        laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-        voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-      </Card>
-    </div>
-  ),
-}
-
-/**
- * Ilustrações embutidas como data URI: as stories não dependem de rede nem de arquivo em
- * `public/`, então funcionam igual no Storybook publicado. As cores são escritas à mão por
- * serem conteúdo de exemplo, não estilo de componente.
- */
-const tile = (de: string, para: string, figura: string) =>
-  `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">` +
-      `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
-      `<stop offset="0" stop-color="${de}"/><stop offset="1" stop-color="${para}"/>` +
-      `</linearGradient></defs>` +
-      `<rect width="320" height="200" fill="url(#g)"/>${figura}</svg>`
-  )}`
-
-const GRAFICO = tile(
-  '#ff4d5e',
-  '#f5127c',
-  '<path d="M0 164 L60 128 L120 142 L180 86 L240 104 L320 54" fill="none" stroke="#fbf5f9" stroke-width="4" opacity=".85"/>'
-)
-const COFRE = tile(
-  '#5ec8f2',
-  '#1fc98a',
-  '<rect x="112" y="64" width="96" height="76" rx="10" fill="#0c0611" opacity=".35"/><circle cx="160" cy="102" r="18" fill="#fbf5f9" opacity=".8"/>'
-)
-const REDE = tile(
-  '#f0a82e',
-  '#ff5c40',
-  '<circle cx="160" cy="100" r="40" fill="none" stroke="#fbf5f9" stroke-width="4" opacity=".8"/><circle cx="160" cy="60" r="10" fill="#fbf5f9"/><circle cx="196" cy="120" r="10" fill="#fbf5f9"/><circle cx="124" cy="120" r="10" fill="#fbf5f9"/>'
-)
-
-/**
- * Contorno para sangrar a mídia até a borda: desfaz o `p-4` do card e repete o raio no topo.
- *
- * Ele se repete em toda composição abaixo, e é esse o argumento para virar API: as três
- * referências que o design mandou (MDBootstrap, cards de produto, card de tênis) têm a imagem
- * encostada na borda. Enquanto não existir uma área de mídia no componente, cada tela refaz
- * essa conta — e erra o raio quando o Card mudar de `radius.3`.
- */
-const MIDIA = '-mt-4 -mx-4 block w-[calc(100%+2rem)] rounded-t-3'
-
-/**
- * Imagem recuada contra imagem sangrada. A primeira é o comportamento natural do `p-4`; a
- * segunda é o contorno.
- */
-export const Midia: Story = {
-  name: 'Mídia',
-  render: () => (
-    <div className="flex flex-col gap-4">
-      <Card title="Imagem recuada" actions={<Button size="small">Ver cofre</Button>}>
-        <img src={GRAFICO} alt="" className="mb-3 w-full rounded-2" />
-        Respeita o `p-4` do card. Funciona sem truque, mas destoa das referências.
-      </Card>
-
-      <Card title="Imagem na borda">
-        <img src={GRAFICO} alt="" className={`${MIDIA} mb-3`} />
-        Encosta na borda desfazendo o padding com margem negativa.
-      </Card>
-    </div>
-  ),
-}
-
-/** Um card de produto: mídia no topo, dados, e ação ocupando a largura. */
-function Produto({
-  imagem,
-  nome,
-  rede,
-  valor,
-}: {
-  imagem: string
-  nome: string
-  rede: string
-  valor: string
-}) {
-  return (
-    <Card
-      className="h-full"
-      title={nome}
-      // `actions` é `justify-end`; um filho `w-full` preenche a linha assim mesmo.
-      actions={<Button className="w-full">Depositar</Button>}
-    >
-      <img src={imagem} alt="" className={`${MIDIA} mb-3`} />
-      <div className="text-sm text-text-secondary">{rede}</div>
-      <div className="mt-1 font-semibold text-text-primary text-lg">{valor}</div>
-    </Card>
-  )
-}
-
-/**
- * Grade de produtos, o padrão das referências. Três coisas aparecem aqui e nenhuma é bug do
- * Card — são decisões que faltam:
- *
- * 1. **Mídia sangrada** precisa do contorno acima, em toda tela que usar card com imagem.
- * 2. **Ação de largura cheia** sai de um filho `w-full` dentro do `justify-end`. Funciona,
- *    mas o nome da prop promete alinhamento à direita.
- * 3. **Altura igual** vem de `h-full` no card; o rodapé, porém, não encosta no fundo quando
- *    um card tem menos texto, porque não há como empurrar `actions` para baixo.
- */
-export const Produtos: Story = {
-  parameters: { largura: 'cheia' },
-  render: () => (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Produto imagem={GRAFICO} nome="WebdexVault" rede="Polygon" valor="4,2% ao ano" />
-      <Produto imagem={COFRE} nome="Cofre Estável" rede="Polygon · USDC" valor="2,8% ao ano" />
-      <Produto imagem={REDE} nome="Pool WDX-ETH" rede="Arbitrum" valor="11,6% ao ano" />
-    </div>
-  ),
-}
-
-/** Card de identificação: faixa no topo, dados e ações. Aqui, a carteira conectada. */
-export const Carteira: Story = {
-  render: () => (
-    <Card
-      title="0x3fA9…c21B"
-      actions={
-        <>
-          <Button variant="text" size="small">
-            Copiar
-          </Button>
-          <Button size="small">Desconectar</Button>
-        </>
-      }
-    >
-      <img src={REDE} alt="" className={`${MIDIA} mb-3`} />
-      <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
-      <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
-    </Card>
-  ),
-}
-
-/**
- * Mídia à esquerda, como as referências fazem no celular. O Card empilha em coluna, então a
- * linha vem de um wrapper no conteúdo — não do componente.
- */
-export const Horizontal: Story = {
-  render: () => (
-    <Card title="Pool WDX-ETH" actions={<Button size="small">Depositar</Button>}>
-      <div className="flex gap-3">
-        <img src={COFRE} alt="" className="size-20 shrink-0 rounded-2 object-cover" />
-        <div className="min-w-0">
-          <div className="text-sm text-text-secondary">Arbitrum · liquidez</div>
-          <div className="mt-1 font-semibold text-text-primary">11,6% ao ano</div>
-        </div>
-      </div>
-    </Card>
-  ),
-}
-
 /** Rótulo acima de cada modelo da galeria, para dizer quais blocos estão em jogo. */
 function Modelo({ nome, children }: { nome: string; children: ReactNode }) {
   return (
@@ -313,8 +147,8 @@ function Modelo({ nome, children }: { nome: string; children: ReactNode }) {
 }
 
 /**
- * Galeria de modelos: as combinações dos blocos que o Card oferece — `title`, mídia,
- * texto, descrição e `actions`.
+ * Galeria de modelos: todas as combinações dos blocos que o Card oferece — `title`, mídia,
+ * texto, descrição e `actions`, inclusive os casos mínimos (só título, só texto).
  *
  * Duas observações que a galeria torna visíveis:
  *
@@ -373,29 +207,192 @@ export const Modelos: Story = {
 
       <Modelo nome="image + title + text">
         <Card title="Rendimento">
-          <img src={GRAFICO} alt="" className={`${MIDIA} mb-3`} />
+          <Faixa>
+            <TokenETH variant="branded" />
+          </Faixa>
           Últimos 30 dias.
         </Card>
       </Modelo>
 
       <Modelo nome="image + title + description + button">
         <Card title="Pool WDX-ETH" actions={<Button className="w-full">Depositar</Button>}>
-          <img src={REDE} alt="" className={`${MIDIA} mb-3`} />
+          <Faixa>
+            <TokenETH variant="branded" />
+          </Faixa>
           <div className="text-sm text-text-secondary">Arbitrum</div>
           <div className="mt-1 font-semibold text-lg text-text-primary">11,6% ao ano</div>
         </Card>
       </Modelo>
+    </div>
+  ),
+}
 
-      <Modelo nome="image + title + text (horizontal)">
-        <Card title="Cofre Estável" actions={<Button size="small">Abrir</Button>}>
-          <div className="flex gap-3">
-            <img src={COFRE} alt="" className="size-16 shrink-0 rounded-2 object-cover" />
-            <div className="min-w-0 text-sm">
-              Mídia à esquerda vem de um wrapper no conteúdo: o Card empilha em coluna.
+/**
+ * Densidade de texto. O card não tem altura fixa: cresce com o conteúdo, e o `p-4` da caixa
+ * e o `gap-3` entre as partes continuam os mesmos nos quatro.
+ *
+ * O hash fecha a lista porque é o caso que o componente trata de propósito: sem espaço para
+ * quebrar, ele vazaria da caixa se não fosse o `wrap-break-word`.
+ */
+export const Texto: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <Card title="Curto">Depósito confirmado.</Card>
+      <Card title="Médio">
+        Cofre publicado na Polygon em 0x3fA9…c21B. 12 depósitos nas últimas 24 horas, com rendimento
+        médio de 4,2% ao ano.
+      </Card>
+      <Card title="Longo">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+        laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+        voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      </Card>
+      <Card title="Sem espaço para quebrar">
+        Hash 0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
+      </Card>
+    </div>
+  ),
+}
+
+/**
+ * Imagem recuada contra imagem sangrada. A primeira é o comportamento natural do `p-4`; a
+ * segunda é o contorno de `MIDIA`.
+ */
+export const Midia: Story = {
+  name: 'Mídia',
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <Card title="Mídia recuada" actions={<Button size="small">Ver cofre</Button>}>
+        <div className="mb-3 flex h-28 items-center justify-center rounded-2 bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14">
+          <TokenUSDT variant="branded" />
+        </div>
+        Respeita o `p-4` do card. Funciona sem truque, mas destoa das referências.
+      </Card>
+
+      <Card title="Mídia na borda">
+        <Faixa>
+          <TokenUSDT variant="branded" />
+        </Faixa>
+        Encosta na borda desfazendo o padding com margem negativa.
+      </Card>
+    </div>
+  ),
+}
+
+/** Um card de pool: mídia no topo, dados, e ação ocupando a largura. */
+function Pool({
+  simbolo,
+  nome,
+  rede,
+  valor,
+}: {
+  simbolo: ReactNode
+  nome: string
+  rede: string
+  valor: string
+}) {
+  return (
+    <Card
+      className="h-full"
+      title={nome}
+      // `actions` é `justify-end`; um filho `w-full` preenche a linha assim mesmo.
+      actions={<Button className="w-full">Depositar</Button>}
+    >
+      <Faixa>{simbolo}</Faixa>
+      <div className="text-sm text-text-secondary">{rede}</div>
+      <div className="mt-1 font-semibold text-text-primary text-lg">{valor}</div>
+    </Card>
+  )
+}
+
+/** Título de cada bloco da story de composições. */
+function Secao({ nome, children }: { nome: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="font-mono text-sm text-text-secondary">{nome}</h3>
+      {children}
+    </section>
+  )
+}
+
+/**
+ * Usos reais, montados a partir das referências que o design mandou. Enquanto a galeria
+ * acima mostra os blocos isolados, aqui eles aparecem como telas.
+ *
+ * Três lacunas da API aparecem juntas, e nenhuma é bug do Card:
+ *
+ * 1. **Mídia sangrada** precisa do contorno `MIDIA`, em toda tela que usar card com imagem.
+ * 2. **Ação de largura cheia** sai de um filho `w-full` dentro do `justify-end`. Funciona,
+ *    mas o nome da prop promete alinhamento à direita.
+ * 3. **Altura igual** vem de `h-full` no card; o rodapé, porém, não encosta no fundo quando
+ *    um card tem menos texto, porque não há como empurrar `actions` para baixo. Dá para ver
+ *    na grade: os botões ficam em alturas diferentes.
+ */
+export const Composicoes: Story = {
+  name: 'Composições',
+  parameters: { largura: 'cheia' },
+  render: () => (
+    <div className="flex flex-col gap-10">
+      <Secao nome="grade de pools">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Pool
+            simbolo={<TokenUSDT variant="branded" />}
+            nome="Cofre USDT"
+            rede="Polygon"
+            valor="4,2% ao ano"
+          />
+          <Pool
+            simbolo={<TokenUSDC variant="branded" />}
+            nome="Cofre Estável"
+            rede="Polygon · USDC"
+            valor="2,8% ao ano"
+          />
+          <Pool
+            simbolo={<TokenETH variant="branded" />}
+            nome="Pool WDX-ETH"
+            rede="Arbitrum"
+            valor="11,6% ao ano"
+          />
+        </div>
+      </Secao>
+
+      <Secao nome="carteira conectada">
+        <div className="max-w-md">
+          <Card
+            title="0x3fA9…c21B"
+            actions={
+              <>
+                <Button variant="text" size="small">
+                  Copiar
+                </Button>
+                <Button size="small">Desconectar</Button>
+              </>
+            }
+          >
+            <Faixa>
+              <NetworkPolygon variant="branded" />
+            </Faixa>
+            <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
+            <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
+          </Card>
+        </div>
+      </Secao>
+
+      <Secao nome="linha com mídia à esquerda">
+        <div className="max-w-md">
+          <Card title="Pool WDX-ETH" actions={<Button size="small">Depositar</Button>}>
+            {/* O Card empilha em coluna: a linha vem de um wrapper no conteúdo. */}
+            <div className="flex items-center gap-3">
+              <NetworkArbitrumOne variant="branded" className="size-12 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm text-text-secondary">Arbitrum · liquidez</div>
+                <div className="mt-1 font-semibold text-text-primary">11,6% ao ano</div>
+              </div>
             </div>
-          </div>
-        </Card>
-      </Modelo>
+          </Card>
+        </div>
+      </Secao>
     </div>
   ),
 }
