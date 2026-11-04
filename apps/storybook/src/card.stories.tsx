@@ -263,22 +263,23 @@ export const Produtos: Story = {
   ),
 }
 
-/** Card de perfil: faixa no topo, identificação e ações. */
-export const Perfil: Story = {
+/** Card de identificação: faixa no topo, dados e ações. Aqui, a carteira conectada. */
+export const Carteira: Story = {
   render: () => (
     <Card
-      title="Anna Smith"
+      title="0x3fA9…c21B"
       actions={
         <>
           <Button variant="text" size="small">
-            Mensagem
+            Copiar
           </Button>
-          <Button size="small">Seguir</Button>
+          <Button size="small">Desconectar</Button>
         </>
       }
     >
       <img src={REDE} alt="" className={`${MIDIA} mb-3`} />
-      Operadora de cofres · 0x3fA9…c21B
+      <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
+      <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
     </Card>
   ),
 }
@@ -289,12 +290,12 @@ export const Perfil: Story = {
  */
 export const Horizontal: Story = {
   render: () => (
-    <Card title="Tie Up Boots" actions={<Button size="small">Adicionar</Button>}>
+    <Card title="Pool WDX-ETH" actions={<Button size="small">Depositar</Button>}>
       <div className="flex gap-3">
         <img src={COFRE} alt="" className="size-20 shrink-0 rounded-2 object-cover" />
         <div className="min-w-0">
-          <div className="text-sm text-text-secondary">Fall Favorite · Boots</div>
-          <div className="mt-1 font-semibold text-text-primary">R$ 245,00</div>
+          <div className="text-sm text-text-secondary">Arbitrum · liquidez</div>
+          <div className="mt-1 font-semibold text-text-primary">11,6% ao ano</div>
         </div>
       </div>
     </Card>
