@@ -326,7 +326,10 @@ describe('generate', () => {
     expect(tracked).toContain('.env.example')
     expect(tracked).toContain('.github/workflows/ci.yml')
     expect(tracked.filter((file) => file.endsWith('.env'))).toEqual([])
-  })
+    // 20s: é o único teste que gera o projeto **e** dispara quatro subprocessos `git`. O
+    // limite padrão do Bun é 5s, e em runner frio isso estoura sem o código ter problema --
+    // a falha aparece como teste quebrado, e não como lentidão.
+  }, 20_000)
 
   test('não sobra placeholder nos arquivos gerados', () => {
     const dir = join(tempDir(), 'acme')
