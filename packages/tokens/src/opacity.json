@@ -1,0 +1,9 @@
+{
+  "opacity": {
+    "$description": "PROVISÓRIO: não há Variable de opacidade no Figma. Vira o namespace --opacity-* do Tailwind 4, que serve de modificador de cor: `bg-background/overlay`.",
+    "overlay": {
+      "$description": "Fundo escurecido atrás do Modal. Alto o bastante para o conteúdo da página não competir com o diálogo sobre o fundo escuro da marca.",
+      "$value": "72%"
+    }
+  }
+}
