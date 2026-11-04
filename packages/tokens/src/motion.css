@@ -3,8 +3,8 @@
  * anexa ao dist/theme.css. Quem consome usa as classes `animate-*`, como nos outros tokens.
  */
 @theme {
-  /* Fechamento das listas suspensas (Select, Menu, Combobox): o Radix espera a animação antes
-     de desmontar. */
+  /* Fechamento das listas suspensas (Select, Menu, Combobox) e da caixa do Modal: o Radix espera
+     a animação antes de desmontar. */
   --animate-list-out: list-out 120ms ease-in forwards;
 
   @keyframes list-out {
@@ -29,6 +29,15 @@
     }
     55% {
       opacity: 0.35;
+    }
+  }
+
+  /* Fechamento do fundo escurecido do Modal: só some, sem mudar de tamanho. */
+  --animate-fade-out: fade-out 120ms ease-in forwards;
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
     }
   }
 }
