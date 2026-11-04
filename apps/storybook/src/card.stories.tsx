@@ -132,6 +132,70 @@ export const Conteudo: Story = {
   ),
 }
 
+/**
+ * Densidade de texto. O card não tem altura fixa: cresce com o conteúdo, e o `p-4` da caixa
+ * e o `gap-3` entre as partes continuam os mesmos nos três.
+ */
+export const Texto: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <Card title="Curto">Depósito confirmado.</Card>
+      <Card title="Médio">
+        Cofre publicado na Polygon em 0x3fA9…c21B. 12 depósitos nas últimas 24 horas, com rendimento
+        médio de 4,2% ao ano.
+      </Card>
+      <Card title="Longo">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+        laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+        voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      </Card>
+    </div>
+  ),
+}
+
+/**
+ * Ilustração embutida como data URI: a story não depende de rede nem de arquivo em `public/`,
+ * então funciona igual no Storybook publicado. As cores são as da marca, escritas à mão aqui
+ * porque é conteúdo de exemplo, não estilo de componente.
+ */
+const GRAFICO = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 140">' +
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#ff4d5e"/><stop offset="1" stop-color="#f5127c"/>' +
+    '</linearGradient></defs>' +
+    '<rect width="320" height="140" fill="#180c20"/>' +
+    '<path d="M0 104 L60 78 L120 92 L180 46 L240 60 L320 24 V140 H0Z" fill="url(#g)" opacity=".4"/>' +
+    '<path d="M0 104 L60 78 L120 92 L180 46 L240 60 L320 24" fill="none" stroke="url(#g)" stroke-width="3"/>' +
+    '</svg>'
+)}`
+
+/**
+ * O Card tem `p-4`, então uma imagem dentro dele nasce recuada da borda. Para mídia que
+ * encosta na borda, hoje é preciso desfazer o padding com `-m-4` e repetir o raio no topo
+ * com `rounded-t-3` — o componente não oferece isso pronto.
+ *
+ * Vale decidir com o design se o Card ganha uma área de mídia de verdade ou se o recuo é o
+ * comportamento desejado.
+ */
+export const Midia: Story = {
+  name: 'Mídia',
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <Card title="Imagem recuada" actions={<Button size="small">Ver cofre</Button>}>
+        <img src={GRAFICO} alt="" className="mb-3 w-full rounded-2" />
+        Rendimento dos últimos 30 dias. A imagem respeita o `p-4` do card.
+      </Card>
+
+      <Card title="Imagem na borda">
+        <img src={GRAFICO} alt="" className="-mt-4 -mx-4 mb-3 w-[calc(100%+2rem)] rounded-t-3" />
+        Encosta na borda desfazendo o padding com margem negativa. Funciona, mas é contorno — não é
+        API do componente.
+      </Card>
+    </div>
+  ),
+}
+
 /** Medido no elemento renderizado, não no que a classe promete. */
 const cardRows: MeasureRow[] = [
   { property: 'padding horizontal', namespace: 'spacing', read: (s) => s.paddingLeft },
