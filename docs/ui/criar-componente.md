@@ -141,7 +141,27 @@ Esta cadeia tem três modos de falha em que o build termina com "completed succe
 **`pnpm --filter <pacote> build` pula o turbo.** Roda só o script daquele pacote, sem construir as dependências.
 → Use `pnpm build` ou `pnpm turbo run build --filter=<pacote>`.
 
-O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Alert, o Card, o Select, o Menu, o Combobox, o InputField, o TextField, a Pagination, o Spinner, o Skeleton e o Modal, e o que não estiver na lista passa sem conferência. O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados. Componente que renderiza em portal (Modal) não aparece no `renderToStaticMarkup`: exporte as classes dele e confira a partir delas.
+Os testes `apps/storybook/test/css-*.test.mjs` existem para pegar as três: eles conferem que os tokens chegaram no CSS publicado e que toda classe que o componente produz tem regra lá.
+
+**Ao criar um componente novo, crie o `css-<nome>.test.mjs` dele.** É um arquivo por componente, e o `node --test` descobre sozinho: não há lista para acrescentar nem para manter. O esqueleto é sempre o mesmo, com os utilitários de `css-helpers.mjs`:
+
+```js
+import { classesFromHtml, missingFromCss } from './css-helpers.mjs'
+
+test('toda classe que o Spinner produz existe no CSS compilado', () => {
+  assert.deepEqual(missingFromCss(classesFromHtml(html)), [])
+})
+```
+
+De onde tirar a lista de classes, nesta ordem:
+
+1. **Do `cva`**, percorrendo os eixos — é o caso do Button e do InputField.
+2. **Do HTML renderizado** (`classesFromHtml`), quando o componente põe classe fora do `cva`: o símbolo do Alert, a mídia do Card, as células do Spinner. São justamente as que sumiriam sem ninguém notar.
+3. **Das classes exportadas**, quando o componente renderiza em portal e o `renderToStaticMarkup` não o desenha — é o caso do Modal, que exporta `modalOverlayClass` e `modalContentVariants` para isso.
+
+O que nunca serve é redigitar a classe no teste: aí ele confere a si mesmo.
+
+O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados.
 
 ## 7. A entrega
 

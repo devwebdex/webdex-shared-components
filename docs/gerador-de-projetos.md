@@ -281,7 +281,7 @@ Decidido pelo operador em 2026-10-21, ao criar o dropdown; fecha a antiga A8.
 
 Registrado em 2026-10-21; fecha a antiga A6.
 
-- Preview: Storybook 10 com `@storybook/react-vite` em `apps/storybook` (pacote privado `ui-storybook`). O Vite vem como dependência dele, não do pacote. O `apps/storybook/test/css.test.mjs` confere, no site compilado, que os tokens chegaram e que toda classe produzida pelo `cva` tem regra.
+- Preview: Storybook 10 com `@storybook/react-vite` em `apps/storybook` (pacote privado `ui-storybook`). O Vite vem como dependência dele, não do pacote. Os `apps/storybook/test/css-*.test.mjs`, um por componente, conferem no site compilado que os tokens chegaram e que toda classe que o componente produz tem regra.
 - Comportamento: Vitest com jsdom e Testing Library em `packages/ui/test`, cobrindo teclado, escolha, busca, envio em formulário e o halo. O jsdom não tem `ResizeObserver`, `scrollIntoView` nem captura de ponteiro; `test/setup.ts` cria versões vazias. Visual e animação ficam no Storybook.
 - Publicação do Storybook: workflow `.github/workflows/storybook.yml` no GitHub Pages, a cada push na `prod` ou à mão, desligado até a variável `STORYBOOK_PAGES` valer `true`. Sai da `prod` porque o ambiente `github-pages` só aceita a branch padrão, a menos que se mude a regra dele. Para habilitar, quem administra a conta `devwebdex` liga o Pages com origem "GitHub Actions" e cria a variável. Fora do GitHub Enterprise, o site do Pages é público mesmo com o repositório privado.
 
