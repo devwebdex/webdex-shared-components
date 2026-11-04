@@ -10,13 +10,31 @@ import { cn } from '../../lib/cn.js'
  * consumidor: `color.surface-card`, que nasceu com esse nome nas Variables do Figma, e as
  * elevações do Button.
  *
- * ELEVAÇÃO EMPRESTADA DO BUTTON
+ * ELEVAÇÃO EMPRESTADA DO BUTTON, MAS NÃO NO HOVER
  *
  * `shadow.elevation-2/4/6` tem `$description` dizendo "Elevações do Button": são os Effect
- * Styles paper/elevation da Figma, transcritos quando o Button nasceu. Reusar aqui segue o
- * passo 2 de docs/ui/criar-componente.md ("usar um token que já existe"), e o par 2 → 4 no
- * hover é o mesmo movimento que o Button faz. Se o design quiser elevações próprias de
- * superfície, a descrição do token é o lugar de registrar isso.
+ * Styles paper/elevation da Figma, transcritos quando o Button nasceu. Em repouso, reusar a
+ * elevation-2 aqui segue o passo 2 de docs/ui/criar-componente.md ("usar um token que já
+ * existe").
+ *
+ * No hover, não. O par 2 → 4 que o Button faz **não se vê neste card**: as elevações paper/*
+ * são pretas, e preto a 20% sobre o `background` #0c0611 escurece 2 pontos por canal. No
+ * Button o hover é visível porque ele também troca de cor (`hover:to-magenta-80`,
+ * `hover:bg-brand-soft/15`); o card só tinha a sombra, então não tinha hover nenhum.
+ *
+ * Daí o `shadow.glow-brand`: a mesma sombra, na cor da marca. É token provisório — ver a
+ * `$description` dele. O caminho nativo do Tailwind seria recolorir a elevation-4 com a
+ * utilitária de cor de sombra (shadow-<cor>, que vira `--tw-shadow-color`), mas ela não
+ * sobrevive ao `cn`: o tailwind-merge põe as duas no mesmo grupo e descarta a elevação.
+ * Um token só não tem conflito para resolver.
+ *
+ * (E não escreva a classe `shadow-<cor>` por extenso nem em comentário: o Tailwind varre o
+ * arquivo inteiro, comentário incluído, e emite a regra para uma classe que ninguém usa.)
+ *
+ * O brilho é aditivo, e é por isso que ele resolve os dois casos: funciona igual com
+ * `selected`, que já gastou a borda e a superfície. A outra saída seria o idioma do Select
+ * (`hover:inset-ring-brand-soft/40 hover:bg-surface-elevated`), que aqui colidiria — é
+ * exatamente o que o `selected` do card faz.
  *
  * OS TRÊS ESTADOS, E ONDE CADA UM MORA
  *
@@ -47,10 +65,10 @@ const cardVariants = cva(
   ],
   {
     variants: {
-      /** O card responde ao clique: ganha cursor, elevação no hover e anel de foco. */
+      /** O card responde ao clique: ganha cursor, brilho da marca no hover e anel de foco. */
       interactive: {
         true: [
-          'cursor-pointer hover:shadow-elevation-4',
+          'cursor-pointer hover:shadow-glow-brand',
           'focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2',
         ],
         false: '',

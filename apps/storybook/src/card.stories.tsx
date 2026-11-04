@@ -65,8 +65,13 @@ const meta = {
           '',
           'O Kit de interface (`docs/ui/webdex-design-system.html`) não desenha um Card. O',
           'desenho sai dos tokens que já existiam sem consumidor: `color.surface-card`, que',
-          'nasceu com esse nome nas Variables do Figma, e as elevações do Button',
-          '(`shadow.elevation-2` em repouso, `-4` no hover).',
+          'nasceu com esse nome nas Variables do Figma, e a `shadow.elevation-2` do Button',
+          'em repouso.',
+          '',
+          'O hover **não** é a `-4`: as elevações `paper/*` são pretas, e preto a 20% sobre o',
+          'fundo `#0c0611` escurece 2 pontos por canal — não dava para ver. Ele usa a',
+          '`shadow.glow-brand`, a mesma sombra na cor da marca, e é token provisório: se o',
+          'design quiser outro sinal de hover para superfície, é aqui que muda.',
           '',
           '`hover` é modificador de classe e só aparece com `interactive`; `selected` é prop,',
           'porque é estado da aplicação. A regra está em `docs/ui/criar-componente.md`.',
@@ -140,13 +145,14 @@ export const Estados: Story = {
         Em repouso: `surface-card`, borda `line-default` e `elevation-2`.
       </Card>
       <Card {...args} interactive title="Hover">
-        Clicável: passe o mouse para ver subir de `elevation-2` para `elevation-4`.
+        Clicável: passe o mouse para ver o brilho da marca (`glow-brand`) no lugar da `elevation-2`.
       </Card>
       <Card {...args} selected title="Selecionado">
         Escolhido: borda da marca e `surface-elevated`.
       </Card>
       <Card {...args} interactive selected title="Selecionado e clicável">
-        Os dois juntos: a borda da marca continua, e o hover ainda levanta.
+        Os dois juntos. O brilho é sombra, então não disputa a borda nem a superfície que o
+        `selected` já usou: funciona igual nos dois.
       </Card>
     </div>
   ),
