@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url'
 import {
   Alert,
   attentionClass,
+  Button,
   buttonVariants,
   Card,
   chevronClass,
@@ -32,6 +33,10 @@ import {
   modalSlotClasses,
   Pagination,
   paginationItemClass,
+  SkeletonAvatar,
+  SkeletonCard,
+  SkeletonText,
+  Spinner,
   selectTriggerVariants,
 } from '@devwebdex/ui'
 import { createElement } from 'react'
@@ -287,6 +292,52 @@ test('as classes literais do TextField existem no CSS compilado', () => {
   ]
   const missing = expected.filter((className) => !css.includes(toSelector(className)))
   assert.deepEqual(missing, [], 'classes do TextField sem regra no CSS')
+})
+
+/**
+ * Toda classe que o Spinner, o Skeleton e o Button `loading` renderizam. Como no Alert, sai do
+ * HTML: as células do losango e as formas do Skeleton têm classes fora de qualquer cva.
+ */
+function loadingClasses() {
+  const sizes = ['small', 'medium', 'large']
+  const cases = [
+    ...sizes.map((size) => [Spinner, { size }]),
+    ...['pixel', 'ring', 'dots'].flatMap((variant) =>
+      ['brand', 'current'].map((tone) => [Spinner, { variant, tone }])
+    ),
+    ...sizes.map((size) => [Button, { size, loading: true, children: 'Salvar' }]),
+    ...['ring', 'pixel', 'dots'].flatMap((loadingIndicator) =>
+      ['start', 'end', 'center'].map((loadingPosition) => [
+        Button,
+        { loading: true, loadingIndicator, loadingPosition, children: 'Salvar' },
+      ])
+    ),
+    ...sizes.map((size) => [SkeletonAvatar, { size }]),
+    [SkeletonText, { lines: 3 }],
+    [SkeletonCard, {}],
+  ]
+  const all = new Set()
+  for (const [component, props] of cases) {
+    const html = renderToStaticMarkup(createElement(component, props))
+    for (const [, classes] of html.matchAll(/class="([^"]*)"/g)) {
+      // O HTML escapa o `&` de seletores como `[&_svg]:size-[20px]`.
+      for (const utility of classes.replaceAll('&amp;', '&').split(/\s+/)) {
+        if (utility) all.add(utility)
+      }
+    }
+  }
+  return [...all]
+}
+
+test('toda classe do Spinner, do Skeleton e do Button loading existe no CSS compilado', () => {
+  const missing = loadingClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(
+    missing,
+    [],
+    'classes sem regra no CSS: o @source de packages/ui/src não está varrendo spinner/ ou skeleton/'
+  )
+  // Sem o @keyframes, o losango fica parado: o animate-pixel-cell vem do motion.css dos tokens.
+  assert.match(css, /@keyframes pixel-cell/, 'o theme.css não trouxe o @keyframes pixel-cell')
 })
 
 /**

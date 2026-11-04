@@ -1,5 +1,6 @@
 import { Button, type ButtonProps, buttonVariants } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { useState } from 'react'
 import { Measurements } from './measurements.js'
 
 const Wallet = () => (
@@ -75,6 +76,32 @@ const meta = {
       description: 'Atributo nativo do botão. Remove o gradiente e a sombra.',
       table: { type: { summary: 'boolean' } },
     },
+    loading: {
+      control: { type: 'boolean' },
+      description: 'Ação em andamento: mostra o spinner, fica focável e ignora cliques.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    loadingIndicator: {
+      control: { type: 'inline-radio' },
+      options: ['ring', 'pixel', 'dots'],
+      description: 'Desenho do spinner: círculo, losango da marca ou três pontos.',
+      table: { type: { summary: "'ring' | 'pixel' | 'dots'" }, defaultValue: { summary: 'ring' } },
+    },
+    loadingPosition: {
+      control: { type: 'inline-radio' },
+      options: ['start', 'end', 'center'],
+      description:
+        'start e end trocam o ícone daquele lado pelo spinner; center esconde o rótulo sem mudar a largura.',
+      table: {
+        type: { summary: "'start' | 'end' | 'center'" },
+        defaultValue: { summary: 'start' },
+      },
+    },
+    loadingText: {
+      control: { type: 'text' },
+      description: 'Rótulo durante o carregamento (ex.: "Conectando…"); vira o nome acessível.',
+      table: { type: { summary: 'ReactNode' } },
+    },
     children: {
       control: { type: 'text' },
       description: 'Rótulo do botão.',
@@ -148,6 +175,167 @@ export const Tamanhos: Story = {
       {SIZES.map((size) => (
         <Button key={size} {...args} size={size} />
       ))}
+    </div>
+  ),
+}
+
+const INDICATORS = ['ring', 'pixel', 'dots'] as const
+const POSITIONS = ['start', 'end', 'center'] as const
+
+/**
+ * Os três desenhos de spinner nas três posições. `start` e `end` trocam o ícone daquele lado
+ * pelo spinner, com o rótulo visível; `center` esconde o rótulo e mantém a largura.
+ */
+export const Carregando: Story = {
+  args: { loading: true, loadingText: 'Conectando…' },
+  render: (args) => (
+    <div className="flex flex-col gap-6">
+      {POSITIONS.map((position) => (
+        <section key={position} className="flex flex-col gap-3">
+          <h3 className="font-mono text-sm text-text-secondary">loadingPosition = {position}</h3>
+          <div className="flex flex-wrap items-center gap-4">
+            {INDICATORS.map((indicator) => (
+              <Button
+                key={indicator}
+                {...args}
+                loadingPosition={position}
+                loadingIndicator={indicator}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  ),
+}
+
+/** Carregando nas seis combinações de cor e variante e nos três tamanhos. */
+export const CarregandoVariantes: Story = {
+  name: 'Carregando nas variantes',
+  args: { loading: true, loadingText: 'Conectando…' },
+  render: (args) => (
+    <div className="flex flex-col gap-8">
+      <Grade {...args} />
+      <div className="flex flex-wrap items-center gap-4">
+        {SIZES.map((size) => (
+          <Button key={size} {...args} size={size} />
+        ))}
+      </div>
+    </div>
+  ),
+}
+
+/** Botão que carrega por `duration` ms a cada clique e volta ao normal. */
+function ClickToLoad({ duration = 2000, ...props }: ButtonProps & { duration?: number }) {
+  const [loading, setLoading] = useState(false)
+  return (
+    <Button
+      {...props}
+      loading={loading}
+      onClick={() => {
+        setLoading(true)
+        setTimeout(() => setLoading(false), duration)
+      }}
+    />
+  )
+}
+
+type ClickExample = ButtonProps & { hint: string; duration?: number }
+
+/** Situações reais do produto, cada uma com uma combinação de indicador, posição e estilo. */
+const CLICK_EXAMPLES: ClickExample[] = [
+  {
+    hint: 'ring · start · texto novo',
+    children: 'Conectar Carteira',
+    iconLeft: <Wallet />,
+    loadingText: 'Conectando…',
+  },
+  {
+    hint: 'pixel · center · largura fixa',
+    children: 'Publicar contrato',
+    loadingIndicator: 'pixel',
+    loadingPosition: 'center',
+    duration: 3000,
+  },
+  {
+    hint: 'dots · end · troca o ícone da direita',
+    children: 'Enviar',
+    iconRight: <Check />,
+    loadingIndicator: 'dots',
+    loadingPosition: 'end',
+    loadingText: 'Enviando',
+  },
+  {
+    hint: 'ring · start · outlined',
+    children: 'Salvar rascunho',
+    variant: 'outlined',
+    loadingText: 'Salvando…',
+  },
+  {
+    hint: 'dots · start · text',
+    children: 'Carregar mais',
+    variant: 'text',
+    loadingIndicator: 'dots',
+  },
+  {
+    hint: 'pixel · start · code',
+    children: 'Compilar',
+    color: 'code',
+    loadingIndicator: 'pixel',
+    loadingText: 'Compilando…',
+    duration: 3000,
+  },
+  {
+    hint: 'ring · center · code outlined',
+    children: 'Verificar assinatura',
+    color: 'code',
+    variant: 'outlined',
+    loadingPosition: 'center',
+  },
+  {
+    hint: 'ring · start · small',
+    children: 'Atualizar saldo',
+    size: 'small',
+    loadingText: 'Atualizando…',
+  },
+  {
+    hint: 'dots · end · large',
+    children: 'Confirmar transação',
+    size: 'large',
+    iconRight: <Check />,
+    loadingIndicator: 'dots',
+    loadingPosition: 'end',
+    loadingText: 'Aguardando a rede',
+    duration: 4000,
+  },
+]
+
+/**
+ * Clique em qualquer botão para ver o ciclo. O primeiro segue os controles do painel; os outros
+ * mostram situações do produto com indicador, posição, texto, cor, variante e tamanho diferentes.
+ */
+export const CarregandoAoClicar: Story = {
+  name: 'Carregando ao clicar',
+  args: { loadingText: 'Conectando…' },
+  render: (args) => (
+    <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-3">
+        <h3 className="font-mono text-sm text-text-secondary">controles do painel</h3>
+        <div>
+          <ClickToLoad {...args} />
+        </div>
+      </section>
+      <section className="flex flex-col gap-3">
+        <h3 className="font-mono text-sm text-text-secondary">exemplos</h3>
+        <div className="grid w-[56rem] grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-6">
+          {CLICK_EXAMPLES.map(({ hint, ...example }) => (
+            <div key={hint} className="flex flex-col items-start gap-2">
+              <ClickToLoad {...example} />
+              <span className="font-mono text-sm text-text-secondary">{hint}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   ),
 }
