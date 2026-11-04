@@ -27,6 +27,8 @@ import {
   listItemVariants,
   listPopupVariants,
   listSeparatorClass,
+  Pagination,
+  paginationItemClass,
   selectTriggerVariants,
 } from '@devwebdex/ui'
 import { createElement } from 'react'
@@ -282,4 +284,23 @@ test('as classes literais do TextField existem no CSS compilado', () => {
   ]
   const missing = expected.filter((className) => !css.includes(toSelector(className)))
   assert.deepEqual(missing, [], 'classes do TextField sem regra no CSS')
+})
+
+/**
+ * Toda classe que a Pagination renderiza (lista, itens e reticências, com página atual e as duas
+ * reticências na tela), mais as versões sem prefixo que a story Estados força no item.
+ */
+function paginationClasses() {
+  const html = renderToStaticMarkup(createElement(Pagination, { count: 20, defaultPage: 10 }))
+  // O React escreve `&` como `&amp;` dentro do atributo: sem desfazer, `[&_svg]:size-4` chegaria
+  // aqui com outro nome e nunca seria achado no CSS.
+  const rendered = [...html.matchAll(/class="([^"]*)"/g)].map(([, classes]) =>
+    classes.replaceAll('&amp;', '&')
+  )
+  return withForcedStates([...rendered, paginationItemClass])
+}
+
+test('toda classe que a Pagination produz existe no CSS compilado', () => {
+  const missing = paginationClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(missing, [], `classes da Pagination sem regra no CSS: ${missing.join(', ')}`)
 })
