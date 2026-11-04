@@ -70,9 +70,15 @@ function toSelector(className) {
 /**
  * Desfaz o escape de atributo do renderToStaticMarkup.
  *
- * Variante arbitrária (`[&>img]:w-full`) sai do HTML como `[&amp;&gt;img]:w-full`, e a busca
- * pelo seletor falharia com a classe presente no CSS -- o teste acusaria um problema que não
- * existe. Só as cinco entidades que o React escapa em atributo.
+ * Variante arbitrária (`[&_svg]:size-4`, `[&>img]:w-full`) sai do HTML com o `&` e o `>`
+ * escapados: `[&amp;_svg]:size-4`, `[&amp;&gt;img]:w-full`. A busca pelo seletor falharia com
+ * a classe presente no CSS -- o teste acusaria um problema que não existe.
+ *
+ * Todo lugar que extrai classe de HTML renderizado passa por aqui. Desfazer só o `&amp;` à
+ * mão, como já se fez em dois lugares, cobre `[&_svg]` mas não `[&>img]`: o furo só aparece
+ * quando alguém usa a primeira variante com `>` ou `<`, e aí parece erro de CSS.
+ *
+ * Só as cinco entidades que o React escapa em atributo.
  */
 function decodeEntities(text) {
   return text
@@ -320,8 +326,7 @@ function loadingClasses() {
   for (const [component, props] of cases) {
     const html = renderToStaticMarkup(createElement(component, props))
     for (const [, classes] of html.matchAll(/class="([^"]*)"/g)) {
-      // O HTML escapa o `&` de seletores como `[&_svg]:size-[20px]`.
-      for (const utility of classes.replaceAll('&amp;', '&').split(/\s+/)) {
+      for (const utility of decodeEntities(classes).split(/\s+/)) {
         if (utility) all.add(utility)
       }
     }
@@ -375,10 +380,8 @@ test('o fundo do Modal usa o token de opacidade, não um valor solto', () => {
  */
 function paginationClasses() {
   const html = renderToStaticMarkup(createElement(Pagination, { count: 20, defaultPage: 10 }))
-  // O React escreve `&` como `&amp;` dentro do atributo: sem desfazer, `[&_svg]:size-4` chegaria
-  // aqui com outro nome e nunca seria achado no CSS.
   const rendered = [...html.matchAll(/class="([^"]*)"/g)].map(([, classes]) =>
-    classes.replaceAll('&amp;', '&')
+    decodeEntities(classes)
   )
   return withForcedStates([...rendered, paginationItemClass])
 }

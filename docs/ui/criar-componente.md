@@ -78,6 +78,17 @@ apps/storybook/src/<nome>.stories.tsx
 
 A story importa de `@devwebdex/ui`, não do arquivo interno. Assim ela exercita a superfície pública do pacote, do mesmo jeito que um projeto que o consome.
 
+**O `title` é que monta a barra lateral**, e é só uma string com `/`:
+
+```ts
+title: 'Componentes/Alert'            // solto
+title: 'Componentes/Campos/InputField' // dentro da pasta Campos
+```
+
+Pasta só quando houver **dois ou mais componentes da mesma família** — hoje `Campos` (InputField, TextField), `Dropdown` (Combobox, Menu, Select) e `Loading` (Spinner, Skeleton). Componente sem irmão fica solto: pasta de um filho só acrescenta profundidade sem ajudar ninguém a achar nada.
+
+A ordem é alfabética, pelo `storySort` do `.storybook/preview.tsx`. Não há lista a manter: componente novo cai no lugar sozinho.
+
 O mínimo: um `Playground` com controles e uma story por eixo de variante. Declare `argTypes` com `options` e `table.type` à mão — o docgen não extrai tipo de `VariantProps`, que é um mapped type, e a tabela de controles sai vazia sem isso.
 
 Para o design conferir alturas, espaçamentos e raios, crie uma story `Medidas` com o `MeasureTable` de `apps/storybook/src/measurements.tsx`: ele mede o elemento renderizado, não o que a classe promete.
@@ -130,7 +141,7 @@ Esta cadeia tem três modos de falha em que o build termina com "completed succe
 **`pnpm --filter <pacote> build` pula o turbo.** Roda só o script daquele pacote, sem construir as dependências.
 → Use `pnpm build` ou `pnpm turbo run build --filter=<pacote>`.
 
-O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Alert, o Select, o Menu, o Combobox, o InputField, o TextField, a Pagination e o Modal, e o que não estiver na lista passa sem conferência. O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados. Componente que renderiza em portal (Modal) não aparece no `renderToStaticMarkup`: exporte as classes dele e confira a partir delas.
+O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Alert, o Card, o Select, o Menu, o Combobox, o InputField, o TextField, a Pagination, o Spinner, o Skeleton e o Modal, e o que não estiver na lista passa sem conferência. O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados. Componente que renderiza em portal (Modal) não aparece no `renderToStaticMarkup`: exporte as classes dele e confira a partir delas.
 
 ## 7. A entrega
 
