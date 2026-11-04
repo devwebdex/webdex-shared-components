@@ -1,7 +1,7 @@
 import { Button, type ButtonProps, buttonVariants } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
-import { Measurements } from './measurements.js'
+import { Measurements } from '../lib/measurements.js'
 
 const Wallet = () => (
   <svg

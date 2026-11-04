@@ -73,7 +73,7 @@ Componente com comportamento (abrir, escolher, navegar pelo teclado) usa o primi
 ## 4. A story
 
 ```
-apps/storybook/src/<nome>.stories.tsx
+apps/storybook/src/stories/<nome>.stories.tsx
 ```
 
 A story importa de `@devwebdex/ui`, não do arquivo interno. Assim ela exercita a superfície pública do pacote, do mesmo jeito que um projeto que o consome.
@@ -91,7 +91,7 @@ A ordem é alfabética, pelo `storySort` do `.storybook/preview.tsx`. Não há l
 
 O mínimo: um `Playground` com controles e uma story por eixo de variante. Declare `argTypes` com `options` e `table.type` à mão — o docgen não extrai tipo de `VariantProps`, que é um mapped type, e a tabela de controles sai vazia sem isso.
 
-Para o design conferir alturas, espaçamentos e raios, crie uma story `Medidas` com o `MeasureTable` de `apps/storybook/src/measurements.tsx`: ele mede o elemento renderizado, não o que a classe promete.
+Para o design conferir alturas, espaçamentos e raios, crie uma story `Medidas` com o `MeasureTable` de `apps/storybook/src/lib/measurements.tsx`: ele mede o elemento renderizado, não o que a classe promete.
 
 ## 4.1. O teste de comportamento
 

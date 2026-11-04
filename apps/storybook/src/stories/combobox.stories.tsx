@@ -22,7 +22,7 @@ import {
   NetworkScroll,
   NetworkSepolia,
 } from '@web3icons/react'
-import { ComboboxMeasurements } from './dropdown-measurements.js'
+import { ComboboxMeasurements } from '../lib/dropdown-measurements.js'
 
 // Lista longa de propósito: é o caso em que a busca vale mais que rolar.
 const networks: ComboboxOption[] = [
