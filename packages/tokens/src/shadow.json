@@ -12,6 +12,11 @@
     "elevation-6": {
       "$type": "shadow",
       "$value": "0 3px 5px -1px rgb(0 0 0 / 0.2), 0 6px 10px 0 rgb(0 0 0 / 0.14), 0 1px 18px 0 rgb(0 0 0 / 0.12)"
+    },
+    "glow-brand": {
+      "$type": "shadow",
+      "$value": "0 4px 20px 0 rgb(245 18 124 / 0.28)",
+      "$description": "PROVISÓRIO: brilho da marca para hover em superfície escura. Não veio do Figma. As elevações paper/* são pretas e somem sobre o fundo #0c0611 (preto a 20% escurece 2 pontos por canal), então sombra não serve de sinal de hover aqui. A cor repete color.brand porque sombra em DTCG é string, sem referência a outro token."
     }
   }
 }

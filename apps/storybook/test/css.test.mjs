@@ -21,6 +21,7 @@ import {
   Alert,
   attentionClass,
   buttonVariants,
+  Card,
   chevronClass,
   inputFieldVariants,
   listItemVariants,
@@ -54,6 +55,22 @@ function readCss() {
 /** Tailwind escapa, no seletor, tudo que não é letra, dígito, hífen ou sublinhado. */
 function toSelector(className) {
   return `.${className.replace(/[^a-zA-Z0-9_-]/g, (char) => `\\${char}`)}`
+}
+
+/**
+ * Desfaz o escape de atributo do renderToStaticMarkup.
+ *
+ * Variante arbitrária (`[&>img]:w-full`) sai do HTML como `[&amp;&gt;img]:w-full`, e a busca
+ * pelo seletor falharia com a classe presente no CSS -- o teste acusaria um problema que não
+ * existe. Só as cinco entidades que o React escapa em atributo.
+ */
+function decodeEntities(text) {
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;/g, '&')
 }
 
 /** Toda classe da lista, mais as versões sem prefixo que as stories Matriz forçam. */
@@ -180,7 +197,7 @@ function alertClasses() {
   for (const variant of ['info', 'warning', 'error', 'success']) {
     const html = renderToStaticMarkup(createElement(Alert, { variant, title: 'Título.' }, 'Texto.'))
     for (const [, classes] of html.matchAll(/class="([^"]*)"/g)) {
-      for (const utility of classes.split(/\s+/)) {
+      for (const utility of decodeEntities(classes).split(/\s+/)) {
         if (utility) all.add(utility)
       }
     }
@@ -194,6 +211,50 @@ test('toda classe que o Alert produz existe no CSS compilado', () => {
     missing,
     [],
     'classes do Alert sem regra no CSS: o @source de packages/ui/src não está varrendo o componente'
+  )
+})
+
+/**
+ * Toda classe que o Card renderiza, nas quatro combinações de interactive x selected,
+ * com mídia, header, conteúdo e ações.
+ *
+ * Sai do HTML renderizado, não só do cva: a mídia sangrada, o header e o rodapé de ações têm
+ * classes fora do cardVariants, e são justamente as que sumiriam sem ninguém notar. O slot de
+ * mídia é o caso mais frágil: `-mt-4 -mx-4` e `[&>img]:w-full` só existem no JSX.
+ */
+function cardClasses() {
+  const all = new Set()
+  for (const interactive of [false, true]) {
+    for (const selected of [false, true]) {
+      const html = renderToStaticMarkup(
+        createElement(
+          Card,
+          {
+            interactive,
+            selected,
+            media: createElement('img', { src: 'data:,', alt: '' }),
+            title: 'Título',
+            actions: createElement('span', null, 'Ação'),
+          },
+          'Conteúdo.'
+        )
+      )
+      for (const [, classes] of html.matchAll(/class="([^"]*)"/g)) {
+        for (const utility of decodeEntities(classes).split(/ +/)) {
+          if (utility) all.add(utility)
+        }
+      }
+    }
+  }
+  return [...all]
+}
+
+test('toda classe que o Card produz existe no CSS compilado', () => {
+  const missing = cardClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(
+    missing,
+    [],
+    'classes do Card sem regra no CSS: o @source de packages/ui/src não está varrendo o componente'
   )
 })
 
