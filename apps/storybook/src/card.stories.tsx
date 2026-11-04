@@ -32,9 +32,14 @@ const meta = {
       description: 'Escolhido numa lista: borda da marca e superfície rosada.',
       table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
     },
+    media: {
+      control: false,
+      description: 'Mídia sangrada no topo, antes do título. O card desfaz o padding.',
+      table: { type: { summary: 'ReactNode' } },
+    },
     title: {
       control: { type: 'text' },
-      description: 'Header do card.',
+      description: 'Header do card, abaixo da mídia.',
       table: { type: { summary: 'ReactNode' } },
     },
     children: {
@@ -89,46 +94,43 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Contorno para sangrar a mídia até a borda: desfaz o `p-4` do card e repete o raio no topo.
+ * Imagem de exemplo para o card que passa uma `<img>` de verdade no slot.
  *
- * Ele se repete em toda composição abaixo, e é esse o argumento para virar API: as três
- * referências que o design mandou (MDBootstrap, cards de produto, card de tênis) têm a imagem
- * encostada na borda. Enquanto não existir uma área de mídia no componente, cada tela refaz
- * essa conta — e erra o raio quando o Card mudar de `radius.3`.
+ * É SVG embutido em data URI, e não um arquivo nem uma URL: a story precisa funcionar sem
+ * rede e sem asset no repositório.
+ *
+ * As cores estão em hex aqui, e não em token, porque isto é **conteúdo** — ocupa o lugar de
+ * uma foto, que também não teria token. O que é estilo (o raio do topo, a sangria) continua
+ * saindo do Card.
  */
-const MIDIA = '-mt-4 -mx-4 mb-3 block w-[calc(100%+2rem)] rounded-t-3'
+const GRAFICO = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 140" preserveAspectRatio="none">
+     <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+       <stop offset="0" stop-color="#ff4d5e"/><stop offset="1" stop-color="#f5127c"/>
+     </linearGradient></defs>
+     <rect width="400" height="140" fill="url(#g)"/>
+     <path d="M0 112 L57 94 L114 101 L171 65 L228 77 L285 39 L342 47 L400 22" fill="none"
+       stroke="#fff" stroke-opacity=".9" stroke-width="5" stroke-linecap="round"
+       stroke-linejoin="round"/>
+   </svg>`
+)}`
 
 /**
- * Faixa de mídia com o símbolo do ativo. Os símbolos vêm do `@web3icons/react`, que já era
- * dependência de desenvolvimento do Storybook para as redes do Dropdown — então são os
- * ícones de verdade de USDT, ETH e USDC, não desenho de exemplo.
+ * Faixa de mídia com o símbolo do ativo, para passar na prop `media`.
  *
- * O fundo sai dos tokens (`coral.50` → `brand`), não de hex escrito à mão.
+ * Os símbolos vêm do `@web3icons/react`, que já era dependência de desenvolvimento do
+ * Storybook para as redes do Dropdown — então são os ícones de verdade de USDT, ETH e USDC,
+ * não desenho de exemplo. O fundo sai dos tokens (`coral.50` → `brand`), não de hex à mão.
  *
- * **Só funciona como primeiro filho de `children`, num card sem `title`.** O Card renderiza
- * `title` → `children` → `actions` nessa ordem fixa, então com `title` preenchido a faixa
- * nasce abaixo dele e o `-mt-4` deixa de encostar na borda: ele só come o `gap-3` e espreme
- * a imagem contra o título.
+ * Note o que **não** está aqui: margem negativa, largura calculada, raio. Sangrar a mídia é
+ * conta do Card, que conhece o próprio `p-4` e o próprio raio; a tela passa só o conteúdo.
  */
 function Faixa({ children }: { children: ReactNode }) {
   return (
-    <div
-      className={`${MIDIA} flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14`}
-    >
+    <div className="flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14">
       {children}
     </div>
   )
-}
-
-/**
- * Título escrito dentro de `children`, para os cards cuja mídia vem antes dele.
- *
- * Repete o estilo que o componente aplica à prop `title` (`font-semibold`, `text-lg`,
- * `text-text-primary`). Essa duplicação é sintoma, não solução: com a ordem dos slots fixa,
- * card com imagem no topo precisa abrir mão da prop e refazer o estilo à mão.
- */
-function Titulo({ children }: { children: ReactNode }) {
-  return <div className="font-semibold text-lg text-text-primary">{children}</div>
 }
 
 /** Use os controles ao lado para trocar os estados e o texto. */
@@ -227,36 +229,43 @@ export const Modelos: Story = {
         </Card>
       </Modelo>
 
-      {/* Sem a prop `title`: a mídia vem antes dele, e a ordem dos slots é fixa. */}
       <Modelo nome="image + title + text">
-        <Card>
-          <Faixa>
-            <TokenETH variant="branded" />
-          </Faixa>
-          <Titulo>Rendimento</Titulo>
-          <p className="mt-2">Últimos 30 dias.</p>
+        <Card
+          media={
+            <Faixa>
+              <TokenETH variant="branded" />
+            </Faixa>
+          }
+          title="Rendimento"
+        >
+          Últimos 30 dias.
         </Card>
       </Modelo>
 
       <Modelo nome="image + title + description + button">
-        <Card actions={<Button className="w-full">Depositar</Button>}>
-          <Faixa>
-            <TokenETH variant="branded" />
-          </Faixa>
-          <Titulo>Pool WDX-ETH</Titulo>
-          <div className="mt-1 text-sm text-text-secondary">Arbitrum</div>
+        <Card
+          media={
+            <Faixa>
+              <TokenETH variant="branded" />
+            </Faixa>
+          }
+          title="Pool WDX-ETH"
+          actions={<Button className="w-full">Depositar</Button>}
+        >
+          <div className="text-sm text-text-secondary">Arbitrum</div>
           <div className="mt-1 font-semibold text-lg text-text-primary">11,6% ao ano</div>
         </Card>
       </Modelo>
 
-      {/* Com `title`, para mostrar o aperto: o -mt-4 da faixa come o gap e encosta no título. */}
-      <Modelo nome="title + image ⚠ aperta">
-        <Card title="Rendimento">
-          <Faixa>
-            <TokenETH variant="branded" />
-          </Faixa>
-          A faixa nasce abaixo do título e o `-mt-4` espreme os dois.
-        </Card>
+      <Modelo nome="image + title">
+        <Card
+          media={
+            <Faixa>
+              <TokenUSDC variant="branded" />
+            </Faixa>
+          }
+          title="Reserva em USDC"
+        />
       </Modelo>
     </div>
   ),
@@ -291,8 +300,12 @@ export const Texto: Story = {
 }
 
 /**
- * Imagem recuada contra imagem sangrada. A primeira é o comportamento natural do `p-4`; a
- * segunda é o contorno de `MIDIA`.
+ * Imagem recuada contra imagem sangrada. A primeira é o comportamento natural do `p-4`, e sai
+ * de marcação dentro de `children`; a segunda vai na prop `media`, e quem sangra é o Card.
+ *
+ * O terceiro card passa uma `<img>` direta em vez de uma faixa. É o caso que o slot resolve
+ * com `[&>img]:w-full`: imagem é elemento substituído, não estica com o `align-items: stretch`
+ * do flex, e sairia no tamanho intrínseco.
  */
 export const Midia: Story = {
   name: 'Mídia',
@@ -305,15 +318,21 @@ export const Midia: Story = {
         Respeita o `p-4` do card. Funciona sem truque, mas destoa das referências.
       </Card>
 
-      <Card>
-        <Faixa>
-          <TokenUSDT variant="branded" />
-        </Faixa>
-        <Titulo>Mídia na borda</Titulo>
-        <p className="mt-2">
-          Encosta na borda desfazendo o padding com margem negativa. O título vem de marcação dentro
-          de `children`: com a prop `title`, a faixa nasceria abaixo dele.
-        </p>
+      <Card
+        media={
+          <Faixa>
+            <TokenUSDT variant="branded" />
+          </Faixa>
+        }
+        title="Mídia na borda"
+      >
+        Encosta na borda porque o slot desfaz o `p-4` do card e arredonda o topo. A tela passa só a
+        faixa, e o título continua sendo a prop `title`.
+      </Card>
+
+      <Card media={<img src={GRAFICO} alt="" />} title="Imagem direta no slot">
+        Uma `img` no `media` estica para a largura do card e é recortada no raio do topo, sem
+        nenhuma classe de quem consome.
       </Card>
     </div>
   ),
@@ -334,13 +353,12 @@ function Pool({
   return (
     <Card
       className="h-full"
-      // Sem `title`: a mídia vem antes dele. O nome entra em `children`, depois da faixa.
+      media={<Faixa>{simbolo}</Faixa>}
+      title={nome}
       // `actions` é `justify-end`; um filho `w-full` preenche a linha assim mesmo.
       actions={<Button className="w-full">Depositar</Button>}
     >
-      <Faixa>{simbolo}</Faixa>
-      <Titulo>{nome}</Titulo>
-      <div className="mt-1 text-sm text-text-secondary">{rede}</div>
+      <div className="text-sm text-text-secondary">{rede}</div>
       <div className="mt-1 font-semibold text-text-primary text-lg">{valor}</div>
     </Card>
   )
@@ -360,17 +378,16 @@ function Secao({ nome, children }: { nome: string; children: ReactNode }) {
  * Usos reais, montados a partir das referências que o design mandou. Enquanto a galeria
  * acima mostra os blocos isolados, aqui eles aparecem como telas.
  *
- * Quatro lacunas da API aparecem juntas, e nenhuma é bug do Card:
+ * Duas lacunas da API aparecem aqui, e nenhuma é bug do Card:
  *
- * 1. **A ordem dos slots é fixa**: `title` → `children` → `actions`. Card com imagem no topo
- *    — o padrão das três referências — precisa abrir mão da prop `title` e reescrever o
- *    título dentro de `children`, duplicando o estilo que o componente já aplica.
- * 2. **Mídia sangrada** precisa do contorno `MIDIA`, em toda tela que usar card com imagem.
- * 3. **Ação de largura cheia** sai de um filho `w-full` dentro do `justify-end`. Funciona,
+ * 1. **Ação de largura cheia** sai de um filho `w-full` dentro do `justify-end`. Funciona,
  *    mas o nome da prop promete alinhamento à direita.
- * 4. **Altura igual** vem de `h-full` no card; o rodapé, porém, não encosta no fundo quando
+ * 2. **Altura igual** vem de `h-full` no card; o rodapé, porém, não encosta no fundo quando
  *    um card tem menos texto, porque não há como empurrar `actions` para baixo. Dá para ver
  *    na grade: os botões ficam em alturas diferentes.
+ *
+ * As outras duas saíram com o slot `media`: a mídia no topo não precisa mais abrir mão da
+ * prop `title`, nem que cada tela refaça a margem negativa.
  */
 export const Composicoes: Story = {
   name: 'Composições',
@@ -403,6 +420,12 @@ export const Composicoes: Story = {
       <Secao nome="carteira conectada">
         <div className="max-w-md">
           <Card
+            media={
+              <Faixa>
+                <NetworkPolygon variant="branded" />
+              </Faixa>
+            }
+            title="0x3fA9…c21B"
             actions={
               <>
                 <Button variant="text" size="small">
@@ -412,11 +435,7 @@ export const Composicoes: Story = {
               </>
             }
           >
-            <Faixa>
-              <NetworkPolygon variant="branded" />
-            </Faixa>
-            <Titulo>0x3fA9…c21B</Titulo>
-            <div className="mt-1 text-sm text-text-secondary">Polygon · conectada por SIWE</div>
+            <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
             <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
           </Card>
         </div>

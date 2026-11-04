@@ -50,6 +50,24 @@ import { cn } from '../../lib/cn.js'
  *
  *   raio   radius.3 (12px)   o Button usa 2 e 3; 3 é o raio de superfície maior
  *
+ * A MÍDIA SANGRADA É SLOT, NÃO MARGEM NEGATIVA DE QUEM CONSOME
+ *
+ * `media` é o primeiro slot, antes de `title`. Quem monta a tela passa só o conteúdo (uma
+ * `<img>`, uma faixa com o símbolo do ativo) e o Card desfaz o próprio `p-4` com `-mt-4
+ * -mx-4`, arredonda o topo junto com a caixa e recorta o que passar.
+ *
+ * Duas razões para a conta viver aqui e não na tela:
+ *
+ * 1. Ela depende de dois valores do Card — o `p-4` e o `radius.3`. Feita de fora, cada tela
+ *    repete os mesmos números, e todas erram juntas no dia em que o Card mudar de raio ou de
+ *    padding.
+ * 2. Sem o slot, a mídia tem de entrar em `children`, que vem depois de `title`. Aí a margem
+ *    negativa não tem `p-4` para cancelar: ela come o `gap-3` e espreme a imagem contra o
+ *    título (12px de gap − 16px de margem = −4px).
+ *
+ * Como `media` é o primeiro filho do flex, o `gap-3` do Card volta a separar a mídia do
+ * título sozinho — por isso não há margem embaixo.
+ *
  * LACUNA CONHECIDA
  *
  * `interactive` dá a afordância visual e o foco, não a semântica. Card inteiro clicável
@@ -88,7 +106,12 @@ const cardVariants = cva(
 
 export type CardProps = Omit<ComponentProps<'div'>, 'title'> &
   VariantProps<typeof cardVariants> & {
-    /** Header: título em destaque, no topo do card. */
+    /**
+     * Mídia sangrada no topo, antes do `title`: imagem, faixa, gráfico. O Card desfaz o
+     * próprio padding e arredonda o topo; passe só o conteúdo, sem margem negativa.
+     */
+    media?: ReactNode
+    /** Header: título em destaque, abaixo da `media`. */
     title?: ReactNode
     /** Rodapé de ações, alinhado à direita. Lugar do Button que age sobre o card. */
     actions?: ReactNode
@@ -98,6 +121,7 @@ export function Card({
   className,
   interactive,
   selected,
+  media,
   title,
   actions,
   children,
@@ -115,6 +139,18 @@ export function Card({
       className={cn(cardVariants({ interactive, selected }), className)}
       {...props}
     >
+      {/*
+        `-mt-4 -mx-4` cancela o `p-4` do Card; como este é o primeiro filho do flex, o `gap-3`
+        cuida do espaço até o título. O `overflow-hidden` recorta no `rounded-t-3`, então
+        imagem, vídeo ou gradiente seguem o raio da caixa sem precisar repeti-lo.
+        `[&>img]:w-full` porque `<img>` é elemento substituído: ele não estica com o
+        `align-items: stretch` do flex, e sairia no tamanho intrínseco.
+      */}
+      {media != null && (
+        <div className="-mx-4 -mt-4 overflow-hidden rounded-t-3 [&>img]:block [&>img]:w-full">
+          {media}
+        </div>
+      )}
       {title != null && <div className="font-semibold text-text-primary text-lg">{title}</div>}
       {/* min-w-0 e wrap-break-word: endereço e hash não têm espaço e vazariam da caixa. */}
       {children != null && <div className="min-w-0 wrap-break-word">{children}</div>}

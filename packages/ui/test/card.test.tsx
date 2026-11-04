@@ -16,13 +16,31 @@ describe('Card', () => {
     expect(screen.getByRole('button', { name: 'Publicar' })).toBeTruthy()
   })
 
-  it('omite header e ações quando não são passados', () => {
+  it('omite mídia, header e ações quando não são passados', () => {
     render(<Card data-testid="card">Só conteúdo.</Card>)
 
     expect(screen.getByText('Só conteúdo.')).toBeTruthy()
     expect(screen.queryByRole('button')).toBeNull()
-    // header, conteúdo e ações são irmãos: sem os dois extremos, sobra um filho.
+    // mídia, header, conteúdo e ações são irmãos: sem os três extremos, sobra um filho.
     expect(screen.getByTestId('card').children.length).toBe(1)
+  })
+
+  // A ordem é o contrato do slot, não detalhe de renderização. A mídia sangra com
+  // `-mt-4`, que só cancela o `p-4` se ela for o primeiro filho; renderizada depois do
+  // título, a margem comeria o `gap-3` e espremeria a imagem contra ele.
+  it('renderiza a mídia como primeiro filho, antes do header', () => {
+    render(
+      <Card data-testid="card" media={<img src="grafico.svg" alt="Rendimento" />} title="Pool">
+        Últimos 30 dias.
+      </Card>
+    )
+
+    // `noUncheckedIndexedAccess`: o índice devolve `Element | undefined`, e o `?.` basta --
+    // se o filho não existir, o `undefined` já reprova o `toBe`.
+    const [midia, header] = Array.from(screen.getByTestId('card').children)
+
+    expect(midia?.contains(screen.getByAltText('Rendimento'))).toBe(true)
+    expect(header?.textContent).toBe('Pool')
   })
 
   it('o card em repouso não recebe foco pelo teclado', async () => {
