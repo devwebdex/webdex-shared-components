@@ -21,6 +21,7 @@ import {
   Alert,
   attentionClass,
   buttonVariants,
+  Card,
   chevronClass,
   inputFieldVariants,
   listItemVariants,
@@ -194,6 +195,43 @@ test('toda classe que o Alert produz existe no CSS compilado', () => {
     missing,
     [],
     'classes do Alert sem regra no CSS: o @source de packages/ui/src não está varrendo o componente'
+  )
+})
+
+/**
+ * Toda classe que o Card renderiza, nas quatro combinações de interactive x selected,
+ * com header, conteúdo e ações.
+ *
+ * Sai do HTML renderizado, não só do cva: header e rodapé de ações têm classes fora do
+ * cardVariants, e são justamente as que sumiriam sem ninguém notar.
+ */
+function cardClasses() {
+  const all = new Set()
+  for (const interactive of [false, true]) {
+    for (const selected of [false, true]) {
+      const html = renderToStaticMarkup(
+        createElement(
+          Card,
+          { interactive, selected, title: 'Título', actions: createElement('span', null, 'Ação') },
+          'Conteúdo.'
+        )
+      )
+      for (const [, classes] of html.matchAll(/class="([^"]*)"/g)) {
+        for (const utility of classes.split(/ +/)) {
+          if (utility) all.add(utility)
+        }
+      }
+    }
+  }
+  return [...all]
+}
+
+test('toda classe que o Card produz existe no CSS compilado', () => {
+  const missing = cardClasses().filter((className) => !css.includes(toSelector(className)))
+  assert.deepEqual(
+    missing,
+    [],
+    'classes do Card sem regra no CSS: o @source de packages/ui/src não está varrendo o componente'
   )
 })
 
