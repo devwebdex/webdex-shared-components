@@ -99,6 +99,11 @@ const MIDIA = '-mt-4 -mx-4 mb-3 block w-[calc(100%+2rem)] rounded-t-3'
  * ícones de verdade de USDT, ETH e USDC, não desenho de exemplo.
  *
  * O fundo sai dos tokens (`coral.50` → `brand`), não de hex escrito à mão.
+ *
+ * **Só funciona como primeiro filho de `children`, num card sem `title`.** O Card renderiza
+ * `title` → `children` → `actions` nessa ordem fixa, então com `title` preenchido a faixa
+ * nasce abaixo dele e o `-mt-4` deixa de encostar na borda: ele só come o `gap-3` e espreme
+ * a imagem contra o título.
  */
 function Faixa({ children }: { children: ReactNode }) {
   return (
@@ -108,6 +113,17 @@ function Faixa({ children }: { children: ReactNode }) {
       {children}
     </div>
   )
+}
+
+/**
+ * Título escrito dentro de `children`, para os cards cuja mídia vem antes dele.
+ *
+ * Repete o estilo que o componente aplica à prop `title` (`font-semibold`, `text-lg`,
+ * `text-text-primary`). Essa duplicação é sintoma, não solução: com a ordem dos slots fixa,
+ * card com imagem no topo precisa abrir mão da prop e refazer o estilo à mão.
+ */
+function Titulo({ children }: { children: ReactNode }) {
+  return <div className="font-semibold text-lg text-text-primary">{children}</div>
 }
 
 /** Use os controles ao lado para trocar os estados e o texto. */
@@ -205,22 +221,35 @@ export const Modelos: Story = {
         </Card>
       </Modelo>
 
+      {/* Sem a prop `title`: a mídia vem antes dele, e a ordem dos slots é fixa. */}
       <Modelo nome="image + title + text">
-        <Card title="Rendimento">
+        <Card>
           <Faixa>
             <TokenETH variant="branded" />
           </Faixa>
-          Últimos 30 dias.
+          <Titulo>Rendimento</Titulo>
+          <p className="mt-2">Últimos 30 dias.</p>
         </Card>
       </Modelo>
 
       <Modelo nome="image + title + description + button">
-        <Card title="Pool WDX-ETH" actions={<Button className="w-full">Depositar</Button>}>
+        <Card actions={<Button className="w-full">Depositar</Button>}>
           <Faixa>
             <TokenETH variant="branded" />
           </Faixa>
-          <div className="text-sm text-text-secondary">Arbitrum</div>
+          <Titulo>Pool WDX-ETH</Titulo>
+          <div className="mt-1 text-sm text-text-secondary">Arbitrum</div>
           <div className="mt-1 font-semibold text-lg text-text-primary">11,6% ao ano</div>
+        </Card>
+      </Modelo>
+
+      {/* Com `title`, para mostrar o aperto: o -mt-4 da faixa come o gap e encosta no título. */}
+      <Modelo nome="title + image ⚠ aperta">
+        <Card title="Rendimento">
+          <Faixa>
+            <TokenETH variant="branded" />
+          </Faixa>
+          A faixa nasce abaixo do título e o `-mt-4` espreme os dois.
         </Card>
       </Modelo>
     </div>
@@ -270,11 +299,15 @@ export const Midia: Story = {
         Respeita o `p-4` do card. Funciona sem truque, mas destoa das referências.
       </Card>
 
-      <Card title="Mídia na borda">
+      <Card>
         <Faixa>
           <TokenUSDT variant="branded" />
         </Faixa>
-        Encosta na borda desfazendo o padding com margem negativa.
+        <Titulo>Mídia na borda</Titulo>
+        <p className="mt-2">
+          Encosta na borda desfazendo o padding com margem negativa. O título vem de marcação dentro
+          de `children`: com a prop `title`, a faixa nasceria abaixo dele.
+        </p>
       </Card>
     </div>
   ),
@@ -295,12 +328,13 @@ function Pool({
   return (
     <Card
       className="h-full"
-      title={nome}
+      // Sem `title`: a mídia vem antes dele. O nome entra em `children`, depois da faixa.
       // `actions` é `justify-end`; um filho `w-full` preenche a linha assim mesmo.
       actions={<Button className="w-full">Depositar</Button>}
     >
       <Faixa>{simbolo}</Faixa>
-      <div className="text-sm text-text-secondary">{rede}</div>
+      <Titulo>{nome}</Titulo>
+      <div className="mt-1 text-sm text-text-secondary">{rede}</div>
       <div className="mt-1 font-semibold text-text-primary text-lg">{valor}</div>
     </Card>
   )
@@ -320,12 +354,15 @@ function Secao({ nome, children }: { nome: string; children: ReactNode }) {
  * Usos reais, montados a partir das referências que o design mandou. Enquanto a galeria
  * acima mostra os blocos isolados, aqui eles aparecem como telas.
  *
- * Três lacunas da API aparecem juntas, e nenhuma é bug do Card:
+ * Quatro lacunas da API aparecem juntas, e nenhuma é bug do Card:
  *
- * 1. **Mídia sangrada** precisa do contorno `MIDIA`, em toda tela que usar card com imagem.
- * 2. **Ação de largura cheia** sai de um filho `w-full` dentro do `justify-end`. Funciona,
+ * 1. **A ordem dos slots é fixa**: `title` → `children` → `actions`. Card com imagem no topo
+ *    — o padrão das três referências — precisa abrir mão da prop `title` e reescrever o
+ *    título dentro de `children`, duplicando o estilo que o componente já aplica.
+ * 2. **Mídia sangrada** precisa do contorno `MIDIA`, em toda tela que usar card com imagem.
+ * 3. **Ação de largura cheia** sai de um filho `w-full` dentro do `justify-end`. Funciona,
  *    mas o nome da prop promete alinhamento à direita.
- * 3. **Altura igual** vem de `h-full` no card; o rodapé, porém, não encosta no fundo quando
+ * 4. **Altura igual** vem de `h-full` no card; o rodapé, porém, não encosta no fundo quando
  *    um card tem menos texto, porque não há como empurrar `actions` para baixo. Dá para ver
  *    na grade: os botões ficam em alturas diferentes.
  */
@@ -360,7 +397,6 @@ export const Composicoes: Story = {
       <Secao nome="carteira conectada">
         <div className="max-w-md">
           <Card
-            title="0x3fA9…c21B"
             actions={
               <>
                 <Button variant="text" size="small">
@@ -373,7 +409,8 @@ export const Composicoes: Story = {
             <Faixa>
               <NetworkPolygon variant="branded" />
             </Faixa>
-            <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
+            <Titulo>0x3fA9…c21B</Titulo>
+            <div className="mt-1 text-sm text-text-secondary">Polygon · conectada por SIWE</div>
             <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
           </Card>
         </div>
