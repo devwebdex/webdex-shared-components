@@ -3,14 +3,41 @@
  * anexa ao dist/theme.css. Quem consome usa as classes `animate-*`, como nos outros tokens.
  */
 @theme {
-  /* Fechamento das listas suspensas (Select, Menu, Combobox): o Radix espera a animação antes
-     de desmontar. */
+  /* Fechamento das listas suspensas (Select, Menu, Combobox) e da caixa do Modal: o Radix espera
+     a animação antes de desmontar. */
   --animate-list-out: list-out 120ms ease-in forwards;
 
   @keyframes list-out {
     to {
       opacity: 0;
       scale: 97%;
+    }
+  }
+
+  /* Célula do spinner losango (bloco "Spinner de compilação e loading" do design system).
+     `backwards` aplica o primeiro quadro durante o atraso de cada anel: sem ele, a célula
+     apareceria acesa até a vez dela. */
+  --animate-pixel-cell: pixel-cell 1.8s infinite backwards;
+
+  @keyframes pixel-cell {
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    18% {
+      opacity: 1;
+    }
+    55% {
+      opacity: 0.35;
+    }
+  }
+
+  /* Fechamento do fundo escurecido do Modal: só some, sem mudar de tamanho. */
+  --animate-fade-out: fade-out 120ms ease-in forwards;
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
     }
   }
 }

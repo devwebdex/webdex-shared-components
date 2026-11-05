@@ -1,8 +1,8 @@
-import { InputField, inputFieldVariants, TextField, type TextFieldProps } from '@devwebdex/ui'
+import { inputFieldVariants, TextField, type TextFieldProps } from '@devwebdex/ui'
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite'
 
 const meta = {
-  title: 'Componentes/TextField',
+  title: 'Componentes/Campos/TextField',
   component: TextField,
   args: {
     label: 'Nome do workspace',
@@ -68,7 +68,8 @@ const meta = {
       description: {
         component: [
           'Campo completo: rótulo, `InputField`, helper text e contador. Para o `<input>`',
-          'sozinho, use o `InputField`, que tem o mesmo eixo `status`.',
+          'sozinho, veja o **InputField**, ao lado nesta pasta: é o mesmo componente que o',
+          'TextField monta por dentro, com o mesmo eixo `status`.',
           '',
           'Só `status` é prop. Hover, focus e disabled **não são**: são `hover:`,',
           '`focus-visible:` e `disabled:`. Passe o mouse e clique no campo para vê-los.',
@@ -223,24 +224,4 @@ function Matrix(props: TextFieldProps) {
 export const Matriz: Story = {
   render: (args) => <Matrix {...args} />,
   parameters: { layout: 'fullscreen' },
-}
-
-/** O `<input>` sozinho, sem rótulo nem mensagens. Aceita o mesmo `status`. */
-export const SoInputField: Story = {
-  name: 'Só o InputField',
-  decorators: narrow,
-  render: () => (
-    <div className="flex flex-col gap-4">
-      {STATUSES.map((status) => (
-        <InputField
-          key={status}
-          status={status}
-          defaultValue={VALUES[status]}
-          aria-label={`InputField ${status}`}
-        />
-      ))}
-      <InputField disabled defaultValue="webdex-core" aria-label="InputField desabilitado" />
-      <InputField placeholder="0x..." aria-label="InputField vazio" />
-    </div>
-  ),
 }

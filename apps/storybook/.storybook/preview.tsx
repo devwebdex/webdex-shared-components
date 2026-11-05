@@ -3,6 +3,10 @@ import '../src/tailwind.css'
 
 const preview: Preview = {
   parameters: {
+    // Sem isto a ordem da barra lateral sai da ordem dos arquivos no disco, e muda
+    // sozinha quando alguém acrescenta um componente. Alfabética não precisa de lista
+    // para manter: componente novo cai no lugar certo sem ninguém mexer aqui.
+    options: { storySort: { method: 'alphabetical' } },
     controls: { expanded: true },
     a11y: { test: 'todo' },
     docs: { toc: true },

@@ -17,7 +17,7 @@ import {
   NetworkPolygon,
   NetworkPolygonAmoy,
 } from '@web3icons/react'
-import { SelectMeasurements } from './dropdown-measurements.js'
+import { SelectMeasurements } from '../lib/dropdown-measurements.js'
 
 // Símbolos oficiais das redes (@web3icons, variante com as cores de cada marca). O Select não
 // conhece ícone de rede: `icon` aceita qualquer imagem, e o tamanho vem do tamanho do campo.

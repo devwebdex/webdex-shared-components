@@ -11,7 +11,7 @@ import {
 } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
-import { MenuMeasurements } from './dropdown-measurements.js'
+import { MenuMeasurements } from '../lib/dropdown-measurements.js'
 
 function Icon({ children }: { children: ReactNode }) {
   return (
