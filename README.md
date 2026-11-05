@@ -43,3 +43,5 @@ Para instalar pacotes `@devwebdex/*` publicados, configure no seu `~/.npmrc` um 
 ```
 //npm.pkg.github.com/:_authToken=<seu-token>
 ```
+
+O token é necessário **mesmo com este repositório sendo público**: o GitHub Packages exige autenticação para instalar qualquer pacote npm, público ou privado. Não é configuração nossa — ver [docs/publicacao.md](docs/publicacao.md#por-que-instalar-exige-token-mesmo-com-o-repositório-público).
