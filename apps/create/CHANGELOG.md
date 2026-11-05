@@ -1,5 +1,11 @@
 # @devwebdex/create
 
+## 0.1.2
+
+### Patch Changes
+
+- Templates passam a usar @devwebdex/tokens@^0.3.0, @devwebdex/ui@^0.3.0.
+
 ## 0.1.1
 
 ### Patch Changes
