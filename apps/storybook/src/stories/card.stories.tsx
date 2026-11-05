@@ -8,7 +8,7 @@ import {
   TokenUSDT,
 } from '@web3icons/react'
 import type { ReactNode } from 'react'
-import { type MeasureColumn, type MeasureRow, MeasureTable } from './measurements.js'
+import { type MeasureColumn, type MeasureRow, MeasureTable } from '../lib/measurements.js'
 
 const meta = {
   title: 'Componentes/Card',

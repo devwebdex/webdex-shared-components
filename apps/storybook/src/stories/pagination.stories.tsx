@@ -2,7 +2,7 @@ import { cn, Pagination, paginationItemClass } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ComponentProps, ReactNode } from 'react'
 import { useArgs } from 'storybook/preview-api'
-import { type MeasureColumn, type MeasureRow, MeasureTable } from './measurements.js'
+import { type MeasureColumn, type MeasureRow, MeasureTable } from '../lib/measurements.js'
 
 const meta = {
   title: 'Componentes/Pagination',

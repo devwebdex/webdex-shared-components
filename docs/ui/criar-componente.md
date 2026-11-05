@@ -73,14 +73,25 @@ Componente com comportamento (abrir, escolher, navegar pelo teclado) usa o primi
 ## 4. A story
 
 ```
-apps/storybook/src/<nome>.stories.tsx
+apps/storybook/src/stories/<nome>.stories.tsx
 ```
 
 A story importa de `@devwebdex/ui`, não do arquivo interno. Assim ela exercita a superfície pública do pacote, do mesmo jeito que um projeto que o consome.
 
+**O `title` é que monta a barra lateral**, e é só uma string com `/`:
+
+```ts
+title: 'Componentes/Alert'            // solto
+title: 'Componentes/Campos/InputField' // dentro da pasta Campos
+```
+
+Pasta só quando houver **dois ou mais componentes da mesma família** — hoje `Campos` (InputField, TextField), `Dropdown` (Combobox, Menu, Select) e `Loading` (Spinner, Skeleton). Componente sem irmão fica solto: pasta de um filho só acrescenta profundidade sem ajudar ninguém a achar nada.
+
+A ordem é alfabética, pelo `storySort` do `.storybook/preview.tsx`. Não há lista a manter: componente novo cai no lugar sozinho.
+
 O mínimo: um `Playground` com controles e uma story por eixo de variante. Declare `argTypes` com `options` e `table.type` à mão — o docgen não extrai tipo de `VariantProps`, que é um mapped type, e a tabela de controles sai vazia sem isso.
 
-Para o design conferir alturas, espaçamentos e raios, crie uma story `Medidas` com o `MeasureTable` de `apps/storybook/src/measurements.tsx`: ele mede o elemento renderizado, não o que a classe promete.
+Para o design conferir alturas, espaçamentos e raios, crie uma story `Medidas` com o `MeasureTable` de `apps/storybook/src/lib/measurements.tsx`: ele mede o elemento renderizado, não o que a classe promete.
 
 ## 4.1. O teste de comportamento
 
@@ -130,7 +141,27 @@ Esta cadeia tem três modos de falha em que o build termina com "completed succe
 **`pnpm --filter <pacote> build` pula o turbo.** Roda só o script daquele pacote, sem construir as dependências.
 → Use `pnpm build` ou `pnpm turbo run build --filter=<pacote>`.
 
-O `apps/storybook/test/css.test.mjs` existe para pegar as três: ele confere que os tokens chegaram no CSS publicado e que toda classe que o `cva` produz tem regra lá. **Ao criar um componente novo, acrescente-o a esse teste** — ele percorre o Button, o Alert, o Select, o Menu, o Combobox, o InputField, o TextField, a Pagination e o Modal, e o que não estiver na lista passa sem conferência. O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados. Componente que renderiza em portal (Modal) não aparece no `renderToStaticMarkup`: exporte as classes dele e confira a partir delas.
+Os testes `apps/storybook/test/css-*.test.mjs` existem para pegar as três: eles conferem que os tokens chegaram no CSS publicado e que toda classe que o componente produz tem regra lá.
+
+**Ao criar um componente novo, crie o `css-<nome>.test.mjs` dele.** É um arquivo por componente, e o `node --test` descobre sozinho: não há lista para acrescentar nem para manter. O esqueleto é sempre o mesmo, com os utilitários de `css-helpers.mjs`:
+
+```js
+import { classesFromHtml, missingFromCss } from './css-helpers.mjs'
+
+test('toda classe que o Spinner produz existe no CSS compilado', () => {
+  assert.deepEqual(missingFromCss(classesFromHtml(html)), [])
+})
+```
+
+De onde tirar a lista de classes, nesta ordem:
+
+1. **Do `cva`**, percorrendo os eixos — é o caso do Button e do InputField.
+2. **Do HTML renderizado** (`classesFromHtml`), quando o componente põe classe fora do `cva`: o símbolo do Alert, a mídia do Card, as células do Spinner. São justamente as que sumiriam sem ninguém notar.
+3. **Das classes exportadas**, quando o componente renderiza em portal e o `renderToStaticMarkup` não o desenha — é o caso do Modal, que exporta `modalOverlayClass` e `modalContentVariants` para isso.
+
+O que nunca serve é redigitar a classe no teste: aí ele confere a si mesmo.
+
+O mesmo vale para o `generateForcedStateSource` do `.storybook/main.ts`, se a story tiver uma Matriz com estados forçados.
 
 ## 7. A entrega
 
