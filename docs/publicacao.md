@@ -71,8 +71,17 @@ Os workflows foram validados com o actionlint, e cada comando deles foi executad
 
 **A publicação real no GitHub Packages funciona**, e já rodou três vezes (tabela acima). O fluxo de duas etapas — merge na `prod` abre o PR "chore: versionar pacotes", merge desse PR publica — foi exercitado de ponta a ponta.
 
+**Instalar a partir do registro também funciona** (2026-11-05). Até então os templates só tinham sido exercitados com `--link-packages .`, que aponta para este checkout e **não passa pelo registro**. O teste que faltava foi feito, de uma pasta fora do monorepo, com um token pessoal `read:packages`:
+
+```bash
+pnpm dlx @devwebdex/create@0.1.2 meu-teste --yes   # sem --link-packages
+cd meu-teste && pnpm build && pnpm check-types && pnpm lint && pnpm test
+```
+
+O projeto resolveu `@devwebdex/ui@0.3.0`, `tokens@0.3.0`, `tsconfig@0.1.0`, `biome-config@0.1.0` e `eslint-config@0.1.0` do registro, e os quatro comandos passaram. O `.npmrc` que o gerador escreve já traz o escopo apontando para o GitHub Packages; só o token é que vem de fora.
+
 ## O que ainda não foi verificado
 
-**Instalar os pacotes a partir do registro.** Os templates do gerador sempre foram exercitados com `--link-packages .`, que aponta para os arquivos deste checkout e **não passa pelo registro**. Ninguém ainda gerou um projeto e rodou `pnpm install` baixando `@devwebdex/ui` publicado. É o teste que fecha o ciclo, e é onde o item 3 da tabela acima apareceria como problema.
+**O acesso por repositório no CI (item 3 da tabela acima).** O teste de instalação acima usou um **token pessoal**, de uma máquina de dev. Ele não exercita o item 3, que é sobre o CI de um projeto gerado instalar os pacotes com o `GITHUB_TOKEN` do próprio repositório dele. São caminhos de autenticação diferentes, e só o primeiro foi conferido.
 
 **O CI do PR de versão não roda sozinho.** O `ci.yml` dispara em todo `pull_request`, sem filtro de branch, mas o PR "chore: versionar pacotes" é aberto pelo `github-actions[bot]`, e o GitHub não executa workflow de PR aberta por bot sem aprovação manual — ele fica em `action_required`. Na prática, alguém precisa clicar em **"Approve workflows to run"** antes de mergear. Não é defeito: é a proteção do GitHub contra Action que dispara Action.
