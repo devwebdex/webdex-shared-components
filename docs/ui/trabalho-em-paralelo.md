@@ -58,16 +58,21 @@ Escrita assim, ela **não conflita com nenhuma PR de componente** -- mexe em arq
 ninguém mais está tocando. Escrita como "revisar Alert, Button, InputField, ..." ela toca os
 12 componentes e colide com toda PR aberta no mesmo dia.
 
-A exceção são **8 lugares onde há cor crua no código**, que não seguem a troca de variável:
+A exceção são as cores que o componente escolhe pela **primitiva**, e não pelo papel. Elas
+não acompanham a troca de variável, porque branco continua branco no tema claro. Restam onze
+usos, todos no Button:
 
-| Arquivo | O que está cru |
+| Onde | O quê |
 |---|---|
-| `packages/ui/src/components/button/button.tsx` | `bg-[#4f4f4f]/15`, `text-white/15`, `ring-white/15`, `ring-white/50` (estados `disabled` e `focus-visible`) |
-| `packages/ui/src/components/input-field/input-field.tsx` | `border-white/22` -- há token para este assim que a PR `tokens/figma-stroke-input`
-entrar: `line-enabled` |
+| `disabled:` do Contained, nas duas cores (×2) | `bg-[#4f4f4f]/15` -- hex à mão, fora da paleta |
+| `disabled:` de todas as variantes (×8) | `text-white-disabled`, `inset-ring-white-disabled` |
+| `hover:` do Contained na cor `code` (×1) | `inset-ring-white/50` |
 
-Esses 8 são uma segunda tarefa, separada, de trocar cor crua por token. Ela sim toca
-componente, então deve entrar **sozinha**, não junto com a do tema.
+Os do meio já são token -- a escada de estado do Figma aplicada ao branco --, mas a
+primitiva `white`. O Figma tem a mesma escada para `black`: num tema claro, esses usos
+teriam de virar `black-*`, ou ganhar um token de papel (`disabled-text`) que troque de
+primitiva com o tema. Isso é uma segunda tarefa, separada, que toca componente: entra
+**sozinha**, não junto com a do tema.
 
 ## Conflito garantido: `packages/ui/src/index.ts`
 

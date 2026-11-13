@@ -29,6 +29,7 @@ saber que ela existia, então o nome do estado bate em quase todos:
 A mudança visual é de no máximo 4 pontos de alpha, e passa a ser o valor que o
 design especificou.
 
-Oito ficam como estão, por não terem correspondente: `brand-soft` não tem escada
-no Figma (só `brand`), `white/50` é realce de borda e a escada é de preenchimento,
-`#4f4f4f` está fora da paleta e `background/55` é opacidade de superfície.
+Dos oito restantes, um vira o token de traço `line-enabled` (a borda de hover do
+InputField, 22% nos dois lados). Sete ficam como estão, por não terem
+correspondente: seis em `brand-soft`, que não tem escada no Figma (só `brand`), e
+o `white/50` do Button, que é realce de borda -- a escada é de preenchimento.

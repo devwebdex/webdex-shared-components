@@ -14,12 +14,8 @@ import { cn } from '../../lib/cn.js'
  * As cores de hover e foco ficam dentro de cada status, e não na base, para que
  * duas classes `hover:border-*` nunca disputem a mesma propriedade.
  *
- * VALORES SEM TOKEN:
- *
- *   cor        white/22      a borda de hover (`--line-h` no HTML). Já existe token
- *                            para esse valor, `color.line-enabled` (a Variable `Line
- *                            Enabled`), mas trocar muda o que o componente pinta: fica
- *                            para um PR próprio, com o design olhando.
+ * A borda de hover (`--line-h` no HTML) é `line-enabled`, a Variable `Line Enabled` do Figma:
+ * branco a 22%, o mesmo valor que era escrito à mão.
  *
  * ALTURA, ATENÇÃO: o campo media 36px, a altura do Button medium, porque o `rounded-3` e
  * o leading de 18px faziam os dois alinharem lado a lado. 18px não existe na escala de
@@ -48,7 +44,7 @@ const inputFieldVariants = cva(
     variants: {
       status: {
         default: [
-          'border-line-default hover:border-white/22',
+          'border-line-default hover:border-line-enabled',
           'focus-visible:border-brand-active focus-visible:ring-brand-focus',
         ],
         error: [

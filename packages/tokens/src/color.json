@@ -62,7 +62,7 @@
     },
     "line-enabled": {
       "$value": "#ffffff38",
-      "$description": "Variable 'Line Enabled' (FFFFFF a 22%). É o valor que o InputField já aplica à mão em hover:border-white/22, e que o Card do Figma usa como borda."
+      "$description": "Variable 'Line Enabled' (FFFFFF a 22%). Borda de hover do InputField. No Figma, é também a borda do Card."
     },
     "line-hovered": {
       "$value": "#ffffff52",
