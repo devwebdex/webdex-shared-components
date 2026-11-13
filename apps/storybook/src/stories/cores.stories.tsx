@@ -26,10 +26,12 @@ const GRUPOS: [titulo: string, pertence: (nome: string) => boolean][] = [
   ['Magenta', (nome) => nome.startsWith('magenta-')],
   ['Coral', (nome) => nome.startsWith('coral-')],
   ['Semânticas', (nome) => /^(success|warning|danger|info)(-bg)?$/.test(nome)],
-  ['Estados', (nome) => ESTADO.test(nome) || /^(white|black)$/.test(nome)],
   ['Superfícies', (nome) => nome === 'background' || nome.startsWith('surface-')],
+  // Texto e Linha antes de Estados: `text-disabled` e `line-pressed` terminam com nome de
+  // estado, e cairiam lá.
   ['Texto', (nome) => nome.startsWith('text-')],
   ['Linha', (nome) => nome.startsWith('line-')],
+  ['Estados', (nome) => ESTADO.test(nome) || /^(white|black)$/.test(nome)],
 ]
 
 function agrupar(cores: Token[]): [string, Token[]][] {
