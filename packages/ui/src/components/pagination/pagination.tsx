@@ -12,7 +12,7 @@ import { paginationItemClass } from './pagination-item.js'
 
 /** As reticências usam o terciário do HTML (--t3), que é o mesmo valor do text-disabled. */
 const ellipsisClass =
-  'inline-flex h-6 min-w-6 items-center justify-center text-base text-text-disabled select-none'
+  'inline-flex h-6 min-w-6 items-center justify-center text-2xs text-text-disabled select-none'
 
 type PageItem = number | 'start-ellipsis' | 'end-ellipsis'
 

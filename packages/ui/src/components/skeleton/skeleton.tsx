@@ -70,7 +70,7 @@ export function SkeletonCard({ className, ...props }: ComponentProps<'div'>) {
     <div
       aria-hidden="true"
       className={cn(
-        'flex w-full flex-col gap-4 rounded-3 p-4 bg-surface-card inset-ring-1 inset-ring-line-default',
+        'flex w-full flex-col gap-4 rounded-4 p-4 bg-surface-card inset-ring-1 inset-ring-line-default',
         className
       )}
       {...props}

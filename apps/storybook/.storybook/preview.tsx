@@ -6,7 +6,10 @@ const preview: Preview = {
     // Sem isto a ordem da barra lateral sai da ordem dos arquivos no disco, e muda
     // sozinha quando alguém acrescenta um componente. Alfabética não precisa de lista
     // para manter: componente novo cai no lugar certo sem ninguém mexer aqui.
-    options: { storySort: { method: 'alphabetical' } },
+    //
+    // A única ordem fixa é a das duas seções de cima: Fundação (tokens) antes de
+    // Componentes, que é a ordem em que se lê um design system. Dentro delas, alfabética.
+    options: { storySort: { method: 'alphabetical', order: ['Fundação', 'Componentes'] } },
     controls: { expanded: true },
     a11y: { test: 'todo' },
     docs: { toc: true },

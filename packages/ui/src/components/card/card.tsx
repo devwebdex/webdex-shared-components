@@ -77,8 +77,8 @@ import { cn } from '../../lib/cn.js'
  */
 const cardVariants = cva(
   [
-    'flex flex-col gap-3 rounded-3 border p-4',
-    'bg-surface-card font-sans text-base text-text-secondary',
+    'flex flex-col gap-3 rounded-4 border p-4',
+    'bg-surface-card font-sans text-2xs text-text-secondary',
     'shadow-elevation-2 transition-[box-shadow,border-color,background-color]',
   ],
   {
@@ -141,17 +141,19 @@ export function Card({
     >
       {/*
         `-mt-4 -mx-4` cancela o `p-4` do Card; como este é o primeiro filho do flex, o `gap-3`
-        cuida do espaço até o título. O `overflow-hidden` recorta no `rounded-t-3`, então
+        cuida do espaço até o título. O `overflow-hidden` recorta no `rounded-t-4`, então
         imagem, vídeo ou gradiente seguem o raio da caixa sem precisar repeti-lo.
         `[&>img]:w-full` porque `<img>` é elemento substituído: ele não estica com o
         `align-items: stretch` do flex, e sairia no tamanho intrínseco.
       */}
       {media != null && (
-        <div className="-mx-4 -mt-4 overflow-hidden rounded-t-3 [&>img]:block [&>img]:w-full">
+        <div className="-mx-4 -mt-4 overflow-hidden rounded-t-4 [&>img]:block [&>img]:w-full">
           {media}
         </div>
       )}
-      {title != null && <div className="font-semibold text-text-primary text-lg">{title}</div>}
+      {title != null && (
+        <div className="font-semibold text-text-primary text-xs leading-xs">{title}</div>
+      )}
       {/* min-w-0 e wrap-break-word: endereço e hash não têm espaço e vazariam da caixa. */}
       {children != null && <div className="min-w-0 wrap-break-word">{children}</div>}
       {actions != null && <div className="flex items-center justify-end gap-2">{actions}</div>}

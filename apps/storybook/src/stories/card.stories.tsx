@@ -1,4 +1,4 @@
-import { Button, Card } from '@devwebdex/ui'
+import { Button, Card, cn } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
   NetworkArbitrumOne,
@@ -125,10 +125,19 @@ const GRAFICO = `data:image/svg+xml,${encodeURIComponent(
  * Note o que **não** está aqui: margem negativa, largura calculada, raio. Sangrar a mídia é
  * conta do Card, que conhece o próprio `p-4` e o próprio raio; a tela passa só o conteúdo.
  */
-function Faixa({ children }: { children: ReactNode }) {
+function Faixa({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14">
-      {children}
+    <div
+      className={cn(
+        'flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand',
+        className
+      )}
+    >
+      {/* Disco branco atrás do ícone: os ícones `branded` têm cor própria e competiam com o
+          degradê, que é da mesma família quente. O disco isola um do outro. */}
+      <div className="flex size-20 items-center justify-center rounded-full bg-white [&_svg]:size-14">
+        {children}
+      </div>
     </div>
   )
 }
@@ -164,7 +173,7 @@ export const Estados: Story = {
 function Modelo({ nome, children }: { nome: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="font-mono text-text-secondary text-xs">{nome}</span>
+      <span className="font-mono text-text-secondary text-3xs">{nome}</span>
       {children}
     </div>
   )
@@ -177,7 +186,7 @@ function Modelo({ nome, children }: { nome: string; children: ReactNode }) {
  * Duas observações que a galeria torna visíveis:
  *
  * - **Não existe slot de descrição.** Subtítulo e texto secundário saem de marcação dentro
- *   de `children`, com `text-sm text-text-secondary` escrito à mão em cada tela. Se isso se
+ *   de `children`, com `text-3xs text-text-secondary` escrito à mão em cada tela. Se isso se
  *   repetir, vira candidato a prop (`description`) ou a um subcomponente.
  * - **`actions` é sempre à direita.** Botão de largura cheia e par de botões divididos saem
  *   de um filho que se estica, não de uma opção do componente.
@@ -202,7 +211,7 @@ export const Modelos: Story = {
 
       <Modelo nome="title + description + text">
         <Card title="WebdexVault">
-          <div className="text-sm text-text-secondary">Polygon · USDC</div>
+          <div className="text-3xs text-text-secondary">Polygon · USDC</div>
           <p className="mt-2">A descrição não tem slot próprio: é marcação dentro de `children`.</p>
         </Card>
       </Modelo>
@@ -252,8 +261,8 @@ export const Modelos: Story = {
           title="Pool WDX-ETH"
           actions={<Button className="w-full">Depositar</Button>}
         >
-          <div className="text-sm text-text-secondary">Arbitrum</div>
-          <div className="mt-1 font-semibold text-lg text-text-primary">11,6% ao ano</div>
+          <div className="text-3xs text-text-secondary">Arbitrum</div>
+          <div className="mt-1 font-semibold text-xs text-text-primary">11,6% ao ano</div>
         </Card>
       </Modelo>
 
@@ -312,9 +321,9 @@ export const Midia: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
       <Card title="Mídia recuada" actions={<Button size="small">Ver cofre</Button>}>
-        <div className="mb-3 flex h-28 items-center justify-center rounded-2 bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14">
+        <Faixa className="mb-3 rounded-2">
           <TokenUSDT variant="branded" />
-        </div>
+        </Faixa>
         Respeita o `p-4` do card. Funciona sem truque, mas destoa das referências.
       </Card>
 
@@ -358,8 +367,8 @@ function Pool({
       // `actions` é `justify-end`; um filho `w-full` preenche a linha assim mesmo.
       actions={<Button className="w-full">Depositar</Button>}
     >
-      <div className="text-sm text-text-secondary">{rede}</div>
-      <div className="mt-1 font-semibold text-text-primary text-lg">{valor}</div>
+      <div className="text-3xs text-text-secondary">{rede}</div>
+      <div className="mt-1 font-semibold text-text-primary text-xs">{valor}</div>
     </Card>
   )
 }
@@ -368,7 +377,7 @@ function Pool({
 function Secao({ nome, children }: { nome: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="font-mono text-sm text-text-secondary">{nome}</h3>
+      <h3 className="font-mono text-3xs text-text-secondary">{nome}</h3>
       {children}
     </section>
   )
@@ -435,8 +444,8 @@ export const Composicoes: Story = {
               </>
             }
           >
-            <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
-            <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
+            <div className="text-3xs text-text-secondary">Polygon · conectada por SIWE</div>
+            <div className="mt-1 font-semibold text-xs text-text-primary">1.284,50 USDC</div>
           </Card>
         </div>
       </Secao>
@@ -448,7 +457,7 @@ export const Composicoes: Story = {
             <div className="flex items-center gap-3">
               <NetworkArbitrumOne variant="branded" className="size-12 shrink-0" />
               <div className="min-w-0">
-                <div className="text-sm text-text-secondary">Arbitrum · liquidez</div>
+                <div className="text-3xs text-text-secondary">Arbitrum · liquidez</div>
                 <div className="mt-1 font-semibold text-text-primary">11,6% ao ano</div>
               </div>
             </div>

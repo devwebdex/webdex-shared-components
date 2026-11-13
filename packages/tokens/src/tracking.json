@@ -1,0 +1,15 @@
+{
+  "tracking": {
+    "$type": "dimension",
+    "$description": "Espaçamento entre letras do Figma: coleção Tipografia, grupo Letter Spacing (6 Variables). Substitui a escala padrão do Tailwind, que é em em; a do Figma é em px absolutos, então não acompanha o tamanho da fonte.",
+    "tighter": { "$value": "-0.25px" },
+    "normal": { "$value": "0px" },
+    "tight": {
+      "$value": "0.1px",
+      "$description": "ATENÇÃO: no Figma, 'Tight' vale 0,1px -- MAIOR que 'Normal' (0), ou seja, alarga em vez de apertar. A escada fica Tighter -0,25 < Normal 0 < Tight 0,1 < Wide 0,25. Parece engano de nome no Figma; mantido igual a ele para a fonte única não divergir. Confirmar com o design."
+    },
+    "wide": { "$value": "0.25px" },
+    "wider": { "$value": "0.4px" },
+    "widest": { "$value": "0.5px" }
+  }
+}

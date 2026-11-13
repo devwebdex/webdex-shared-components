@@ -46,12 +46,31 @@
     "surface-card": { "$value": "#180c20a6" },
     "surface-code": { "$value": "#ffffff0d" },
     "surface-elevated": { "$value": "#f5127c0f" },
+    "surface-input": {
+      "$value": "#00000047",
+      "$description": "Superfície de Input. Variable 'Surface Input' (000000 a 28%) da coleção 'Cores Surface, Text e Stroke'. Ainda sem consumidor: o InputField usa background/55, que é outra cor. Trocar exige validação do design."
+    },
 
     "text-primary": { "$value": "#fbf5f9" },
     "text-secondary": { "$value": "#f2deeca3" },
     "text-disabled": { "$value": "#f2deec57" },
     "text-syntax": { "$value": "#c8b4ff" },
 
-    "line-default": { "$value": "#ffffff1a" }
+    "line-default": {
+      "$value": "#ffffff1a",
+      "$description": "ATENÇÃO: o valor (10%) é o da Variable 'Line Disabled' do Figma, não de um 'default'. O Figma tem quatro: Disabled 10%, Enabled 22%, Hovered 32%, Pressed 60%. Renomear exige decisão do design, por ser quebra de API."
+    },
+    "line-enabled": {
+      "$value": "#ffffff38",
+      "$description": "Variable 'Line Enabled' (FFFFFF a 22%). Borda de hover do InputField. No Figma, é também a borda do Card."
+    },
+    "line-hovered": {
+      "$value": "#ffffff52",
+      "$description": "Variable 'Line Hovered' (FFFFFF a 32%). Sem consumidor ainda."
+    },
+    "line-pressed": {
+      "$value": "#ffffff99",
+      "$description": "Variable 'Line Pressed' (FFFFFF a 60%). Sem consumidor ainda."
+    }
   }
 }

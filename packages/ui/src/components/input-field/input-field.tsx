@@ -14,13 +14,15 @@ import { cn } from '../../lib/cn.js'
  * As cores de hover e foco ficam dentro de cada status, e não na base, para que
  * duas classes `hover:border-*` nunca disputem a mesma propriedade.
  *
- * VALORES SEM TOKEN:
+ * A borda de hover (`--line-h` no HTML) é `line-enabled`, a Variable `Line Enabled` do Figma:
+ * branco a 22%, o mesmo valor que era escrito à mão.
  *
- *   radius     10px          o mesmo do Button medium, para os dois alinharem lado
- *                            a lado; fora da escala Radius (8, 12)
- *   leading    18px          sem namespace de line-height nos tokens. Com py-2 e a
- *                            borda, o campo fica com 36px, a altura do Button medium
- *   cor        white/22      a borda de hover (`--line-h` no HTML), sem token
+ * ALTURA, ATENÇÃO: o campo media 36px, a altura do Button medium, porque o `rounded-3` e
+ * o leading de 18px faziam os dois alinharem lado a lado. 18px não existe na escala de
+ * Line Height do Figma. Ao adotar a escala, o leading virou `leading-3xs` (20px) e o campo
+ * passou a 38px -- 2px mais alto que o Button medium. Não dá para ter os dois: 36px com
+ * leading da escala exigiria padding de 9 ou 7px, fora da escala Spacing. Ou o Button
+ * medium cresce, ou o campo usa outro padding: é decisão do design.
  *
  * DIVERGÊNCIAS do HTML de referência:
  *
@@ -32,8 +34,8 @@ import { cn } from '../../lib/cn.js'
  */
 const inputFieldVariants = cva(
   [
-    'w-full min-w-0 rounded-[10px] border bg-background/55 px-3 py-2',
-    'font-mono text-sm leading-[18px] text-text-primary placeholder:text-text-disabled',
+    'w-full min-w-0 rounded-3 border bg-background/55 px-3 py-2',
+    'font-mono text-3xs leading-3xs text-text-primary placeholder:text-text-disabled',
     'outline-none transition-[border-color,box-shadow]',
     'focus-visible:ring-3',
     'disabled:cursor-not-allowed disabled:border-line-default disabled:bg-transparent disabled:text-text-disabled',
@@ -42,16 +44,16 @@ const inputFieldVariants = cva(
     variants: {
       status: {
         default: [
-          'border-line-default hover:border-white/22',
-          'focus-visible:border-brand/60 focus-visible:ring-brand/12',
+          'border-line-default hover:border-line-enabled',
+          'focus-visible:border-brand-active focus-visible:ring-brand-focus',
         ],
         error: [
-          'border-danger/60 hover:border-danger',
-          'focus-visible:border-danger/60 focus-visible:ring-danger/12',
+          'border-danger-active hover:border-danger',
+          'focus-visible:border-danger-active focus-visible:ring-danger-focus',
         ],
         success: [
-          'border-success/60 hover:border-success',
-          'focus-visible:border-success/60 focus-visible:ring-success/12',
+          'border-success-active hover:border-success',
+          'focus-visible:border-success-active focus-visible:ring-success-focus',
         ],
       },
     },
