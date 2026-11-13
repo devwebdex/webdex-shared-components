@@ -1,4 +1,4 @@
-import { Button, Card } from '@devwebdex/ui'
+import { Button, Card, cn } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
   NetworkArbitrumOne,
@@ -125,10 +125,19 @@ const GRAFICO = `data:image/svg+xml,${encodeURIComponent(
  * Note o que **não** está aqui: margem negativa, largura calculada, raio. Sangrar a mídia é
  * conta do Card, que conhece o próprio `p-4` e o próprio raio; a tela passa só o conteúdo.
  */
-function Faixa({ children }: { children: ReactNode }) {
+function Faixa({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14">
-      {children}
+    <div
+      className={cn(
+        'flex h-28 items-center justify-center bg-linear-to-br from-coral-50 to-brand',
+        className
+      )}
+    >
+      {/* Disco branco atrás do ícone: os ícones `branded` têm cor própria e competiam com o
+          degradê, que é da mesma família quente. O disco isola um do outro. */}
+      <div className="flex size-20 items-center justify-center rounded-full bg-white [&_svg]:size-14">
+        {children}
+      </div>
     </div>
   )
 }
@@ -312,9 +321,9 @@ export const Midia: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
       <Card title="Mídia recuada" actions={<Button size="small">Ver cofre</Button>}>
-        <div className="mb-3 flex h-28 items-center justify-center rounded-2 bg-linear-to-br from-coral-50 to-brand [&_svg]:size-14">
+        <Faixa className="mb-3 rounded-2">
           <TokenUSDT variant="branded" />
-        </div>
+        </Faixa>
         Respeita o `p-4` do card. Funciona sem truque, mas destoa das referências.
       </Card>
 
