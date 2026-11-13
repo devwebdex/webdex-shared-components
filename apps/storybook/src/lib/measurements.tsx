@@ -1,28 +1,42 @@
 import { Button, type ButtonProps } from '@devwebdex/ui'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { tokensOf } from './tokens.js'
 
 /**
  * Mede o componente já renderizado e diz, valor a valor, de qual token ele veio.
  *
  * Lê `getComputedStyle` do elemento real em vez de interpretar as classes: o que
  * aparece é o que o navegador aplicou, incluindo o que vier de cascata ou de
- * valor arbitrário. Depois compara cada medida com os tokens do tema, lidos de
- * `document.documentElement`, e marca o que não corresponde a nenhum.
+ * valor arbitrário. Depois compara cada medida com os tokens da FONTE,
+ * packages/tokens/src, e marca o que não corresponde a nenhum.
+ *
+ * Da fonte, e não das variáveis do CSS compilado, por dois motivos. O Tailwind 4
+ * só emite a variável de um token que alguma classe usa, então um token válido e
+ * sem uso (`tracking-normal`) não seria achado. E, comparando com a fonte, um dist
+ * velho aparece como divergência em vez de concordar consigo mesmo.
  *
  * É a informação que o time de design precisa para saber o que falta virar
  * Variable no Figma.
  */
 
-/** Tokens procurados, por namespace. A lista acompanha packages/tokens/src. */
-const SCALES = {
-  spacing: ['1', '2', '3', '4', '5', '6', '7', '8'],
-  radius: ['0', '1', '2', '3', '4', '5', 'full'],
-  text: ['sm', 'base', 'lg'],
-}
+/**
+ * Namespaces em que a medida é procurada. Os nomes e valores vêm de packages/tokens/src: já
+ * foi uma lista escrita à mão, e ficou para trás quando a escala de texto e de raio mudou
+ * para a do Figma -- a tabela passou a marcar `text-2xs` como "sem token".
+ */
+const NAMESPACES = [
+  'spacing',
+  'radius',
+  'text',
+  'leading',
+  'tracking',
+  'font-weight',
+  'font',
+] as const
 
 export type MeasureRow = {
   property: string
-  namespace: keyof typeof SCALES | null
+  namespace: (typeof NAMESPACES)[number] | null
   read: (style: CSSStyleDeclaration, element: HTMLElement) => string
 }
 
@@ -43,8 +57,13 @@ export const boxRows: MeasureRow[] = [
   { property: 'espaço entre ícone e texto', namespace: 'spacing', read: (s) => s.columnGap },
   { property: 'raio', namespace: 'radius', read: (s) => s.borderTopLeftRadius },
   { property: 'tamanho da fonte', namespace: 'text', read: (s) => s.fontSize },
-  { property: 'altura de linha', namespace: null, read: (s) => s.lineHeight },
-  { property: 'espaçamento de letra', namespace: null, read: (s) => s.letterSpacing },
+  { property: 'altura de linha', namespace: 'leading', read: (s) => s.lineHeight },
+  {
+    property: 'espaçamento de letra',
+    namespace: 'tracking',
+    // Sem tracking, o navegador devolve `normal`, que é 0: é o `tracking-normal` da escala.
+    read: (s) => (s.letterSpacing === 'normal' ? '0px' : s.letterSpacing),
+  },
   {
     property: 'tamanho do ícone',
     namespace: 'spacing',
@@ -72,22 +91,24 @@ export type MeasureColumn = {
 }
 
 function readTheme(): Map<string, string> {
-  const root = getComputedStyle(document.documentElement)
   const map = new Map<string, string>()
-  for (const [namespace, names] of Object.entries(SCALES)) {
-    for (const name of names) {
-      const value = root.getPropertyValue(`--${namespace}-${name}`).trim()
-      if (value) map.set(`${namespace}|${normalize(value)}`, `${namespace}.${name}`)
+  for (const namespace of NAMESPACES) {
+    for (const token of tokensOf(namespace)) {
+      map.set(`${namespace}|${normalize(token.value)}`, `${namespace}.${token.name}`)
     }
   }
   return map
 }
 
-/** rem e px comparáveis: o navegador devolve tudo em px no computed style. */
-function normalize(value: string): string {
-  const rem = value.match(/^([\d.]+)rem$/)
+/**
+ * rem e px comparáveis: o navegador devolve tudo em px no computed style. Aspas saem porque o
+ * navegador as põe em nome de família com espaço ("IBM Plex Sans") e o token não tem.
+ */
+function normalize(raw: string): string {
+  const value = raw.replaceAll(/["']/g, '').trim()
+  const rem = value.match(/^(-?[\d.]+)rem$/)
   if (rem) return `${Number(rem[1]) * 16}px`
-  const px = value.match(/^([\d.]+)px$/)
+  const px = value.match(/^(-?[\d.]+)px$/)
   return px ? `${Number(px[1])}px` : value
 }
 
@@ -190,7 +211,7 @@ export function MeasureTable({ columns, rows }: { columns: MeasureColumn[]; rows
         <span className="text-warning">sem token</span> é valor que existe no componente mas não
         corresponde a nenhuma Variable — é o que o time de design precisa criar no Figma.{' '}
         <span className="text-text-disabled">sem namespace</span> é propriedade para a qual o design
-        system ainda não tem escala nenhuma, como altura de linha e espessura de borda.
+        system ainda não tem escala nenhuma, como espessura de borda.
       </p>
     </div>
   )
