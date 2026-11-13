@@ -104,7 +104,6 @@ publicado.
 | `Feedback` | -- (`Alert` está solto) | Badge/Tag, Status pill, Empty state |
 | `Navegação` | -- (`Pagination` está solto) | Tabs, Stepper |
 | `Superfícies` | -- (`Card` está solto) | Avatar, Cards de perfil, Cards de métricas |
-| `Fundação` | -- | Tipografia, Ícones, paleta de cores |
 
 **Quem cria a pasta move o componente solto para dentro dela, no mesmo PR**, e atualiza esta
 tabela. Exemplo: o PR do Drawer cria `Componentes/Sobreposição/Drawer` e muda o `title` do
@@ -112,6 +111,11 @@ Modal para `Componentes/Sobreposição/Modal`. São duas linhas.
 
 As pastas vazias não existem de propósito: criar `Sobreposição` hoje, só com o Modal dentro,
 é a pasta de um filho que a regra acima recusa.
+
+Tokens não são componente e ficam **fora** de `Componentes/`, numa seção própria no topo da
+barra lateral: `Fundação/Tipografia`, `Fundação/Cores`, `Fundação/Espaço, raio e sombra`. A
+galeria de ícones entra ali também. As páginas de Fundação leem os JSON de `packages/tokens/src`
+e não têm lista para manter: token novo aparece sozinho.
 
 Dois casos ainda sem casa: o **Button** não tem irmão previsto e fica solto; o **Accordion**
 não se encaixa bem em nenhuma -- decida junto com quem for implementar, e registre aqui.
