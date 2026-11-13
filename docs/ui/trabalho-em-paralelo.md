@@ -115,6 +115,12 @@ Siga o mesmo princípio em tudo:
 precisa ser editada a cada componente novo, ela é um gerador de conflito: avise, em vez de
 alimentá-la.
 
+Há uma exceção, estreita de propósito: a tabela **"Qual pasta é a sua"** em
+[criar-componente.md](criar-componente.md). Ela diz em que pasta do Storybook cada componente
+do backlog entra, para que `Overlay`, `Modais` e `Sobreposição` não nasçam como três nomes da
+mesma coisa. Só quem **cria uma pasta** mexe nela, e só na linha da sua pasta -- são umas
+cinco edições no total, não uma por componente. Leia antes de escolher o `title` da sua story.
+
 Os dois arquivos restantes com esse formato são `docs/gerador-de-projetos.md` (13 mudanças) e
 `docs/ui/criar-componente.md` (11). Se precisar editar um deles, acrescente **ao fim** da
 seção, nunca no meio: conflito no fim de bloco é mais fácil de ler.

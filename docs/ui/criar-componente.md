@@ -87,6 +87,35 @@ title: 'Componentes/Campos/InputField' // dentro da pasta Campos
 
 Pasta só quando houver **dois ou mais componentes da mesma família** — hoje `Campos` (InputField, TextField), `Dropdown` (Combobox, Menu, Select) e `Loading` (Spinner, Skeleton). Componente sem irmão fica solto: pasta de um filho só acrescenta profundidade sem ajudar ninguém a achar nada.
 
+### Qual pasta é a sua
+
+A regra acima diz **quando** uma pasta nasce. Esta tabela diz **qual**, para os componentes
+que já estão no backlog. Sem ela, quem chegar primeiro inventa o nome -- `Overlay`, `Modais`
+e `Sobreposição` para a mesma coisa -- e renomear depois quebra todo link do Storybook
+publicado.
+
+| Pasta | Hoje | Quem entra nela |
+|---|---|---|
+| `Campos` | InputField, TextField | Formulário avançado |
+| `Dropdown` | Combobox, Menu, Select, Visão geral | -- |
+| `Loading` | Skeleton, Spinner | Progress bar |
+| `Dados` | -- | Tabela de dados, Gráficos, Timeline de eventos |
+| `Sobreposição` | -- (`Modal` está solto) | Drawer, Modal de confirmação |
+| `Feedback` | -- (`Alert` está solto) | Badge/Tag, Status pill, Empty state |
+| `Navegação` | -- (`Pagination` está solto) | Tabs, Stepper |
+| `Superfícies` | -- (`Card` está solto) | Avatar, Cards de perfil, Cards de métricas |
+| `Fundação` | -- | Tipografia, Ícones, paleta de cores |
+
+**Quem cria a pasta move o componente solto para dentro dela, no mesmo PR**, e atualiza esta
+tabela. Exemplo: o PR do Drawer cria `Componentes/Sobreposição/Drawer` e muda o `title` do
+Modal para `Componentes/Sobreposição/Modal`. São duas linhas.
+
+As pastas vazias não existem de propósito: criar `Sobreposição` hoje, só com o Modal dentro,
+é a pasta de um filho que a regra acima recusa.
+
+Dois casos ainda sem casa: o **Button** não tem irmão previsto e fica solto; o **Accordion**
+não se encaixa bem em nenhuma -- decida junto com quem for implementar, e registre aqui.
+
 A ordem é alfabética, pelo `storySort` do `.storybook/preview.tsx`. Não há lista a manter: componente novo cai no lugar sozinho.
 
 O mínimo: um `Playground` com controles e uma story por eixo de variante. Declare `argTypes` com `options` e `table.type` à mão — o docgen não extrai tipo de `VariantProps`, que é um mapped type, e a tabela de controles sai vazia sem isso.
