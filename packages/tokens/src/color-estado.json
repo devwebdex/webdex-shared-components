@@ -1,0 +1,57 @@
+{
+  "color": {
+    "$type": "color",
+    "$description": "Escada de alpha de estado do Figma, aplicada a cada cor base: hover 8%, focus 12%, disabled 18%, pressed 28%, selected 42%, active 56%. Sao as colecoes Cores Primitivas (branco e preto), Cores Semanticas (success, danger, warning, info) e o grupo Brand Surface de Cores da Marca. Arquivo separado do color.json de proposito: e uma tabela gerada, e PR nova nao precisa editar o arquivo das cores base.",
+
+    "white": { "$value": "#ffffff" },
+    "white-hover": { "$value": "#ffffff14" },
+    "white-focus": { "$value": "#ffffff1f" },
+    "white-disabled": { "$value": "#ffffff2e" },
+    "white-pressed": { "$value": "#ffffff47" },
+    "white-selected": { "$value": "#ffffff6b" },
+    "white-active": { "$value": "#ffffff8f" },
+
+    "black": { "$value": "#000000" },
+    "black-hover": { "$value": "#00000014" },
+    "black-focus": { "$value": "#0000001f" },
+    "black-disabled": { "$value": "#0000002e" },
+    "black-pressed": { "$value": "#00000047" },
+    "black-selected": { "$value": "#0000006b" },
+    "black-active": { "$value": "#0000008f" },
+
+    "success-hover": { "$value": "#1fc98a14" },
+    "success-focus": { "$value": "#1fc98a1f" },
+    "success-disabled": { "$value": "#1fc98a2e" },
+    "success-pressed": { "$value": "#1fc98a47" },
+    "success-selected": { "$value": "#1fc98a6b" },
+    "success-active": { "$value": "#1fc98a8f" },
+
+    "danger-hover": { "$value": "#ff5c4014" },
+    "danger-focus": { "$value": "#ff5c401f" },
+    "danger-disabled": { "$value": "#ff5c402e" },
+    "danger-pressed": { "$value": "#ff5c4047" },
+    "danger-selected": { "$value": "#ff5c406b" },
+    "danger-active": { "$value": "#ff5c408f" },
+
+    "warning-hover": { "$value": "#f0a82e14" },
+    "warning-focus": { "$value": "#f0a82e1f" },
+    "warning-disabled": { "$value": "#f0a82e2e" },
+    "warning-pressed": { "$value": "#f0a82e47" },
+    "warning-selected": { "$value": "#f0a82e6b" },
+    "warning-active": { "$value": "#f0a82e8f" },
+
+    "info-hover": { "$value": "#5ec8f214" },
+    "info-focus": { "$value": "#5ec8f21f" },
+    "info-disabled": { "$value": "#5ec8f22e" },
+    "info-pressed": { "$value": "#5ec8f247" },
+    "info-selected": { "$value": "#5ec8f26b" },
+    "info-active": { "$value": "#5ec8f28f" },
+
+    "brand-hover": { "$value": "#f5127c14" },
+    "brand-focus": { "$value": "#f5127c1f" },
+    "brand-disabled": { "$value": "#f5127c2e" },
+    "brand-pressed": { "$value": "#f5127c47" },
+    "brand-selected": { "$value": "#f5127c6b" },
+    "brand-active": { "$value": "#f5127c8f" }
+  }
+}

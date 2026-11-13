@@ -49,15 +49,15 @@ const inputFieldVariants = cva(
       status: {
         default: [
           'border-line-default hover:border-white/22',
-          'focus-visible:border-brand/60 focus-visible:ring-brand/12',
+          'focus-visible:border-brand-active focus-visible:ring-brand-focus',
         ],
         error: [
-          'border-danger/60 hover:border-danger',
-          'focus-visible:border-danger/60 focus-visible:ring-danger/12',
+          'border-danger-active hover:border-danger',
+          'focus-visible:border-danger-active focus-visible:ring-danger-focus',
         ],
         success: [
-          'border-success/60 hover:border-success',
-          'focus-visible:border-success/60 focus-visible:ring-success/12',
+          'border-success-active hover:border-success',
+          'focus-visible:border-success-active focus-visible:ring-success-focus',
         ],
       },
     },

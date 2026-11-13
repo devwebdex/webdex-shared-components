@@ -34,10 +34,10 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        info: 'border-info/30 bg-info-bg',
-        warning: 'border-warning/30 bg-warning-bg',
-        error: 'border-danger/30 bg-danger-bg',
-        success: 'border-success/30 bg-success-bg',
+        info: 'border-info-pressed bg-info-bg',
+        warning: 'border-warning-pressed bg-warning-bg',
+        error: 'border-danger-pressed bg-danger-bg',
+        success: 'border-success-pressed bg-success-bg',
       },
     },
     defaultVariants: {
