@@ -133,11 +133,11 @@ export function Combobox({
               <Search />
               <Command.Input
                 placeholder={searchPlaceholder}
-                className="w-full bg-transparent py-2 text-base text-text-primary outline-none placeholder:text-text-secondary"
+                className="w-full bg-transparent py-2 text-2xs text-text-primary outline-none placeholder:text-text-secondary"
               />
             </div>
             <Command.List label={listLabel ?? 'Opções'} className="min-h-0 overflow-y-auto p-1">
-              <Command.Empty className="px-3 py-2 text-sm text-text-secondary">
+              <Command.Empty className="px-3 py-2 text-3xs text-text-secondary">
                 {emptyMessage}
               </Command.Empty>
               {options.map((option) => (

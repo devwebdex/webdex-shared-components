@@ -24,12 +24,6 @@ test('as classes literais do TextField existem no CSS compilado', () => {
   // O TextField não tem cva com eixos para percorrer: as classes dele são escritas
   // direto no JSX. A lista é a que tem valor arbitrário ou token, que é onde um
   // @source errado ou um tema faltando aparecem.
-  const expected = [
-    'text-[11.5px]',
-    'leading-[16px]',
-    'text-danger',
-    'text-success',
-    'text-text-disabled',
-  ]
+  const expected = ['text-3xs', 'leading-4xs', 'text-danger', 'text-success', 'text-text-disabled']
   assert.deepEqual(missingFromCss(expected), [], 'classes do TextField sem regra no CSS')
 })

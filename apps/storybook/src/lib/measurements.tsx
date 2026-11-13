@@ -140,16 +140,16 @@ export function MeasureTable({ columns, rows }: { columns: MeasureColumn[]; rows
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-0 text-left text-sm">
+        <table className="w-full border-separate border-spacing-0 text-left text-3xs">
           <thead>
             <tr>
-              <th className="border-b border-line-default px-3 py-2 font-mono text-xs text-text-secondary">
+              <th className="border-b border-line-default px-3 py-2 font-mono text-3xs text-text-secondary">
                 propriedade
               </th>
               {columns.map((column) => (
                 <th
                   key={column.label}
-                  className="border-b border-line-default px-3 py-2 font-mono text-xs text-brand"
+                  className="border-b border-line-default px-3 py-2 font-mono text-3xs text-brand"
                 >
                   {column.label}
                 </th>
@@ -169,11 +169,11 @@ export function MeasureTable({ columns, rows }: { columns: MeasureColumn[]; rows
                       <span className="font-mono">{cell?.value ?? '…'}</span>
                       {cell &&
                         (cell.token ? (
-                          <span className="ml-2 font-mono text-xs text-success">{cell.token}</span>
+                          <span className="ml-2 font-mono text-3xs text-success">{cell.token}</span>
                         ) : row.namespace ? (
-                          <span className="ml-2 font-mono text-xs text-warning">sem token</span>
+                          <span className="ml-2 font-mono text-3xs text-warning">sem token</span>
                         ) : (
-                          <span className="ml-2 font-mono text-xs text-text-disabled">
+                          <span className="ml-2 font-mono text-3xs text-text-disabled">
                             sem namespace
                           </span>
                         ))}
@@ -186,7 +186,7 @@ export function MeasureTable({ columns, rows }: { columns: MeasureColumn[]; rows
         </table>
       </div>
 
-      <p className="max-w-2xl text-sm text-text-secondary">
+      <p className="max-w-2xl text-3xs text-text-secondary">
         <span className="text-warning">sem token</span> é valor que existe no componente mas não
         corresponde a nenhuma Variable — é o que o time de design precisa criar no Figma.{' '}
         <span className="text-text-disabled">sem namespace</span> é propriedade para a qual o design

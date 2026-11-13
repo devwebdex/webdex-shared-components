@@ -16,11 +16,17 @@ import { cn } from '../../lib/cn.js'
  *
  * VALORES SEM TOKEN:
  *
- *   radius     10px          o mesmo do Button medium, para os dois alinharem lado
- *                            a lado; fora da escala Radius (8, 12)
- *   leading    18px          sem namespace de line-height nos tokens. Com py-2 e a
- *                            borda, o campo fica com 36px, a altura do Button medium
- *   cor        white/22      a borda de hover (`--line-h` no HTML), sem token
+ *   cor        white/22      a borda de hover (`--line-h` no HTML). Já existe token
+ *                            para esse valor, `color.line-enabled` (a Variable `Line
+ *                            Enabled`), mas trocar muda o que o componente pinta: fica
+ *                            para um PR próprio, com o design olhando.
+ *
+ * ALTURA, ATENÇÃO: o campo media 36px, a altura do Button medium, porque o `rounded-3` e
+ * o leading de 18px faziam os dois alinharem lado a lado. 18px não existe na escala de
+ * Line Height do Figma. Ao adotar a escala, o leading virou `leading-3xs` (20px) e o campo
+ * passou a 38px -- 2px mais alto que o Button medium. Não dá para ter os dois: 36px com
+ * leading da escala exigiria padding de 9 ou 7px, fora da escala Spacing. Ou o Button
+ * medium cresce, ou o campo usa outro padding: é decisão do design.
  *
  * DIVERGÊNCIAS do HTML de referência:
  *
@@ -32,8 +38,8 @@ import { cn } from '../../lib/cn.js'
  */
 const inputFieldVariants = cva(
   [
-    'w-full min-w-0 rounded-[10px] border bg-background/55 px-3 py-2',
-    'font-mono text-sm leading-[18px] text-text-primary placeholder:text-text-disabled',
+    'w-full min-w-0 rounded-3 border bg-background/55 px-3 py-2',
+    'font-mono text-3xs leading-3xs text-text-primary placeholder:text-text-disabled',
     'outline-none transition-[border-color,box-shadow]',
     'focus-visible:ring-3',
     'disabled:cursor-not-allowed disabled:border-line-default disabled:bg-transparent disabled:text-text-disabled',

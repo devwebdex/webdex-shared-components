@@ -12,25 +12,24 @@ import { cn } from '../../lib/cn.js'
  * O eixo `variant` usa os nomes do SCRUM-166: info, warning, error e success. Nos tokens, o
  * vermelho se chama `danger`, então `error` lê `color.danger` e `color.danger-bg`.
  *
- * VALORES SEM TOKEN (valor arbitrário entre colchetes):
- *
- *   radius    10px   o --r-m do HTML, o mesmo do Button medium; fora da escala Radius (8, 12)
- *   leading   22px   sem namespace de line-height nos tokens
- *
  * ARREDONDADOS PARA O TOKEN MAIS PERTO (o HTML usa outro número):
  *
  *   padding horizontal   15px      ->  spacing.4 (16px)
  *   espaço do símbolo    11px      ->  spacing.3 (12px)
- *   fonte                13.5px    ->  text.base (14px)
- *   fundo                cor a 8%  ->  color.<cor>-bg, a 14% (Variable do Figma)
+ *   fonte                13.5px    ->  text.2xs (14px)
+ *
+ * O fundo é `color.<cor>-bg`, a 14%. ATENÇÃO: esses 14% NÃO são Variable do Figma, ao
+ * contrário do que esta docstring dizia. A escada de alpha de estado do Figma é 8, 12, 18,
+ * 28, 42 e 56%, e o HTML de referência usa 8% -- que existe lá (Hover). Os 14% foram
+ * inventados aqui. Trocar é mudança visual: decisão do design.
  *
  * Onde o HTML e o token divergem, vale o token (docs/ui/html-primeiro.md). O margin-bottom
  * do HTML não entra: o espaço entre alertas é de quem monta a tela.
  */
 const alertVariants = cva(
   [
-    'flex items-start gap-3 rounded-[10px] border px-4 py-3',
-    'font-sans text-base leading-[22px] text-text-secondary',
+    'flex items-start gap-3 rounded-3 border px-4 py-3',
+    'font-sans text-2xs leading-2xs text-text-secondary',
   ],
   {
     variants: {

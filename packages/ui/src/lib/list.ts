@@ -8,10 +8,13 @@ import { cva, type VariantProps } from 'class-variance-authority'
  * `data-state`), escritos como classes literais para o Tailwind encontrá-las no código. O
  * Combobox usa o cmdk, que marca o destaque com `data-selected="true"` e acrescenta essas classes.
  *
- * VALORES SEM TOKEN, os mesmos do Button: padding vertical de 6px no medium (fora da escala
- * Spacing), altura de linha 22, 24 e 26px (sem namespace de line-height) e ícones de 22, 20 e
- * 18px (fora da escala Spacing); e a barra de 2px do item em destaque, menor que o menor
+ * VALORES SEM TOKEN, os mesmos do Button: padding vertical de 6px no medium e ícones de 22, 20
+ * e 18px, fora da escala Spacing; e a barra de 2px do item em destaque, menor que o menor
  * espaçamento.
+ *
+ * Tamanho e entrelinha seguem o Button (o item large perdeu 2px com o leading de 26px virando
+ * `leading-xs`). O `radius` dá os mesmos pixels de antes: os valores da prop ('0' a '5') são
+ * os nomes da escala antiga, e por isso '3' aponta para `rounded-4` (12px).
  */
 
 // O item fica dentro da caixa com 4px de respiro (p-1): o raio dele é o da caixa menos 4px, para
@@ -36,10 +39,10 @@ export const listPopupVariants = cva(
         '0': 'rounded-0',
         '1': 'rounded-1',
         '2': 'rounded-2',
-        '3': 'rounded-3',
-        '4': 'rounded-4',
-        '5': 'rounded-5',
-        full: 'rounded-5',
+        '3': 'rounded-4',
+        '4': 'rounded-5',
+        '5': 'rounded-7',
+        full: 'rounded-7',
       },
     },
     defaultVariants: { radius: '2' },
@@ -63,17 +66,17 @@ export const listItemVariants = cva(
   {
     variants: {
       size: {
-        large: 'px-3 py-2 text-lg leading-[26px] [&_svg]:size-[22px]',
-        medium: 'px-3 py-[6px] text-base leading-[24px] [&_svg]:size-[20px]',
-        small: 'px-2 py-1 text-sm leading-[22px] [&_svg]:size-[18px]',
+        large: 'px-3 py-2 text-xs leading-xs [&_svg]:size-[22px]',
+        medium: 'px-3 py-[6px] text-2xs leading-xs [&_svg]:size-[20px]',
+        small: 'px-2 py-1 text-3xs leading-2xs [&_svg]:size-[18px]',
       },
       radius: {
         '0': 'rounded-0',
         '1': 'rounded-0',
         '2': 'rounded-1',
         '3': 'rounded-2',
-        '4': 'rounded-3',
-        '5': 'rounded-4',
+        '4': 'rounded-4',
+        '5': 'rounded-5',
         full: 'rounded-full',
       },
       /** `danger` para ação destrutiva no Menu (ex.: Excluir). */

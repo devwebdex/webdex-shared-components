@@ -164,7 +164,7 @@ export const Estados: Story = {
 function Modelo({ nome, children }: { nome: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="font-mono text-text-secondary text-xs">{nome}</span>
+      <span className="font-mono text-text-secondary text-3xs">{nome}</span>
       {children}
     </div>
   )
@@ -177,7 +177,7 @@ function Modelo({ nome, children }: { nome: string; children: ReactNode }) {
  * Duas observações que a galeria torna visíveis:
  *
  * - **Não existe slot de descrição.** Subtítulo e texto secundário saem de marcação dentro
- *   de `children`, com `text-sm text-text-secondary` escrito à mão em cada tela. Se isso se
+ *   de `children`, com `text-3xs text-text-secondary` escrito à mão em cada tela. Se isso se
  *   repetir, vira candidato a prop (`description`) ou a um subcomponente.
  * - **`actions` é sempre à direita.** Botão de largura cheia e par de botões divididos saem
  *   de um filho que se estica, não de uma opção do componente.
@@ -202,7 +202,7 @@ export const Modelos: Story = {
 
       <Modelo nome="title + description + text">
         <Card title="WebdexVault">
-          <div className="text-sm text-text-secondary">Polygon · USDC</div>
+          <div className="text-3xs text-text-secondary">Polygon · USDC</div>
           <p className="mt-2">A descrição não tem slot próprio: é marcação dentro de `children`.</p>
         </Card>
       </Modelo>
@@ -252,8 +252,8 @@ export const Modelos: Story = {
           title="Pool WDX-ETH"
           actions={<Button className="w-full">Depositar</Button>}
         >
-          <div className="text-sm text-text-secondary">Arbitrum</div>
-          <div className="mt-1 font-semibold text-lg text-text-primary">11,6% ao ano</div>
+          <div className="text-3xs text-text-secondary">Arbitrum</div>
+          <div className="mt-1 font-semibold text-xs text-text-primary">11,6% ao ano</div>
         </Card>
       </Modelo>
 
@@ -358,8 +358,8 @@ function Pool({
       // `actions` é `justify-end`; um filho `w-full` preenche a linha assim mesmo.
       actions={<Button className="w-full">Depositar</Button>}
     >
-      <div className="text-sm text-text-secondary">{rede}</div>
-      <div className="mt-1 font-semibold text-text-primary text-lg">{valor}</div>
+      <div className="text-3xs text-text-secondary">{rede}</div>
+      <div className="mt-1 font-semibold text-text-primary text-xs">{valor}</div>
     </Card>
   )
 }
@@ -368,7 +368,7 @@ function Pool({
 function Secao({ nome, children }: { nome: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="font-mono text-sm text-text-secondary">{nome}</h3>
+      <h3 className="font-mono text-3xs text-text-secondary">{nome}</h3>
       {children}
     </section>
   )
@@ -435,8 +435,8 @@ export const Composicoes: Story = {
               </>
             }
           >
-            <div className="text-sm text-text-secondary">Polygon · conectada por SIWE</div>
-            <div className="mt-1 font-semibold text-lg text-text-primary">1.284,50 USDC</div>
+            <div className="text-3xs text-text-secondary">Polygon · conectada por SIWE</div>
+            <div className="mt-1 font-semibold text-xs text-text-primary">1.284,50 USDC</div>
           </Card>
         </div>
       </Secao>
@@ -448,7 +448,7 @@ export const Composicoes: Story = {
             <div className="flex items-center gap-3">
               <NetworkArbitrumOne variant="branded" className="size-12 shrink-0" />
               <div className="min-w-0">
-                <div className="text-sm text-text-secondary">Arbitrum · liquidez</div>
+                <div className="text-3xs text-text-secondary">Arbitrum · liquidez</div>
                 <div className="mt-1 font-semibold text-text-primary">11,6% ao ano</div>
               </div>
             </div>

@@ -91,7 +91,7 @@ export function WalletLogin() {
       aria-labelledby="wallet-title"
       className="flex flex-col gap-4 rounded-2 border border-line-default p-4"
     >
-      <h2 id="wallet-title" className="font-bold text-xl">
+      <h2 id="wallet-title" className="font-bold text-md leading-sm">
         Carteira
       </h2>
       <p role="status" className="break-all">

@@ -35,7 +35,7 @@
 export const paginationItemClass = [
   'inline-flex h-6 min-w-6 items-center justify-center px-1',
   'rounded-2 border border-transparent',
-  'font-sans text-base tabular-nums text-text-secondary select-none',
+  'font-sans text-2xs tabular-nums text-text-secondary select-none',
   'cursor-pointer transition-colors duration-100 motion-reduce:transition-none',
   'outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2',
   'focus-visible:outline-brand',

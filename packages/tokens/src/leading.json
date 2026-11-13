@@ -1,0 +1,17 @@
+{
+  "leading": {
+    "$type": "dimension",
+    "$description": "Alturas de linha do Figma: coleção Tipografia, grupo Line Height (11 Variables). Em rem pelo mesmo motivo de text.json -- entrelinha em px com tamanho em rem faz o texto se sobrepor quando a pessoa aumenta a fonte. A escada casa por nome com a de tamanho: text-xs (16px) com leading-xs (24px) dá 1,5.",
+    "4xs": { "$value": "1rem" },
+    "3xs": { "$value": "1.25rem" },
+    "2xs": { "$value": "1.375rem" },
+    "xs": { "$value": "1.5rem" },
+    "sm": { "$value": "1.75rem" },
+    "md": { "$value": "2rem" },
+    "lg": { "$value": "2.25rem" },
+    "xl": { "$value": "2.5rem" },
+    "2xl": { "$value": "2.75rem" },
+    "3xl": { "$value": "3.25rem" },
+    "4xl": { "$value": "4rem" }
+  }
+}
