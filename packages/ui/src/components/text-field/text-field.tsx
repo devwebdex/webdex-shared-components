@@ -21,14 +21,9 @@ import { InputField, type InputFieldProps } from '../input-field/input-field.js'
  * É client component porque o contador precisa saber o tamanho do valor, e no
  * modo não controlado isso só se sabe acompanhando o onChange.
  *
- * VALORES SEM TOKEN:
- *
- *   texto      11.5px, leading 16px   helper text e contador; fora da escala text
- *                                     (13, 14, 15px)
- *
  * DIVERGÊNCIAS do HTML de referência:
  *
- * - O rótulo é `text.sm` (13px), não 12.5px.
+ * - O rótulo é `text.3xs` (12px), não 12.5px.
  * - O espaço entre rótulo, campo e mensagem é `spacing.2` (8px), não 6px.
  */
 const messageVariants = cva('', {
@@ -98,7 +93,7 @@ export function TextField({
       {label && (
         <label
           htmlFor={inputId}
-          className={cn('text-sm', disabled ? 'text-text-disabled' : 'text-text-secondary')}
+          className={cn('text-3xs', disabled ? 'text-text-disabled' : 'text-text-secondary')}
         >
           {label}
         </label>
@@ -116,7 +111,7 @@ export function TextField({
         {...props}
       />
       {(helperText || counter) && (
-        <div className="flex items-start gap-3 font-mono text-[11.5px] leading-[16px]">
+        <div className="flex items-start gap-3 font-mono text-3xs leading-4xs">
           {helperText && (
             <p id={helperId} className={messageVariants({ status: messageStatus })}>
               {helperText}

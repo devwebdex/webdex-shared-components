@@ -113,8 +113,8 @@ function Section({ title, hint, children }: { title: string; hint: string; child
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
-        <p className="text-sm text-text-secondary">{hint}</p>
+        <h2 className="text-xs font-semibold text-text-primary">{title}</h2>
+        <p className="text-3xs text-text-secondary">{hint}</p>
       </div>
       {children}
     </section>

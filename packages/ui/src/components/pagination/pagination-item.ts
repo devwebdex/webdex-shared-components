@@ -24,7 +24,7 @@
  *                                   cabe nos 32px sem alargar o item
  *   espaço entre itens        4px   spacing.1
  *   raio                      8px   radius.2, o mesmo do item do menu
- *   fonte                     14px  text.base (13,5px no HTML)
+ *   fonte                     14px  text.2xs (13,5px no HTML)
  *   seta                      16px  spacing.4
  *
  * O foco usa o mesmo anel provisório do Button (o definitivo é o SCRUM-141), com uma classe a
@@ -35,12 +35,12 @@
 export const paginationItemClass = [
   'inline-flex h-6 min-w-6 items-center justify-center px-1',
   'rounded-2 border border-transparent',
-  'font-sans text-base tabular-nums text-text-secondary select-none',
+  'font-sans text-2xs tabular-nums text-text-secondary select-none',
   'cursor-pointer transition-colors duration-100 motion-reduce:transition-none',
   'outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2',
   'focus-visible:outline-brand',
   'hover:bg-surface-code hover:text-text-primary',
-  'aria-[current=page]:border-brand/30 aria-[current=page]:bg-brand/10',
+  'aria-[current=page]:border-brand-pressed aria-[current=page]:bg-brand-focus',
   'aria-[current=page]:text-brand-soft',
   'disabled:cursor-not-allowed disabled:bg-transparent disabled:text-text-disabled',
   '[&_svg]:size-4 [&_svg]:shrink-0',

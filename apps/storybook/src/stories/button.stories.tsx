@@ -151,7 +151,7 @@ function Grade({ children, ...props }: ButtonProps) {
     <div className="flex flex-col gap-8">
       {COLORS.map((color) => (
         <section key={color} className="flex flex-col gap-3">
-          <h3 className="font-mono text-sm text-text-secondary">color = {color}</h3>
+          <h3 className="font-mono text-3xs text-text-secondary">color = {color}</h3>
           <div className="flex flex-wrap items-center gap-4">
             {VARIANTS.map((variant) => (
               <Button key={variant} color={color} variant={variant} {...props}>
@@ -192,7 +192,7 @@ export const Carregando: Story = {
     <div className="flex flex-col gap-6">
       {POSITIONS.map((position) => (
         <section key={position} className="flex flex-col gap-3">
-          <h3 className="font-mono text-sm text-text-secondary">loadingPosition = {position}</h3>
+          <h3 className="font-mono text-3xs text-text-secondary">loadingPosition = {position}</h3>
           <div className="flex flex-wrap items-center gap-4">
             {INDICATORS.map((indicator) => (
               <Button
@@ -320,18 +320,18 @@ export const CarregandoAoClicar: Story = {
   render: (args) => (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
-        <h3 className="font-mono text-sm text-text-secondary">controles do painel</h3>
+        <h3 className="font-mono text-3xs text-text-secondary">controles do painel</h3>
         <div>
           <ClickToLoad {...args} />
         </div>
       </section>
       <section className="flex flex-col gap-3">
-        <h3 className="font-mono text-sm text-text-secondary">exemplos</h3>
+        <h3 className="font-mono text-3xs text-text-secondary">exemplos</h3>
         <div className="grid w-[56rem] grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-6">
           {CLICK_EXAMPLES.map(({ hint, ...example }) => (
             <div key={hint} className="flex flex-col items-start gap-2">
               <ClickToLoad {...example} />
-              <span className="font-mono text-sm text-text-secondary">{hint}</span>
+              <span className="font-mono text-3xs text-text-secondary">{hint}</span>
             </div>
           ))}
         </div>

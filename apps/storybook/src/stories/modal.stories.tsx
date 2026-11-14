@@ -194,7 +194,7 @@ function ConnectWallet() {
       >
         <Alert variant="info">A conexão pode ser desfeita a qualquer momento na carteira.</Alert>
       </ConfirmModal>
-      {address && <p className="font-mono text-sm text-text-secondary">Conectado: {address}</p>}
+      {address && <p className="font-mono text-3xs text-text-secondary">Conectado: {address}</p>}
     </div>
   )
 }

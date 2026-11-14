@@ -74,11 +74,11 @@ export const Variantes: Story = {
     <div className="flex flex-col gap-6">
       {TONES.map((tone) => (
         <div key={tone} className="flex items-center gap-8">
-          <span className="w-24 font-mono text-sm text-text-secondary">tone = {tone}</span>
+          <span className="w-24 font-mono text-3xs text-text-secondary">tone = {tone}</span>
           {VARIANTS.map((variant) => (
             <div key={variant} className="flex flex-col items-center gap-2 text-text-primary">
               <Spinner {...args} variant={variant} tone={tone} size="medium" />
-              <span className="font-mono text-sm text-text-secondary">{variant}</span>
+              <span className="font-mono text-3xs text-text-secondary">{variant}</span>
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ export const Tamanhos: Story = {
       {SIZES.map((size) => (
         <div key={size} className="flex flex-col items-center gap-3">
           <Spinner {...args} size={size} />
-          <span className="font-mono text-sm text-text-secondary">{size}</span>
+          <span className="font-mono text-3xs text-text-secondary">{size}</span>
         </div>
       ))}
     </div>
@@ -109,7 +109,7 @@ export const ComTexto: Story = {
     <div className="flex items-center gap-3">
       <Spinner {...args} />
       {/* O texto visível repete o rótulo: o leitor de tela já o ouve pelo status. */}
-      <span aria-hidden="true" className="font-mono text-sm text-text-secondary">
+      <span aria-hidden="true" className="font-mono text-3xs text-text-secondary">
         Compilando WebdexVault.sol…
       </span>
     </div>

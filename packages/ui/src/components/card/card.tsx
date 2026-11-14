@@ -48,7 +48,7 @@ import { cn } from '../../lib/cn.js'
  *
  * ARREDONDADOS PARA O TOKEN MAIS PERTO
  *
- *   raio   radius.3 (12px)   o Button usa 2 e 3; 3 é o raio de superfície maior
+ *   raio   radius.4 (12px)   o Button usa 2, 3 e 4; 4 é o raio de superfície maior
  *
  * A MÍDIA SANGRADA É SLOT, NÃO MARGEM NEGATIVA DE QUEM CONSOME
  *
@@ -58,7 +58,7 @@ import { cn } from '../../lib/cn.js'
  *
  * Duas razões para a conta viver aqui e não na tela:
  *
- * 1. Ela depende de dois valores do Card — o `p-4` e o `radius.3`. Feita de fora, cada tela
+ * 1. Ela depende de dois valores do Card — o `p-4` e o `radius.4`. Feita de fora, cada tela
  *    repete os mesmos números, e todas erram juntas no dia em que o Card mudar de raio ou de
  *    padding.
  * 2. Sem o slot, a mídia tem de entrar em `children`, que vem depois de `title`. Aí a margem
@@ -77,8 +77,8 @@ import { cn } from '../../lib/cn.js'
  */
 const cardVariants = cva(
   [
-    'flex flex-col gap-3 rounded-3 border p-4',
-    'bg-surface-card font-sans text-base text-text-secondary',
+    'flex flex-col gap-3 rounded-4 border p-4',
+    'bg-surface-card font-sans text-2xs text-text-secondary',
     'shadow-elevation-2 transition-[box-shadow,border-color,background-color]',
   ],
   {
@@ -141,17 +141,19 @@ export function Card({
     >
       {/*
         `-mt-4 -mx-4` cancela o `p-4` do Card; como este é o primeiro filho do flex, o `gap-3`
-        cuida do espaço até o título. O `overflow-hidden` recorta no `rounded-t-3`, então
+        cuida do espaço até o título. O `overflow-hidden` recorta no `rounded-t-4`, então
         imagem, vídeo ou gradiente seguem o raio da caixa sem precisar repeti-lo.
         `[&>img]:w-full` porque `<img>` é elemento substituído: ele não estica com o
         `align-items: stretch` do flex, e sairia no tamanho intrínseco.
       */}
       {media != null && (
-        <div className="-mx-4 -mt-4 overflow-hidden rounded-t-3 [&>img]:block [&>img]:w-full">
+        <div className="-mx-4 -mt-4 overflow-hidden rounded-t-4 [&>img]:block [&>img]:w-full">
           {media}
         </div>
       )}
-      {title != null && <div className="font-semibold text-text-primary text-lg">{title}</div>}
+      {title != null && (
+        <div className="font-semibold text-text-primary text-xs leading-xs">{title}</div>
+      )}
       {/* min-w-0 e wrap-break-word: endereço e hash não têm espaço e vazariam da caixa. */}
       {children != null && <div className="min-w-0 wrap-break-word">{children}</div>}
       {actions != null && <div className="flex items-center justify-end gap-2">{actions}</div>}

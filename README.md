@@ -8,7 +8,7 @@ Este repositório contém o gerador de projetos da WEbdEX e os componentes e con
 - [HTML primeiro, Figma depois](docs/ui/html-primeiro.md): por que o componente nasce em código e o Figma entra como revisão.
 - [Do Figma para tokens](docs/ui/figma-para-tokens.md): como as Variables viram tokens, com o subagente `figma-tokens`.
 - [Limites de chamadas do MCP do Figma](docs/ui/figma-mcp-limites.md): limites por plano e assento, consumo estimado do fluxo e qual assento comprar.
-- [Publicação dos pacotes](docs/publicacao.md): changesets, PR de release, configuração do GitHub e primeira publicação.
+- [Publicação dos pacotes](docs/publicacao.md): changesets, PR de release, configuração do GitHub e o que já foi publicado.
 - [AGENTS.md](AGENTS.md): comandos, estrutura e regras do repositório (lido pelas ferramentas de IA).
 
 ## Mudou um pacote `@devwebdex/*`?
@@ -43,3 +43,5 @@ Para instalar pacotes `@devwebdex/*` publicados, configure no seu `~/.npmrc` um 
 ```
 //npm.pkg.github.com/:_authToken=<seu-token>
 ```
+
+O token é necessário **mesmo com este repositório sendo público**: o GitHub Packages exige autenticação para instalar qualquer pacote npm, público ou privado. Não é configuração nossa — ver [docs/publicacao.md](docs/publicacao.md#por-que-instalar-exige-token-mesmo-com-o-repositório-público).

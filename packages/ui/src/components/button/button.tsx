@@ -11,18 +11,26 @@ import { SpinnerGlyph, type SpinnerVariant } from '../spinner/spinner.js'
  * Focused existem lá porque a Figma não tem pseudo-classe, e aqui são
  * `hover:`, `active:`, `disabled:` e `focus-visible:`.
  *
+ * O QUE MUDOU AO ADOTAR A ESCALA DO FIGMA:
+ *
+ *   radius     o valor arbitrário de 10px virou `rounded-3`, sem mudar de pixel. Ele sempre
+ *              foi a Variable `Radius 3`; faltava a coleção, que agora está nos tokens.
+ *   leading    22 e 24px viraram `leading-2xs` e `leading-xs` sem mudar de valor. O 26px
+ *              do large não está na escala e virou `leading-xs` (24px): o large ficou 2px
+ *              mais baixo.
+ *   tracking   0,3 -> `tracking-wide` (0,25px) e 0,46 -> `tracking-widest` (0,5px).
+ *              Nenhum dos dois originais está na escala do Figma.
+ *
  * VALORES SEM TOKEN (valor arbitrário entre colchetes). Cada um existe porque a
  * propriedade correspondente não está ligada a Variable no Figma. Relatório
  * completo e pedido ao time de design: ver o PR.
  *
  *   padding    22, 11, 10, 6, 5px   fora da escala Spacing (4, 8, 12, 16, 24...)
- *   radius     10px                 fora da escala Radius; no Figma ESTÁ ligado a
- *                                   uma Variable de uma coleção que não recebemos
- *   leading    22, 24, 26px         sem namespace de line-height nos tokens
  *   ícone      22, 20, 18px         fora da escala Spacing
- *   tracking   0.3, 0.46px          sem token
  *   cor        #4f4f4f/15           cinza do Disabled, fora da paleta
- *              white/15, white/50   brancos translúcidos sem Variable
+ *              white/50             realce da borda no hover. A escada de estado do
+ *                                   Figma é de preenchimento, e vai só até 56%: um
+ *                                   realce de borda a 50% não tem Variable lá
  *
  * DIVERGÊNCIAS DELIBERADAS do Figma:
  *
@@ -54,11 +62,9 @@ const buttonVariants = cva(
   {
     variants: {
       size: {
-        large: 'px-[22px] py-2 rounded-3 text-lg leading-[26px] [&_svg]:size-[22px]',
-        medium:
-          'px-4 py-[6px] rounded-[10px] text-base leading-[24px] tracking-[0.3px] [&_svg]:size-[20px]',
-        small:
-          'px-[10px] py-1 rounded-2 text-sm leading-[22px] tracking-[0.46px] [&_svg]:size-[18px]',
+        large: 'px-[22px] py-2 rounded-4 text-xs leading-xs [&_svg]:size-[22px]',
+        medium: 'px-4 py-[6px] rounded-3 text-2xs leading-xs tracking-wide [&_svg]:size-[20px]',
+        small: 'px-[10px] py-1 rounded-2 text-3xs leading-2xs tracking-widest [&_svg]:size-[18px]',
       },
       color: {
         brand: '',
@@ -84,7 +90,7 @@ const buttonVariants = cva(
         class: [
           'bg-linear-to-br from-coral-50 to-brand text-text-primary shadow-elevation-2',
           'hover:to-magenta-80 hover:shadow-elevation-4 active:shadow-elevation-6',
-          'disabled:bg-none disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
+          'disabled:bg-none disabled:bg-[#4f4f4f]/15 disabled:text-white-disabled disabled:shadow-none',
         ],
       },
       {
@@ -92,7 +98,7 @@ const buttonVariants = cva(
         variant: 'outlined',
         class: [
           'inset-ring-1 inset-ring-brand text-brand hover:bg-brand-soft/15',
-          'disabled:inset-ring-white/15 disabled:bg-transparent disabled:text-white/15',
+          'disabled:inset-ring-white-disabled disabled:bg-transparent disabled:text-white-disabled',
         ],
       },
       {
@@ -100,7 +106,7 @@ const buttonVariants = cva(
         variant: 'text',
         class: [
           'text-brand hover:bg-brand-soft/10',
-          'disabled:bg-transparent disabled:text-white/15',
+          'disabled:bg-transparent disabled:text-white-disabled',
         ],
       },
 
@@ -111,7 +117,7 @@ const buttonVariants = cva(
         class: [
           'inset-ring-1 inset-ring-line-default bg-surface-code text-text-primary shadow-elevation-2',
           'hover:inset-ring-white/50 hover:shadow-elevation-4 active:shadow-elevation-6',
-          'disabled:inset-ring-0 disabled:bg-[#4f4f4f]/15 disabled:text-white/15 disabled:shadow-none',
+          'disabled:inset-ring-0 disabled:bg-[#4f4f4f]/15 disabled:text-white-disabled disabled:shadow-none',
         ],
       },
       {
@@ -119,7 +125,7 @@ const buttonVariants = cva(
         variant: 'outlined',
         class: [
           'inset-ring-1 inset-ring-text-primary/27 text-text-primary hover:bg-surface-code',
-          'disabled:inset-ring-white/15 disabled:bg-transparent disabled:text-white/15',
+          'disabled:inset-ring-white-disabled disabled:bg-transparent disabled:text-white-disabled',
         ],
       },
       {
@@ -127,7 +133,7 @@ const buttonVariants = cva(
         variant: 'text',
         class: [
           'text-text-primary hover:bg-surface-code',
-          'disabled:bg-transparent disabled:text-white/15',
+          'disabled:bg-transparent disabled:text-white-disabled',
         ],
       },
     ],

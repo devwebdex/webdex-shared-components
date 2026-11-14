@@ -32,10 +32,12 @@
     "tailwind-merge": "3.7.0"
   },
   "peerDependencies": {
+    "@devwebdex/tokens": "workspace:^",
     "react": ">=19.0.0",
     "react-dom": ">=19.0.0"
   },
   "devDependencies": {
+    "@devwebdex/tokens": "workspace:*",
     "@devwebdex/tsconfig": "workspace:*",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",

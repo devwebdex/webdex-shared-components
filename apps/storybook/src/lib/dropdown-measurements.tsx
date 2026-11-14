@@ -47,8 +47,8 @@ function Part({ title, hint, children }: { title: string; hint: string; children
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h3 className="text-base font-semibold text-text-primary">{title}</h3>
-        <p className="text-sm text-text-secondary">{hint}</p>
+        <h3 className="text-2xs font-semibold text-text-primary">{title}</h3>
+        <p className="text-3xs text-text-secondary">{hint}</p>
       </div>
       {children}
     </section>

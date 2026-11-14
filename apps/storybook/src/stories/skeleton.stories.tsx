@@ -48,7 +48,7 @@ export const Avatar: Story = {
       {(['small', 'medium', 'large'] as const).map((size) => (
         <div key={size} className="flex flex-col items-center gap-3">
           <SkeletonAvatar size={size} />
-          <span className="font-mono text-sm text-text-secondary">{size}</span>
+          <span className="font-mono text-3xs text-text-secondary">{size}</span>
         </div>
       ))}
     </div>

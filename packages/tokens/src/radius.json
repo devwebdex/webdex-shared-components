@@ -1,12 +1,16 @@
 {
   "radius": {
     "$type": "dimension",
+    "$description": "Raios do Figma: coleção 'Spacing, Radius e Stroke Weight', grupo Radius (10 Variables). ATENÇÃO ao histórico: até a 0.3.0, radius-3/4/5 valiam 12/16/24px -- os valores de Radius 4/5/7 do Figma. A escala estava deslocada a partir do índice 3, e faltava o 10px, que o Button e o InputField escreviam à mão como rounded-[10px].",
     "0": { "$value": "0px" },
     "1": { "$value": "4px" },
     "2": { "$value": "8px" },
-    "3": { "$value": "12px" },
-    "4": { "$value": "16px" },
-    "5": { "$value": "24px" },
-    "full": { "$value": "999px" }
+    "3": { "$value": "10px" },
+    "4": { "$value": "12px" },
+    "5": { "$value": "16px" },
+    "6": { "$value": "20px" },
+    "7": { "$value": "24px" },
+    "100": { "$value": "100px" },
+    "full": { "$value": "1000px" }
   }
 }

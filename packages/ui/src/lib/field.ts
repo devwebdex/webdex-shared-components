@@ -9,9 +9,13 @@ import { attentionClass } from './list.js'
  * `brand-soft`, aberto ela fica `brand` e a seta gira. Estados são atributos, não props: aberto é
  * `data-[state=open]`, sem valor é `data-placeholder`.
  *
- * VALORES SEM TOKEN, os mesmos do Button: padding vertical de 6px no medium (fora da escala
- * Spacing), altura de linha 22, 24 e 26px (sem namespace de line-height) e ícones de 22, 20 e
- * 18px (fora da escala Spacing).
+ * VALORES SEM TOKEN, os mesmos do Button: padding vertical de 6px no medium e ícones de 22, 20
+ * e 18px, fora da escala Spacing.
+ *
+ * Tamanho e entrelinha seguem o Button: o 26px do large não existe na escala do Figma e virou
+ * `leading-xs` (24px), então o campo large mede 40px, como o Button large. O `radius` continua
+ * dando os mesmos pixels de antes: `radius="3"` é 12px, hoje via `rounded-4` -- os valores da
+ * prop são os nomes da escala antiga, e alinhá-los aos do Figma é decisão de API à parte.
  */
 export const selectTriggerVariants = cva(
   [
@@ -28,17 +32,17 @@ export const selectTriggerVariants = cva(
   {
     variants: {
       size: {
-        large: 'px-4 py-2 text-lg leading-[26px] [&_svg]:size-[22px]',
-        medium: 'px-3 py-[6px] text-base leading-[24px] [&_svg]:size-[20px]',
-        small: 'px-2 py-1 text-sm leading-[22px] [&_svg]:size-[18px]',
+        large: 'px-4 py-2 text-xs leading-xs [&_svg]:size-[22px]',
+        medium: 'px-3 py-[6px] text-2xs leading-xs [&_svg]:size-[20px]',
+        small: 'px-2 py-1 text-3xs leading-2xs [&_svg]:size-[18px]',
       },
       radius: {
         '0': 'rounded-0',
         '1': 'rounded-1',
         '2': 'rounded-2',
-        '3': 'rounded-3',
-        '4': 'rounded-4',
-        '5': 'rounded-5',
+        '3': 'rounded-4',
+        '4': 'rounded-5',
+        '5': 'rounded-7',
         full: 'rounded-full',
       },
       /** Halo pulsante para chamar a atenção; some ao abrir e não volta depois de escolhido um valor. */

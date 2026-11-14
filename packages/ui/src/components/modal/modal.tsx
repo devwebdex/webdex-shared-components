@@ -29,7 +29,6 @@ import { Button } from '../button/button.js'
  * VALORES SEM TOKEN:
  *
  *   largura    400, 560, 800px    sm, md, lg; fora da escala Spacing, que para em 64px
- *   leading    22, 26px           sem namespace de line-height, os mesmos do Button
  */
 
 export const modalOverlayClass = cn(
@@ -48,7 +47,7 @@ export const modalContentVariants = cva(
     'flex w-[calc(100%-2*var(--spacing-4))] max-h-[calc(100dvh-2*var(--spacing-4))] flex-col',
     // scheme-dark: a barra de rolagem do conteúdo longo segue o fundo escuro, não a clara do
     // sistema.
-    'rounded-4 bg-background font-sans text-text-primary shadow-elevation-6 scheme-dark',
+    'rounded-5 bg-background font-sans text-text-primary shadow-elevation-6 scheme-dark',
     'inset-ring-1 inset-ring-line-default outline-none',
     'transition-[opacity,scale] duration-150 ease-out starting:opacity-0 starting:scale-97',
     'data-[state=closed]:animate-list-out',
@@ -69,13 +68,13 @@ export const modalContentVariants = cva(
 /** Classes das partes internas, exportadas para o teste de CSS do Storybook conferi-las. */
 export const modalSlotClasses = {
   header: 'flex items-start gap-3 px-5 pt-5 pb-4',
-  icon: 'flex size-7 shrink-0 items-center justify-center rounded-3 bg-brand-soft/10 text-brand [&_svg]:size-5',
+  icon: 'flex size-7 shrink-0 items-center justify-center rounded-4 bg-brand-soft/10 text-brand [&_svg]:size-5',
   heading: 'flex min-w-0 flex-1 flex-col gap-1',
-  title: 'text-lg leading-[26px] font-semibold text-text-primary',
-  description: 'text-base leading-[22px] text-text-secondary',
+  title: 'text-xs leading-xs font-semibold text-text-primary',
+  description: 'text-2xs leading-2xs text-text-secondary',
   close: '-mt-1 -mr-2 shrink-0',
   body: [
-    'min-h-0 flex-1 overflow-y-auto px-5 pb-5 text-base leading-[22px] text-text-secondary',
+    'min-h-0 flex-1 overflow-y-auto px-5 pb-5 text-2xs leading-2xs text-text-secondary',
     'outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand',
   ].join(' '),
   footer: 'flex flex-wrap items-center justify-end gap-3 border-t border-line-default px-5 py-4',
