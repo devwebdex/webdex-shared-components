@@ -48,7 +48,7 @@ import { cn } from '../../lib/cn.js'
  *
  * ARREDONDADOS PARA O TOKEN MAIS PERTO
  *
- *   raio   radius.3 (12px)   o Button usa 2 e 3; 3 é o raio de superfície maior
+ *   raio   radius.4 (12px)   o Button usa 2, 3 e 4; 4 é o raio de superfície maior
  *
  * A MÍDIA SANGRADA É SLOT, NÃO MARGEM NEGATIVA DE QUEM CONSOME
  *
@@ -58,7 +58,7 @@ import { cn } from '../../lib/cn.js'
  *
  * Duas razões para a conta viver aqui e não na tela:
  *
- * 1. Ela depende de dois valores do Card — o `p-4` e o `radius.3`. Feita de fora, cada tela
+ * 1. Ela depende de dois valores do Card — o `p-4` e o `radius.4`. Feita de fora, cada tela
  *    repete os mesmos números, e todas erram juntas no dia em que o Card mudar de raio ou de
  *    padding.
  * 2. Sem o slot, a mídia tem de entrar em `children`, que vem depois de `title`. Aí a margem

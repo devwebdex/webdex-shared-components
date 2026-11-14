@@ -42,6 +42,24 @@ com 21,33px. E nomes que só ele tem -- `text-base`, `rounded-lg`,
 **Quem usa um desses no próprio código deixa de ter CSS gerado para ele.** Troque
 pelo token da escala.
 
+**Pior: nomes que existem nos dois temas mudam de valor sem aviso.** Continuam
+gerando CSS, então nada acusa. Num projeto consumidor, o que era antes e o que
+passa a ser:
+
+    text-xs          12px      ->  16px
+    text-sm          13px      ->  18px
+    text-lg          15px      ->  24px
+    text-xl          20px      ->  28px
+    text-2xl         24px      ->  32px
+    text-3xl         30px      ->  36px
+    text-4xl         36px      ->  40px
+    text-6xl         60px      ->  58px
+    tracking-tight   -0,025em  ->  +0,1px   (passa a alargar, e não a apertar)
+    tracking-*       em        ->  px absolutos
+
+Procure esses nomes no código antes de atualizar. Os templates do gerador tinham
+dois deles, e foram ajustados (ver abaixo).
+
 **O que muda de tamanho:**
 
 - Button, Select, Menu e Combobox `large`: 42px -> 40px. O leading de 26px não
@@ -50,10 +68,14 @@ pelo token da escala.
   `leading-3xs` (20px). O campo deixa de ter a mesma altura do Button medium, que
   era proposital. Manter os 36px exigiria padding fora da escala Spacing: é
   decisão do design.
+- Título do Modal: 15px/26px -> 16px/24px (`text-xs leading-xs`).
 - Título do Card: entrelinha de 23,33px -> 24px (`leading-xs`, o mesmo par do
   título do Modal).
+- Helper text e contador do TextField: 11,5px -> 12px (`text-3xs`).
 - Texto de 12px sem entrelinha declarada (vazio do Combobox, rótulo do
   TextField): 18,57px -> 18px.
+- `rounded-full`: 999px -> 1000px, sem diferença visível. Entram também
+  `rounded-6` (20px), `rounded-7` (24px) e `rounded-100` (100px).
 
 **Projetos gerados:** os títulos dos templates usavam `text-2xl` e `text-xl`, que
 existem na escala nova com outro valor. Viraram `text-lg leading-md` e

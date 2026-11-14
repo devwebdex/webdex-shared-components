@@ -224,11 +224,24 @@ function dentro(seletor: string, ref: (element: HTMLElement | null) => void) {
   return (element: HTMLElement | null) => ref(element?.querySelector<HTMLElement>(seletor) ?? null)
 }
 
+/**
+ * Mede o elemento cujo texto é exatamente `texto`. Para o título do Card, que não tem gancho
+ * próprio: achar pela classe (`.font-semibold`) quebraria em silêncio se a classe mudasse.
+ */
+function peloTexto(texto: string, ref: (element: HTMLElement | null) => void) {
+  return (element: HTMLElement | null) =>
+    ref(
+      Array.from(element?.querySelectorAll<HTMLElement>('*') ?? []).find(
+        (candidato) => candidato.childElementCount === 0 && candidato.textContent === texto
+      ) ?? null
+    )
+}
+
 const niveis: MeasureColumn[] = [
   {
     label: 'título — Card',
     render: (ref) => (
-      <div ref={dentro('.font-semibold', ref)} className="w-64">
+      <div ref={peloTexto('Cofre USDT', ref)} className="w-64">
         <Card title="Cofre USDT">Polygon</Card>
       </div>
     ),

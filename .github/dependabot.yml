@@ -3,5 +3,7 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    # Sem isto, o PR vai para a branch padrão (prod) e pula o caminho dev -> prod.
+    target-branch: dev
     schedule:
       interval: weekly

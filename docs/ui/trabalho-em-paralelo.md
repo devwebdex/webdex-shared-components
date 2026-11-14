@@ -19,10 +19,11 @@ $ grep -rniE 'prefers-color-scheme|data-theme|\.dark|\.light|light-dark\(' \
 ```
 
 O `packages/tokens/dist/theme.css` gerado tem um `@theme` só, com um valor por token. E
-**14 dos 41 tokens de cor têm alpha embutido** -- `line-default` é `rgba(255,255,255,0.10)`,
+**56 das 88 cores têm alpha embutido** -- `line-default` é `rgba(255,255,255,0.10)`,
 `danger-bg` é `rgba(255,92,64,0.14)`. Branco a 10% só se lê sobre fundo escuro. Sobre fundo
-claro ele some. Esses 14 tokens não têm "versão clara" óbvia: precisam ser rederivados no
-Figma, um a um, com o design decidindo cada valor.
+claro ele some. Essas cores não têm "versão clara" óbvia: precisam ser rederivadas no Figma,
+uma a uma, com o design decidindo cada valor. A maior parte é a escada de estado
+(`white-hover`, `danger-pressed`...), que o Figma já tem também em preto.
 
 O `preview.tsx` do Storybook já diz isso em comentário: *"O design system é só escuro: as
 cores com alpha só se leem sobre o fundo da marca."*
@@ -76,7 +77,8 @@ primitiva com o tema. Isso é uma segunda tarefa, separada, que toca componente:
 
 ## Conflito garantido: `packages/ui/src/index.ts`
 
-Mudou em **10 dos últimos 60 commits**. É o segundo arquivo mais tocado do repositório.
+Mudou em **10 dos últimos 60 commits**: o quarto arquivo mais tocado do repositório, e o
+segundo de código.
 
 Toda tarefa que cria componente acrescenta uma linha nesse arquivo, e todas no mesmo bloco
 ordenado alfabeticamente. Duas PRs abertas no mesmo dia conflitam ali, sempre.

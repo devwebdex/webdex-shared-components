@@ -24,7 +24,7 @@
  *                                   cabe nos 32px sem alargar o item
  *   espaço entre itens        4px   spacing.1
  *   raio                      8px   radius.2, o mesmo do item do menu
- *   fonte                     14px  text.base (13,5px no HTML)
+ *   fonte                     14px  text.2xs (13,5px no HTML)
  *   seta                      16px  spacing.4
  *
  * O foco usa o mesmo anel provisório do Button (o definitivo é o SCRUM-141), com uma classe a
