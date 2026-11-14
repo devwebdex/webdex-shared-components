@@ -39,3 +39,26 @@ test('a escala de espaçamento é a nossa, não a do Tailwind', () => {
     'p-8 está usando o multiplicador padrão do Tailwind: o theme.css dos tokens não foi aplicado'
   )
 })
+
+test('o tema padrão do Tailwind foi zerado nas escalas que vêm do Figma', () => {
+  const flat = css.replace(/\s+/g, '')
+
+  // Casado com o tamanho: sem o reset, text-xs levaria a entrelinha que o Tailwind calculou
+  // para os 12px do text-xs DELE (1,333), aplicada aos nossos 16px.
+  assert.ok(
+    !css.includes('--text-xs--line-height'),
+    'a entrelinha padrão do text-xs do Tailwind voltou: o reset do build.mjs dos tokens não rodou'
+  )
+  assert.match(
+    flat,
+    /\.text-xs\{font-size:var\(--text-xs\)\}/,
+    'text-xs saiu com mais que o tamanho'
+  )
+
+  // Nomes que só o Tailwind tem. O tailwind.css do Storybook os pede com @source inline;
+  // com o reset, nenhum gera regra.
+  const vazados = ['text-base', 'rounded-lg', 'leading-relaxed', 'font-light'].filter((name) =>
+    flat.includes(`.${name}{`)
+  )
+  assert.deepEqual(vazados, [], 'classes do tema padrão do Tailwind ainda geram CSS')
+})

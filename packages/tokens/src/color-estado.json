@@ -1,7 +1,7 @@
 {
   "color": {
     "$type": "color",
-    "$description": "Escada de alpha de estado do Figma, aplicada a cada cor base: hover 8%, focus 12%, disabled 18%, pressed 28%, selected 42%, active 56%. Sao as colecoes Cores Primitivas (branco e preto), Cores Semanticas (success, danger, warning, info) e o grupo Brand Surface de Cores da Marca. Arquivo separado do color.json de proposito: e uma tabela gerada, e PR nova nao precisa editar o arquivo das cores base.",
+    "$description": "Escada de alpha de estado do Figma, aplicada a cada cor base: hover 8%, focus 12%, disabled 18%, pressed 28%, selected 42%, active 56%. São as coleções Cores Primitivas (branco e preto), Cores Semânticas (success, danger, warning, info) e o grupo Brand Surface de Cores da Marca. Os hex são literais, porque o DTCG não deriva uma cor com alpha de outra; o build.mjs confere cada um contra a cor base e para se divergirem. Arquivo separado do color.json de propósito: PR nova não precisa editar o arquivo das cores base.",
 
     "white": { "$value": "#ffffff" },
     "white-hover": { "$value": "#ffffff14" },

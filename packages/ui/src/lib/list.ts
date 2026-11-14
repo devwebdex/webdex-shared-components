@@ -100,6 +100,6 @@ export const listSeparatorClass = 'my-1 h-px bg-line-default'
  */
 export const attentionClass = [
   'after:pointer-events-none after:absolute after:-inset-1 after:rounded-[inherit]',
-  'after:inset-ring-2 after:inset-ring-brand/60 after:animate-pulse',
+  'after:inset-ring-2 after:inset-ring-brand-active after:animate-pulse',
   'data-[state=open]:after:hidden motion-reduce:after:animate-none',
 ].join(' ')

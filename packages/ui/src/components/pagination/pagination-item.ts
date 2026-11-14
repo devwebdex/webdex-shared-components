@@ -40,7 +40,7 @@ export const paginationItemClass = [
   'outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2',
   'focus-visible:outline-brand',
   'hover:bg-surface-code hover:text-text-primary',
-  'aria-[current=page]:border-brand/30 aria-[current=page]:bg-brand/10',
+  'aria-[current=page]:border-brand-pressed aria-[current=page]:bg-brand-focus',
   'aria-[current=page]:text-brand-soft',
   'disabled:cursor-not-allowed disabled:bg-transparent disabled:text-text-disabled',
   '[&_svg]:size-4 [&_svg]:shrink-0',

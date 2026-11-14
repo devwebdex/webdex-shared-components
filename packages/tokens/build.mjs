@@ -1,6 +1,30 @@
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs'
 import StyleDictionary from 'style-dictionary'
 
+// A escada de estado (color-estado.json) é a cor base com um alpha fixo por estado. Os hex são
+// literais -- o DTCG não sabe derivar "esta cor a 8%" de outra --, então nada os amarra à base:
+// se `danger` mudar em color.json, `danger-hover` ficaria para trás sem ninguém notar. O build
+// confere cada um e para, dizendo o valor certo.
+const ALPHA_DO_ESTADO = { hover: 8, focus: 12, disabled: 18, pressed: 28, selected: 42, active: 56 }
+const cores = {
+  ...JSON.parse(readFileSync('src/color.json', 'utf8')).color,
+  ...JSON.parse(readFileSync('src/color-estado.json', 'utf8')).color,
+}
+const divergentes = Object.entries(cores).flatMap(([nome, token]) => {
+  const [, base, estado] = nome.match(/^(.+)-(hover|focus|disabled|pressed|selected|active)$/) ?? []
+  if (!base || !estado || !cores[base]) return []
+  const alpha = Math.round((ALPHA_DO_ESTADO[estado] * 255) / 100)
+    .toString(16)
+    .padStart(2, '0')
+  const esperado = `${cores[base].$value.slice(0, 7)}${alpha}`.toLowerCase()
+  return token.$value.toLowerCase() === esperado
+    ? []
+    : [`  ${nome}: ${token.$value}, deveria ser ${esperado}`]
+})
+if (divergentes.length) {
+  throw new Error(`color-estado.json não acompanha a cor base:\n${divergentes.join('\n')}`)
+}
+
 // O seletor `@theme` faz cada token virar um tema do Tailwind 4: o caminho do token
 // precisa começar por um namespace do Tailwind (color, radius, spacing, font, text...).
 const sd = new StyleDictionary({
