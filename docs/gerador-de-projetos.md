@@ -296,6 +296,18 @@ Registrado em 2026-11-01, pelos critérios de aceite do componente de loading.
 - **Button `loading`**: prop, porque é estado da aplicação, não do Figma. O botão fica com `aria-busy` e `aria-disabled`, sem `disabled`: com `disabled`, o foco sairia do botão no meio do envio. O clique é ignorado e o `type` vira `button`, para o `submit` não disparar. O spinner vem na cor do texto (o colorido sumiria sobre o gradiente brand). O Button continua sem `'use client'`.
   - Revisão do operador em 2026-11-01 ("não gostei, mais variantes"): a primeira versão escondia o rótulo e usava só o losango, que fica apagado em boa parte do ciclo no tamanho de ícone. Agora `loadingIndicator` (`ring`, padrão, `pixel` ou `dots`), `loadingPosition` (`start`, padrão: no lugar do ícone da esquerda, com o rótulo visível; `end`: no lugar do da direita; `center`: rótulo transparente, sem mudar a largura) e `loadingText` (rótulo durante o carregamento, que vira o nome acessível).
 
+### D19. DataTable
+
+Registrado em 2026-11-15, pelo pedido do operador: ações "…" por linha, um botão que muda a orientação do texto das linhas, paginação integrada, hover que destaca a linha e outras variações.
+
+- **Lógica própria, sem biblioteca de tabela.** O TanStack Table (base do data table do shadcn) está na 9.x, um major que não foi avaliado aqui. Ordenar, paginar, selecionar e esconder colunas no cliente cabe num hook (`useDataTable`), e a API pública fica sob controle do pacote. Se a tabela precisar de paginação no servidor, filtros por coluna ou virtualização, reavaliar.
+- "Orientação do texto" foi lida como **alinhamento horizontal**: um botão na barra avança esquerda → centro → direita. Coluna com `align` próprio (ex.: valores à direita) não muda.
+- Reaproveita os componentes do pacote: `Menu` com gatilho "…" para as ações, `Pagination` e `Select` (linhas por página) no rodapé, `Skeleton` nas linhas carregando.
+- Variações: densidade `comfortable`/`compact` (com botão, `aria-pressed`), listrada, cabeçalho fixo com `maxHeight`, ordenação por coluna (`aria-sort`), seleção com checkbox e "selecionar a página" (`indeterminate`), menu de colunas visíveis, vazia, carregando (`aria-busy`), slot para busca. Toda prop de estado tem par controlado/não controlado.
+- O contrato fica em `components/data-table/types.ts`, e cada parte (hook, cabeçalho, ações, barra, rodapé, tabela) em arquivo próprio: foi o que permitiu dividir o trabalho entre subagentes sem conflito.
+- O contêiner usa `border`, não `inset-ring`: o fundo das linhas e do cabeçalho fixo pintaria por cima da sombra. A barra do hover é sombra interna na primeira célula, porque `position: relative` em `<tr>` não vale em todo navegador.
+- O design system não desenha tabela de dados: o cabeçalho segue a tabela de tokens do HTML (`table.tk`), e o resto é proposta para revisão do design. O Empty state da lista de tarefas ainda não existe; a tabela tem `emptyState` como slot até ele entrar.
+
 ## Em aberto
 
 | # | Tema | Pendência |
