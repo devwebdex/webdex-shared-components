@@ -3,11 +3,17 @@ import type { DataTableColumn } from './types.js'
 const SEPARATOR = ';'
 const LINE_BREAK = '\r\n'
 const BOM = '\uFEFF'
-const FORMULA_START = /^[=+\-@\t\r]/
+// Também depois de espaços: algumas planilhas ignoram o espaço inicial e avaliam a fórmula.
+const FORMULA_START = /^(\s*[=+\-@]|[\t\r])/
 
 /**
  * CSV no formato que o Excel em pt-BR abre direto: `;` como separador (a vírgula é decimal),
  * BOM para os acentos e escape RFC 4180.
+ *
+ * Todo texto vai entre aspas, mesmo sem `;`: numa planilha que separa por vírgula, um texto sem
+ * aspas como `ok,=HYPERLINK(...)` seria cortado na vírgula, e o pedaço `=...` viraria fórmula,
+ * driblando a proteção abaixo. Números e datas ISO não têm vírgula e ficam sem aspas, para a
+ * planilha os ler como número.
  */
 export function toCsv<Row>(rows: Row[], columns: DataTableColumn<Row>[]): string {
   const exported = columns.filter((column) => column.exportValue !== false)
@@ -17,8 +23,8 @@ export function toCsv<Row>(rows: Row[], columns: DataTableColumn<Row>[]): string
       : column.id
   )
   const lines = [
-    header.map((text) => escapeField(protectText(text))),
-    ...rows.map((row) => exported.map((column) => escapeField(cellValue(column, row)))),
+    header.map((text) => quote(protectText(text))),
+    ...rows.map((row) => exported.map((column) => cellField(column, row))),
   ]
   return BOM + lines.map((fields) => fields.join(SEPARATOR)).join(LINE_BREAK)
 }
@@ -32,16 +38,17 @@ export function downloadCsv(csv: string, fileName: string): void {
   document.body.append(link)
   link.click()
   link.remove()
-  URL.revokeObjectURL(url)
+  // Liberar no mesmo tick pode cancelar o download em alguns navegadores (Safari, Firefox antigo).
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
-function cellValue<Row>(column: DataTableColumn<Row>, row: Row): string {
+function cellField<Row>(column: DataTableColumn<Row>, row: Row): string {
   const value =
     typeof column.exportValue === 'function' ? column.exportValue(row) : column.accessor?.(row)
   if (value == null) return ''
   if (typeof value === 'number' || typeof value === 'bigint') return String(value)
   if (value instanceof Date) return value.toISOString()
-  return protectText(value)
+  return quote(protectText(value))
 }
 
 /**
@@ -53,6 +60,6 @@ function protectText(text: string) {
   return FORMULA_START.test(text) ? `'${text}` : text
 }
 
-function escapeField(field: string) {
-  return /[";\r\n]/.test(field) ? `"${field.replaceAll('"', '""')}"` : field
+function quote(text: string) {
+  return `"${text.replaceAll('"', '""')}"`
 }

@@ -658,8 +658,8 @@ describe('DataTable: recursos', () => {
       await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
       const rows = await downloads.lastRows()
       expect(rows).toHaveLength(9)
-      expect(rows[0]).toBe('Carteira 01;10;Polygon')
-      expect(rows.some((line) => line.startsWith('Carteira 10'))).toBe(false)
+      expect(rows[0]).toBe('"Carteira 01";10;"Polygon"')
+      expect(rows.some((line) => line.startsWith('"Carteira 10"'))).toBe(false)
     })
 
     it('com seleção, exporta só as selecionadas; sem exportFileName, "tabela.csv"', async () => {
@@ -668,7 +668,7 @@ describe('DataTable: recursos', () => {
       await user.click(screen.getByRole('checkbox', { name: 'Selecionar linha Carteira 03' }))
       await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
       expect(downloads.fileNames).toEqual(['tabela.csv'])
-      expect(await downloads.lastRows()).toEqual(['Carteira 03;30;Polygon'])
+      expect(await downloads.lastRows()).toEqual(['"Carteira 03";30;"Polygon"'])
     })
   })
 

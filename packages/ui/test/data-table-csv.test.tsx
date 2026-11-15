@@ -22,11 +22,11 @@ describe('toCsv', () => {
       { id: 'note', header: <span>Nota</span>, accessor: (r) => r.note },
     ]
     const csv = toCsv([row, { ...row, id: 'b', note: null }], columns)
-    expect(csv.startsWith('\uFEFF')).toBe(true)
-    expect(lines(csv)).toEqual(['Código;2025;note', 'a;10.5;simples', 'b;10.5;'])
+    expect(csv.startsWith('﻿')).toBe(true)
+    expect(lines(csv)).toEqual(['"Código";"2025";"note"', '"a";10.5;"simples"', '"b";10.5;'])
   })
 
-  it('escapa aspas, ; e quebras de linha (RFC 4180)', () => {
+  it('põe todo texto entre aspas e escapa aspas, ; e quebras de linha (RFC 4180)', () => {
     const columns: DataTableColumn<Row>[] = [
       { id: 'note', header: 'Nota', accessor: (r) => r.note },
     ]
@@ -38,7 +38,17 @@ describe('toCsv', () => {
       ],
       columns
     )
-    expect(csv).toBe('\uFEFFNota\r\n"diz ""oi"""\r\n"a;b"\r\n"linha 1\nlinha 2"')
+    expect(csv).toBe('﻿"Nota"\r\n"diz ""oi"""\r\n"a;b"\r\n"linha 1\nlinha 2"')
+  })
+
+  // Numa planilha que separa por vírgula, texto sem aspas seria cortado na vírgula e o pedaço
+  // "=..." viraria fórmula, driblando a proteção.
+  it('não deixa uma vírgula soltar uma fórmula numa planilha que separa por vírgula', () => {
+    const columns: DataTableColumn<Row>[] = [
+      { id: 'note', header: 'Nota', accessor: (r) => r.note },
+    ]
+    const [, line] = lines(toCsv([{ ...row, note: 'ok,=HYPERLINK("x")' }], columns))
+    expect(line).toBe('"ok,=HYPERLINK(""x"")"')
   })
 
   it('usa exportValue, ignora coluna com exportValue false e converte Date e bigint', () => {
@@ -55,8 +65,8 @@ describe('toCsv', () => {
       { id: 'empty', header: 'Vazio' },
     ]
     expect(lines(toCsv([row], columns))).toEqual([
-      'Valor;Data;Big;Vazio',
-      'R$ 10.5;2025-03-01T12:00:00.000Z;12345678901234567890;',
+      '"Valor";"Data";"Big";"Vazio"',
+      '"R$ 10.5";2025-03-01T12:00:00.000Z;12345678901234567890;',
     ])
   })
 
@@ -65,33 +75,36 @@ describe('toCsv', () => {
       { id: 'note', header: '=Nota', accessor: (r) => r.note },
       { id: 'amount', header: 'Valor', accessor: (r) => r.amount },
     ]
-    const data = ['=SUM(A1)', '+1', '-1', '@cmd', '\tx', '\rx'].map((note) => ({
+    const data = ['=SUM(A1)', '+1', '-1', '@cmd', '\tx', '\rx', '  =1+1'].map((note) => ({
       ...row,
       note,
       amount: -5,
     }))
     expect(lines(toCsv(data, columns))).toEqual([
-      "'=Nota;Valor",
-      "'=SUM(A1);-5",
-      "'+1;-5",
-      "'-1;-5",
-      "'@cmd;-5",
-      "'\tx;-5",
+      `"'=Nota";"Valor"`,
+      `"'=SUM(A1)";-5`,
+      `"'+1";-5`,
+      `"'-1";-5`,
+      `"'@cmd";-5`,
+      `"'\tx";-5`,
       `"'\rx";-5`,
+      `"'  =1+1";-5`,
     ])
   })
 
   it('sem linhas, só o cabeçalho', () => {
-    expect(toCsv([], [{ id: 'id', header: 'Código', accessor: (r: Row) => r.id }])).toBe(
-      '\uFEFFCódigo'
-    )
+    expect(toCsv([], [{ id: 'id', header: 'Código', accessor: (r: Row) => r.id }])).toBe('﻿"Código"')
   })
 })
 
 describe('downloadCsv', () => {
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
 
-  it('baixa por um link temporário e libera a URL', () => {
+  it('baixa por um link temporário e libera a URL depois do clique', () => {
+    vi.useFakeTimers()
     const createObjectURL = vi.fn((_blob: Blob) => 'blob:csv')
     const revokeObjectURL = vi.fn()
     Object.assign(URL, { createObjectURL, revokeObjectURL })
@@ -104,6 +117,9 @@ describe('downloadCsv', () => {
     const link = click.mock.contexts[0] as HTMLAnchorElement
     expect(link.download).toBe('tabela.csv')
     expect(link.isConnected).toBe(false)
+    // Liberada no tick seguinte, não no mesmo: alguns navegadores cancelariam o download.
+    expect(revokeObjectURL).not.toHaveBeenCalled()
+    vi.runAllTimers()
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:csv')
   })
 })
