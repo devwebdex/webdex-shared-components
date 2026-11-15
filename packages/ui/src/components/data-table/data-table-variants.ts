@@ -28,6 +28,26 @@ import { cva } from 'class-variance-authority'
  * VALORES SEM TOKEN: a barra de 2px do hover (`inset_2px_0_0`), menor que o menor espaçamento,
  * como a do item de lista.
  *
+ * VALORES SEM TOKEN (recursos da tabela):
+ *
+ *   colunas de controle  40px   `w-[40px]` (seta de expandir e checkbox): a escala pula de 32 para
+ *                               48px, e 40px é o que o checkbox já ocupava (16px + 12px de cada
+ *                               lado). Largura fixa porque o `left` da coluna fixa é a soma delas:
+ *                               `left-[40px]` e `left-[80px]`
+ *   coluna de ações      56px   `w-[56px]`, o botão de 32px mais 12px de cada lado, para o
+ *                               `<colgroup>` do `table-fixed`
+ *   cards                40rem  `@max-[40rem]`: abaixo disso a tabela vira cards. Nenhum tamanho
+ *                               de contêiner do Tailwind dá 40rem (`@xl` 36rem, `@2xl` 42rem)
+ *
+ * COLUNA FIXA (`stickyFirstColumn`). A célula fixa precisa de fundo opaco, senão o conteúdo que
+ * rola passa por baixo dela à vista. Mas o fundo dos estados da linha (hover, seleção, listra) é
+ * translúcido e fica no `<tr>`, atrás da célula: com um `bg-*` opaco na célula, ele sumiria.
+ * A saída: a linha publica a cor do estado numa variável (`--data-table-row-bg`), com os mesmos
+ * modificadores do fundo dela, e a célula fixa pinta três camadas: `background` (opaco, o fundo da
+ * página), por cima `surface-card` (o fundo do contêiner) e por cima a cor da variável. O
+ * resultado é a mesma cor das células vizinhas, contanto que o contêiner esteja sobre o fundo da
+ * página. A separação da parte que rola é uma linha de 1px (`after:`) à direita da última fixa.
+ *
  * O contêiner tem `border`, não `inset-ring`: o `inset-ring` é sombra, e o fundo das linhas
  * (hover, seleção, listras) e do cabeçalho fixo pintaria por cima dela nas bordas.
  */
@@ -71,11 +91,14 @@ export const dataTableRowVariants = cva(
     '[&>td:first-child]:transition-shadow [&>td:first-child]:duration-100',
     'motion-reduce:[&>td:first-child]:transition-none',
     'aria-selected:bg-brand-focus aria-selected:text-text-primary',
+    // A mesma cor de cada estado, para a célula fixa (ver COLUNA FIXA acima).
+    'hover:[--data-table-row-bg:var(--color-surface-elevated)]',
+    'aria-selected:[--data-table-row-bg:var(--color-brand-focus)]',
   ],
   {
     variants: {
       striped: {
-        true: 'even:bg-surface-code',
+        true: 'even:bg-surface-code even:[--data-table-row-bg:var(--color-surface-code)]',
         false: '',
       },
     },
@@ -104,3 +127,59 @@ export const dataTableCheckboxClass = [
   'outline-none focus-visible:outline-solid focus-visible:outline-2',
   'focus-visible:outline-offset-2 focus-visible:outline-brand',
 ].join(' ')
+
+/** Faixa das ações em lote, entre a barra e a tabela. */
+export const dataTableBulkAreaClass = 'border-b border-line-default'
+
+/** Coluna de controle (seta de expandir, checkbox): largura fixa, para somar o `left` fixo. */
+export const dataTableControlCellClass = 'w-[40px]'
+
+/** Coluna das ações da linha no `<colgroup>`, com `resizableColumns`. */
+export const dataTableActionsColClass = 'w-[56px]'
+
+/** `left` da célula fixa pela posição dela entre as fixas (cada coluna de controle tem 40px). */
+export const dataTableStickyLeftClass = ['left-0', 'left-[40px]', 'left-[80px]'] as const
+
+/** Célula fixa do corpo: o fundo em três camadas descrito em COLUNA FIXA. */
+export const dataTableStickyBodyCellClass = [
+  'sticky z-[1] bg-background',
+  'bg-[linear-gradient(var(--data-table-row-bg,transparent),var(--data-table-row-bg,transparent)),linear-gradient(var(--color-surface-card),var(--color-surface-card))]',
+].join(' ')
+
+export const dataTableStickyHeadCellVariants = cva('sticky z-20 bg-background', {
+  variants: {
+    /**
+     * Com o cabeçalho fixo, o `<thead>` já é `bg-background` opaco, e a célula fica igual a ele.
+     * Sem ele, o cabeçalho mostra o contêiner (`surface-card`), e a célula pinta essa camada.
+     */
+    stickyHeader: {
+      true: '',
+      false: 'bg-[linear-gradient(var(--color-surface-card),var(--color-surface-card))]',
+    },
+  },
+  defaultVariants: { stickyHeader: false },
+})
+
+/** Linha à direita da última célula fixa, separando-a da parte que rola. */
+export const dataTableStickyEdgeClass =
+  'after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-line-default'
+
+/** Botão da seta de expandir: gira 90° aberto. O resto do estilo vem do item da Pagination. */
+export const dataTableExpandButtonClass = [
+  'size-5 min-w-0 px-0 [&>svg]:size-4',
+  '[&>svg]:transition-transform [&>svg]:duration-100 motion-reduce:[&>svg]:transition-none',
+  'aria-expanded:[&>svg]:rotate-90',
+].join(' ')
+
+/**
+ * Linha de detalhe, logo abaixo da expandida: fundo surface-code (branco a 5%) para se ler como
+ * parte da linha de cima, sem hover nem barra, porque não é uma linha de dados.
+ */
+export const dataTableDetailRowClass =
+  'border-b border-line-default last:border-b-0 bg-surface-code'
+export const dataTableDetailCellClass = 'px-4 py-3 text-text-secondary'
+
+/** Área da tabela e lista de cards com `mobileLayout="cards"`: um some quando o outro aparece. */
+export const dataTableCardsContainerClass = '@container'
+export const dataTableScrollAreaCardsClass = '@max-[40rem]:hidden'
+export const dataTableCardsAreaClass = 'hidden @max-[40rem]:block'

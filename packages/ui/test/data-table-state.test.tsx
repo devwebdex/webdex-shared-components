@@ -282,3 +282,265 @@ describe('useDataTable: aparência e colunas', () => {
     ])
   })
 })
+
+describe('useDataTable: busca global', () => {
+  it('ignora caixa e acento e devolve filteredRows e totalRows sem paginar', () => {
+    const { result } = setup({ defaultPageSize: 1 })
+    act(() => result.current.setGlobalFilter('  AVI '))
+    expect(ids(result.current.filteredRows)).toEqual(['c'])
+    act(() => result.current.setGlobalFilter('carteira'))
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'b'])
+    expect(result.current.totalRows).toBe(2)
+    expect(ids(result.current.rows)).toEqual(['a'])
+    expect(result.current.isFiltered).toBe(true)
+  })
+
+  it('busca vazia não filtra', () => {
+    const { result } = setup()
+    act(() => result.current.setGlobalFilter('   '))
+    expect(result.current.totalRows).toBe(5)
+    expect(result.current.isFiltered).toBe(false)
+  })
+
+  it('usa searchValue, ignora coluna com searchValue false e colunas escondidas', () => {
+    const cols: DataTableColumn<Row>[] = [
+      { id: 'name', header: 'Nome', accessor: (row) => row.name, searchValue: false },
+      {
+        id: 'tag',
+        header: 'Tag',
+        accessor: (row) => row.tag,
+        searchValue: (row) => `tag-${row.tag}`,
+      },
+      { id: 'amount', header: 'Valor', accessor: (row) => row.amount },
+    ]
+    const { result } = setup({ columns: cols })
+    act(() => result.current.setGlobalFilter('bruno'))
+    expect(result.current.filteredRows).toEqual([])
+    act(() => result.current.setGlobalFilter('tag-y'))
+    expect(ids(result.current.filteredRows)).toEqual(['b', 'd'])
+    act(() => result.current.setGlobalFilter('30'))
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'd'])
+    act(() => result.current.toggleColumn('amount'))
+    expect(result.current.filteredRows).toEqual([])
+  })
+
+  it('filtra antes de ordenar', () => {
+    const { result } = setup({ defaultSort: { columnId: 'amount', direction: 'desc' } })
+    act(() => result.current.setGlobalFilter('a'))
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'e', 'c', 'b'])
+  })
+
+  it('mudar a busca volta para a página 1, sem chamar onPageChange se já está nela', () => {
+    const onPageChange = vi.fn()
+    const onGlobalFilterChange = vi.fn()
+    const { result } = setup({
+      defaultPageSize: 2,
+      defaultPage: 2,
+      onPageChange,
+      onGlobalFilterChange,
+    })
+    act(() => result.current.setGlobalFilter('a'))
+    expect(result.current.page).toBe(1)
+    expect(onPageChange).toHaveBeenCalledTimes(1)
+    act(() => result.current.setGlobalFilter('ab'))
+    expect(onPageChange).toHaveBeenCalledTimes(1)
+    act(() => result.current.setGlobalFilter('ab'))
+    expect(onGlobalFilterChange.mock.calls).toEqual([['a'], ['ab']])
+  })
+})
+
+describe('useDataTable: filtros de coluna', () => {
+  it('OR dentro da coluna, AND entre colunas, e lista vazia remove a chave', () => {
+    const onColumnFiltersChange = vi.fn()
+    const cols: DataTableColumn<Row>[] = [
+      ...columns,
+      {
+        id: 'big',
+        header: 'Alto',
+        filterValue: (row) => ((row.amount ?? 0) >= 30 ? 'sim' : 'não'),
+      },
+    ]
+    const { result } = setup({ columns: cols, onColumnFiltersChange })
+
+    act(() => result.current.setColumnFilter('tag', ['x', 'y']))
+    expect(result.current.totalRows).toBe(5)
+    act(() => result.current.setColumnFilter('tag', ['x']))
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'c', 'e'])
+    act(() => result.current.setColumnFilter('big', ['sim']))
+    expect(ids(result.current.filteredRows)).toEqual(['a'])
+    expect(result.current.columnFilters).toEqual({ tag: ['x'], big: ['sim'] })
+
+    act(() => result.current.setColumnFilter('tag', []))
+    expect(result.current.columnFilters).toEqual({ big: ['sim'] })
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'd'])
+
+    act(() => result.current.setColumnFilter('tag', []))
+    expect(onColumnFiltersChange).toHaveBeenCalledTimes(4)
+  })
+
+  it('compara o accessor como texto', () => {
+    const { result } = setup()
+    act(() => result.current.setColumnFilter('amount', ['30', '10']))
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'c', 'd'])
+  })
+
+  it('mudar um filtro volta para a página 1', () => {
+    const onPageChange = vi.fn()
+    const { result } = setup({ defaultPageSize: 1, defaultPage: 3, onPageChange })
+    act(() => result.current.setColumnFilter('tag', ['x']))
+    expect(result.current.page).toBe(1)
+    expect(onPageChange).toHaveBeenCalledWith(1)
+  })
+
+  it('clearFilters limpa busca e filtros, chamando cada on*Change uma vez', () => {
+    const onGlobalFilterChange = vi.fn()
+    const onColumnFiltersChange = vi.fn()
+    const onPageChange = vi.fn()
+    const { result } = setup({
+      defaultGlobalFilter: 'a',
+      defaultColumnFilters: { tag: ['x'] },
+      defaultPageSize: 1,
+      defaultPage: 2,
+      onGlobalFilterChange,
+      onColumnFiltersChange,
+      onPageChange,
+    })
+    expect(result.current.isFiltered).toBe(true)
+    expect(ids(result.current.filteredRows)).toEqual(['a', 'c', 'e'])
+
+    act(() => result.current.clearFilters())
+    expect(result.current.isFiltered).toBe(false)
+    expect(result.current.totalRows).toBe(5)
+    expect(result.current.page).toBe(1)
+    expect(onGlobalFilterChange.mock.calls).toEqual([['']])
+    expect(onColumnFiltersChange.mock.calls).toEqual([[{}]])
+    expect(onPageChange.mock.calls).toEqual([[1]])
+
+    act(() => result.current.clearFilters())
+    expect(onGlobalFilterChange).toHaveBeenCalledTimes(1)
+    expect(onColumnFiltersChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('só com filtro de coluna também conta como isFiltered', () => {
+    const { result } = setup({ defaultColumnFilters: { tag: ['y'] } })
+    expect(result.current.isFiltered).toBe(true)
+  })
+})
+
+describe('useDataTable: modo manual', () => {
+  it('não filtra, não ordena nem pagina; pageCount vem do rowCount', () => {
+    const { result } = setup({
+      manual: true,
+      rowCount: 42,
+      defaultPageSize: 2,
+      defaultGlobalFilter: 'bruno',
+      defaultColumnFilters: { tag: ['x'] },
+      defaultSort: { columnId: 'amount', direction: 'asc' },
+    })
+    expect(ids(result.current.rows)).toEqual(['a', 'b', 'c', 'd', 'e'])
+    expect(result.current.filteredRows).toBe(rows)
+    expect(result.current.totalRows).toBe(42)
+    expect(result.current.pageCount).toBe(21)
+  })
+
+  it('sem rowCount usa data.length', () => {
+    const { result } = setup({ manual: true, defaultPageSize: 2 })
+    expect(result.current.totalRows).toBe(5)
+    expect(result.current.pageCount).toBe(3)
+  })
+
+  it('a página é limitada só pelo pageCount, e os setters avisam o servidor', () => {
+    const onPageChange = vi.fn()
+    const onSortChange = vi.fn()
+    const onGlobalFilterChange = vi.fn()
+    const onColumnFiltersChange = vi.fn()
+    const { result } = setup({
+      manual: true,
+      rowCount: 100,
+      defaultPageSize: 10,
+      onPageChange,
+      onSortChange,
+      onGlobalFilterChange,
+      onColumnFiltersChange,
+    })
+    act(() => result.current.setPage(7))
+    expect(result.current.page).toBe(7)
+    expect(ids(result.current.rows)).toEqual(['a', 'b', 'c', 'd', 'e'])
+    expect(onPageChange).toHaveBeenLastCalledWith(7)
+
+    act(() => result.current.setPage(50))
+    expect(result.current.page).toBe(10)
+
+    act(() => result.current.toggleSort('name'))
+    expect(onSortChange).toHaveBeenCalledWith({ columnId: 'name', direction: 'asc' })
+    expect(onPageChange).toHaveBeenLastCalledWith(1)
+    expect(ids(result.current.rows)).toEqual(['a', 'b', 'c', 'd', 'e'])
+
+    act(() => result.current.setGlobalFilter('x'))
+    act(() => result.current.setColumnFilter('tag', ['y']))
+    expect(onGlobalFilterChange).toHaveBeenCalledWith('x')
+    expect(onColumnFiltersChange).toHaveBeenCalledWith({ tag: ['y'] })
+    expect(result.current.rows).toHaveLength(5)
+  })
+})
+
+describe('useDataTable: seleção em lote e expansão', () => {
+  it('selectedRows segue a ordem de data, entre páginas, e clearSelection limpa', () => {
+    const onSelectionChange = vi.fn()
+    const { result } = setup({ defaultPageSize: 2, onSelectionChange })
+    act(() => result.current.setPage(3))
+    act(() => result.current.toggleRow('e'))
+    act(() => result.current.setPage(1))
+    act(() => result.current.toggleRow('a'))
+    expect(ids(result.current.selectedRows)).toEqual(['a', 'e'])
+
+    act(() => result.current.setGlobalFilter('ana'))
+    expect(ids(result.current.selectedRows)).toEqual(['a', 'e'])
+
+    act(() => result.current.clearSelection())
+    expect(result.current.selectedRows).toEqual([])
+    act(() => result.current.clearSelection())
+    expect(onSelectionChange).toHaveBeenCalledTimes(3)
+  })
+
+  it('toggleExpanded e isExpanded', () => {
+    const onExpandedChange = vi.fn()
+    const { result } = setup({ defaultExpandedRowIds: ['b'], onExpandedChange })
+    expect(result.current.isExpanded('b')).toBe(true)
+    act(() => result.current.toggleExpanded('a'))
+    expect(result.current.expandedRowIds).toEqual(['b', 'a'])
+    act(() => result.current.toggleExpanded('b'))
+    expect(result.current.expandedRowIds).toEqual(['a'])
+    expect(result.current.isExpanded('b')).toBe(false)
+    expect(onExpandedChange.mock.calls).toEqual([[['b', 'a']], [['a']]])
+  })
+})
+
+describe('useDataTable: larguras de coluna', () => {
+  const cols: DataTableColumn<Row>[] = [
+    { id: 'name', header: 'Nome', accessor: (row) => row.name, width: 200 },
+    { id: 'amount', header: 'Valor', accessor: (row) => row.amount, minWidth: 100 },
+    { id: 'tag', header: 'Tag', accessor: (row) => row.tag },
+  ]
+
+  it('começa pelas widths das colunas', () => {
+    const { result } = setup({ columns: cols })
+    expect(result.current.columnWidths).toEqual({ name: 200 })
+  })
+
+  it('arredonda e respeita minWidth (padrão 64)', () => {
+    const onColumnWidthsChange = vi.fn()
+    const { result } = setup({ columns: cols, onColumnWidthsChange })
+    act(() => result.current.setColumnWidth('name', 150.6))
+    act(() => result.current.setColumnWidth('amount', 20))
+    act(() => result.current.setColumnWidth('tag', 10))
+    expect(result.current.columnWidths).toEqual({ name: 151, amount: 100, tag: 64 })
+    act(() => result.current.setColumnWidth('tag', 30))
+    expect(onColumnWidthsChange).toHaveBeenCalledTimes(3)
+  })
+
+  it('defaultColumnWidths vence as widths das colunas', () => {
+    const { result } = setup({ columns: cols, defaultColumnWidths: { tag: 90 } })
+    expect(result.current.columnWidths).toEqual({ tag: 90 })
+  })
+})

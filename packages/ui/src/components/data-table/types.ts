@@ -36,6 +36,30 @@ export type DataTableColumn<Row> = {
   hideable?: boolean
   /** Classe da célula e do cabeçalho da coluna (ex.: largura). */
   className?: string
+  /** Texto que a busca global procura. Padrão: o `accessor` como texto. `false` tira da busca. */
+  searchValue?: ((row: Row) => string) | false
+  /** Opções do filtro da coluna. Com elas, o cabeçalho ganha o menu de filtro. */
+  filterOptions?: DataTableFilterOption[]
+  /** Valor da linha comparado com as opções do filtro. Padrão: o `accessor` como texto. */
+  filterValue?: (row: Row) => string
+  /** Valor no CSV. Padrão: o `accessor`. `false` tira a coluna do CSV. */
+  exportValue?: ((row: Row) => string | number | null | undefined) | false
+  /** Largura inicial em px, com `resizableColumns`. */
+  width?: number
+  /** Largura mínima em px ao redimensionar. Padrão: 64. */
+  minWidth?: number
+}
+
+export type DataTableFilterOption = { value: string; label: ReactNode }
+
+/** Ação da barra de ações em lote. */
+export type DataTableBulkAction = {
+  label: ReactNode
+  icon?: ReactNode
+  onSelect: () => void
+  /** `danger` para ação destrutiva (ex.: Cancelar selecionadas). */
+  tone?: 'default' | 'danger'
+  disabled?: boolean
 }
 
 export type DataTableProps<Row> = {
@@ -98,6 +122,52 @@ export type DataTableProps<Row> = {
   /** Conteúdo no começo da barra de ferramentas (ex.: um campo de busca). */
   toolbarStart?: ReactNode
 
+  /** Campo de busca na barra, que procura em todas as colunas. */
+  searchable?: boolean
+  /** Padrão: "Buscar". */
+  searchPlaceholder?: string
+  globalFilter?: string
+  defaultGlobalFilter?: string
+  onGlobalFilterChange?: (value: string) => void
+
+  /** Filtros por coluna: id da coluna → valores marcados. Coluna sem valores não filtra. */
+  columnFilters?: Record<string, string[]>
+  defaultColumnFilters?: Record<string, string[]>
+  onColumnFiltersChange?: (filters: Record<string, string[]>) => void
+
+  /** Ações em lote: com linhas selecionadas, a barra delas aparece acima da tabela. */
+  bulkActions?: (rows: Row[]) => DataTableBulkAction[]
+
+  /** Detalhes da linha: com ele, a primeira coluna ganha a seta que expande. */
+  renderExpanded?: (row: Row) => ReactNode
+  expandedRowIds?: string[]
+  defaultExpandedRowIds?: string[]
+  onExpandedChange?: (ids: string[]) => void
+
+  /** Botão "Exportar CSV" na barra: as linhas filtradas e ordenadas, ou só as selecionadas. */
+  exportable?: boolean
+  /** Padrão: "tabela.csv". */
+  exportFileName?: string
+
+  /**
+   * Dados vindos do servidor: `data` já é a página atual, ordenada e filtrada. A tabela não
+   * ordena, não filtra nem pagina; só avisa as mudanças pelos `on*Change`.
+   */
+  manual?: boolean
+  /** Total de linhas no servidor, com `manual`. Padrão: `data.length`. */
+  rowCount?: number
+
+  /** A primeira coluna de dados fica parada ao rolar para o lado. */
+  stickyFirstColumn?: boolean
+  /** Borda do cabeçalho arrastável (e setas do teclado) para mudar a largura das colunas. */
+  resizableColumns?: boolean
+  columnWidths?: Record<string, number>
+  defaultColumnWidths?: Record<string, number>
+  onColumnWidthsChange?: (widths: Record<string, number>) => void
+
+  /** `cards`: em contêiner estreito (menos de 40rem), cada linha vira um card. Padrão: `scroll`. */
+  mobileLayout?: 'scroll' | 'cards'
+
   /** Linhas de Skeleton no lugar dos dados, com `aria-busy` na tabela. */
   loading?: boolean
   /** Conteúdo quando não há linhas. Padrão: "Nenhum registro encontrado." */
@@ -134,13 +204,29 @@ export type UseDataTableOptions<Row> = Pick<
   | 'hiddenColumnIds'
   | 'defaultHiddenColumnIds'
   | 'onHiddenColumnsChange'
+  | 'globalFilter'
+  | 'defaultGlobalFilter'
+  | 'onGlobalFilterChange'
+  | 'columnFilters'
+  | 'defaultColumnFilters'
+  | 'onColumnFiltersChange'
+  | 'expandedRowIds'
+  | 'defaultExpandedRowIds'
+  | 'onExpandedChange'
+  | 'manual'
+  | 'rowCount'
+  | 'columnWidths'
+  | 'defaultColumnWidths'
+  | 'onColumnWidthsChange'
 >
 
 /** O que o `useDataTable` devolve. Toda prop controlada tem a sua versão interna aqui. */
 export type DataTableState<Row> = {
-  /** Linhas da página atual, já ordenadas. Sem paginação, todas. */
+  /** Linhas da página atual, filtradas e ordenadas. Sem paginação, todas. Com `manual`, `data`. */
   rows: Row[]
-  /** Total de linhas, depois de ordenar (a ordenação não filtra). */
+  /** Todas as linhas depois de filtrar e ordenar, sem paginar (base do CSV). Com `manual`, `data`. */
+  filteredRows: Row[]
+  /** Total depois de filtrar. Com `manual`, `rowCount ?? data.length`. */
   totalRows: number
 
   page: number
@@ -175,6 +261,28 @@ export type DataTableState<Row> = {
   toggleColumn: (id: string) => void
   /** As colunas sem as escondidas, na ordem original. */
   visibleColumns: DataTableColumn<Row>[]
+
+  /** Mudar a busca ou um filtro volta para a página 1. */
+  globalFilter: string
+  setGlobalFilter: (value: string) => void
+  columnFilters: Record<string, string[]>
+  /** Lista vazia remove o filtro da coluna. */
+  setColumnFilter: (columnId: string, values: string[]) => void
+  /** Limpa a busca e todos os filtros de coluna. */
+  clearFilters: () => void
+  /** Há busca ou filtro de coluna ativo. */
+  isFiltered: boolean
+
+  /** As linhas de `data` cujos ids estão selecionados (base das ações em lote). */
+  selectedRows: Row[]
+  clearSelection: () => void
+
+  expandedRowIds: string[]
+  isExpanded: (id: string) => boolean
+  toggleExpanded: (id: string) => void
+
+  columnWidths: Record<string, number>
+  setColumnWidth: (columnId: string, width: number) => void
 }
 
 // --- Partes ---------------------------------------------------------------------------------
@@ -182,6 +290,14 @@ export type DataTableState<Row> = {
 export type DataTableHeaderCellProps = {
   header: ReactNode
   align: DataTableAlign
+  /** Menu de filtro da coluna (`DataTableColumnFilter`), ao lado do título. */
+  filter?: ReactNode
+  /** Alça de redimensionar (`DataTableResizer`), na borda direita. */
+  resizer?: ReactNode
+  /** Largura em px, com `resizableColumns`. */
+  width?: number
+  /** Fixa a célula à esquerda ao rolar para o lado (`stickyFirstColumn`). */
+  sticky?: boolean
   /** Sem ele, a coluna não ordena. */
   onToggleSort?: () => void
   /** Direção desta coluna, se ela for a ordenada. */
@@ -206,6 +322,10 @@ export type DataTableToolbarProps = {
   onToggleColumn: (id: string) => void
   /** Linhas selecionadas; com mais de 0, a barra mostra "N selecionadas". */
   selectedCount: number
+  /** Com ele, a barra mostra o botão "Exportar CSV". */
+  onExport?: () => void
+  /** Com ele, a barra mostra "Limpar filtros". */
+  onClearFilters?: () => void
 }
 
 export type DataTableFooterProps = {
@@ -217,4 +337,59 @@ export type DataTableFooterProps = {
   onPageSizeChange: (pageSize: number) => void
   /** Vazio esconde o seletor de linhas por página. */
   pageSizeOptions: number[]
+}
+
+export type DataTableSearchProps = {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  /** Nome acessível do campo (ex.: "Buscar em Transações recentes"). */
+  label: string
+}
+
+export type DataTableColumnFilterProps = {
+  /** Nome da coluna, para o nome acessível do botão ("Filtrar Status"). */
+  columnLabel: string
+  options: DataTableFilterOption[]
+  selected: string[]
+  onChange: (values: string[]) => void
+}
+
+export type DataTableBulkBarProps = {
+  count: number
+  actions: DataTableBulkAction[]
+  onClear: () => void
+}
+
+export type DataTableCopyButtonProps = {
+  /** Texto copiado para a área de transferência. */
+  value: string
+  /** Nome acessível (ex.: "Copiar hash"). */
+  label: string
+  className?: string
+}
+
+export type DataTableResizerProps = {
+  /** Nome da coluna, para o nome acessível ("Largura da coluna Valor"). */
+  columnLabel: string
+  width: number
+  minWidth: number
+  onResize: (width: number) => void
+}
+
+export type DataTableCardListProps<Row> = {
+  rows: Row[]
+  columns: DataTableColumn<Row>[]
+  getRowId: (row: Row) => string
+  /** O conteúdo da célula, igual ao da tabela. */
+  renderCell: (column: DataTableColumn<Row>, row: Row) => ReactNode
+  /** Identificação da linha para nomes acessíveis (ex.: o hash). */
+  rowLabel: (row: Row) => string
+  rowActions?: (row: Row) => MenuItem[]
+  selectable?: boolean
+  isSelected: (id: string) => boolean
+  toggleRow: (id: string) => void
+  renderExpanded?: (row: Row) => ReactNode
+  isExpanded: (id: string) => boolean
+  toggleExpanded: (id: string) => void
 }

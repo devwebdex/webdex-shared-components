@@ -1,14 +1,18 @@
 import {
   Button,
   DataTable,
+  type DataTableBulkAction,
   type DataTableColumn,
+  DataTableCopyButton,
   type DataTableDensity,
+  type DataTableFilterOption,
   type DataTableSort,
+  type DataTableSortValue,
   InputField,
   type MenuItem,
 } from '@devwebdex/ui'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { action } from 'storybook/actions'
 import { useArgs } from 'storybook/preview-api'
 import { type MeasureColumn, type MeasureRow, MeasureTable } from '../lib/measurements.js'
@@ -29,6 +33,13 @@ type Transaction = {
   amount: number
   status: TxStatus
   date: Date
+  /** Hash completo (66 caracteres); `hash` é a forma abreviada da célula. */
+  fullHash: string
+  block: number
+  /** Gas consumido, em unidades. */
+  gasUsed: number
+  /** Carteira de destino. */
+  to: string
 }
 
 const NETWORKS: Network[] = ['Polygon', 'Ethereum', 'Arbitrum', 'Base', 'BNB Chain']
@@ -55,17 +66,27 @@ function seeded(seed: number) {
 
 function makeTransactions(count: number): Transaction[] {
   const random = seeded(42)
-  const hex = (length: number) =>
-    Array.from({ length }, () => Math.floor(random() * 16).toString(16)).join('')
+  // Os detalhes (hash completo, bloco, gas, destino) saem de outra semente: assim as colunas
+  // continuam com os mesmos valores de antes deles existirem.
+  const extra = seeded(7)
+  const hexFrom = (next: () => number, length: number) =>
+    Array.from({ length }, () => Math.floor(next() * 16).toString(16)).join('')
+  const hex = (length: number) => hexFrom(random, length)
   const base = Date.UTC(2026, 10, 14, 18, 0)
 
   return Array.from({ length: count }, (_, index) => {
     const type = TYPES[Math.floor(random() * TYPES.length)] ?? 'Swap'
     const magnitude = Math.round((random() * 24_000 + 15) * 100) / 100
     const roll = random()
+    const head = hex(4)
+    const tail = hex(4)
     return {
       id: `tx-${index + 1}`,
-      hash: `0x${hex(4)}…${hex(4)}`,
+      hash: `0x${head}…${tail}`,
+      fullHash: `0x${head}${hexFrom(extra, 56)}${tail}`,
+      block: 65_420_000 - index * 1_190 - Math.floor(extra() * 900),
+      gasUsed: 21_000 + Math.floor(extra() * 180_000),
+      to: `0x${hexFrom(extra, 40)}`,
       owner: OWNERS[Math.floor(random() * OWNERS.length)] ?? 'Ana Souza',
       network: NETWORKS[Math.floor(random() * NETWORKS.length)] ?? 'Polygon',
       type,
@@ -181,6 +202,102 @@ function rowActions(tx: Transaction): MenuItem[] {
 
 const getRowId = (tx: Transaction) => tx.id
 
+// Colunas com os recursos novos: busca, filtro, CSV e largura
+
+const options = (values: readonly string[]): DataTableFilterOption[] =>
+  values.map((value) => ({ value, label: value }))
+
+const STATUSES: TxStatus[] = ['Confirmada', 'Pendente', 'Falhou']
+
+/** Por id: cada coluna de COLUMNS ganha o que faz sentido para ela. */
+const FEATURES: Record<string, Partial<DataTableColumn<Transaction>>> = {
+  // A célula mostra o hash abreviado; a busca e o CSV usam também o completo.
+  hash: {
+    searchValue: (tx) => `${tx.hash} ${tx.fullHash}`,
+    exportValue: (tx) => tx.fullHash,
+    width: 150,
+  },
+  owner: { width: 200 },
+  network: { filterOptions: options(NETWORKS), width: 140 },
+  type: { filterOptions: options(TYPES), width: 180 },
+  // Número no CSV, não o texto formatado com sinal e separador de milhar.
+  amount: { searchValue: false, exportValue: (tx) => tx.amount, width: 150 },
+  status: { filterOptions: options(STATUSES), width: 140 },
+  date: { exportValue: (tx) => tx.date.toISOString(), width: 170 },
+}
+
+const FEATURE_COLUMNS: DataTableColumn<Transaction>[] = COLUMNS.map((column) => ({
+  ...column,
+  ...FEATURES[column.id],
+}))
+
+/** Hash abreviado com o botão que copia o completo. */
+const COPY_HASH_COLUMN: DataTableColumn<Transaction> = {
+  ...(FEATURE_COLUMNS[0] as DataTableColumn<Transaction>),
+  cell: (tx) => (
+    <span className="inline-flex items-center gap-1">
+      <span className="font-mono text-text-primary">{tx.hash}</span>
+      <DataTableCopyButton value={tx.fullHash} label={`Copiar hash ${tx.hash}`} />
+    </span>
+  ),
+}
+
+const COPY_COLUMNS: DataTableColumn<Transaction>[] = [COPY_HASH_COLUMN, ...FEATURE_COLUMNS.slice(1)]
+
+function bulkActions(rows: Transaction[]): DataTableBulkAction[] {
+  const pending = rows.filter((tx) => tx.status === 'Pendente')
+  return [
+    {
+      label: 'Exportar seleção',
+      onSelect: () => action('exportar-selecao')(rows.map((tx) => tx.hash)),
+    },
+    {
+      label: 'Marcar como revisadas',
+      onSelect: () => action('marcar-como-revisadas')(rows.map((tx) => tx.hash)),
+    },
+    {
+      label: 'Cancelar pendentes',
+      tone: 'danger',
+      // Só a pendente ainda pode ser cancelada: sem nenhuma na seleção, a ação não vale.
+      disabled: pending.length === 0,
+      onSelect: () => action('cancelar-pendentes')(pending.map((tx) => tx.hash)),
+    },
+  ]
+}
+
+const integer = new Intl.NumberFormat('pt-BR')
+
+function Detail({ term, children }: { term: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="font-mono text-3xs font-medium tracking-widest text-text-disabled">{term}</dt>
+      <dd className="min-w-0 text-text-primary">{children}</dd>
+    </div>
+  )
+}
+
+function renderDetails(tx: Transaction) {
+  return (
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
+      <Detail term="Hash">
+        <span className="inline-flex max-w-full items-center gap-1">
+          <span className="min-w-0 font-mono break-all">{tx.fullHash}</span>
+          <DataTableCopyButton value={tx.fullHash} label="Copiar hash completo" />
+        </span>
+      </Detail>
+      <Detail term="Bloco">
+        <span className="font-mono tabular-nums">{integer.format(tx.block)}</span>
+      </Detail>
+      <Detail term="Gas usado">
+        <span className="tabular-nums">{integer.format(tx.gasUsed)}</span>
+      </Detail>
+      <Detail term="Carteira de destino">
+        <span className="font-mono break-all">{tx.to}</span>
+      </Detail>
+    </dl>
+  )
+}
+
 /** A tabela é larga: ocupa a largura do canvas em vez de encolher no centro do decorator. */
 function Wide({ children }: { children: ReactNode }) {
   return <div className="w-full">{children}</div>
@@ -200,13 +317,14 @@ const meta = {
   argTypes: {
     data: {
       control: false,
-      description: 'As linhas. A tabela ordena e pagina; filtrar é de quem usa (ver ComBusca).',
+      description:
+        'As linhas. A tabela busca, filtra, ordena e pagina; com `manual`, `data` já é a página atual.',
       table: { type: { summary: 'Row[]' } },
     },
     columns: {
       control: false,
       description:
-        '`id`, `header`, `accessor` (ordenar e texto padrão), `cell`, `sortable`, `align`, `hideable`, `className`.',
+        '`id`, `header`, `accessor` (ordenar e texto padrão), `cell`, `sortable`, `align`, `hideable`, `className`, `searchValue`, `filterOptions`, `filterValue`, `exportValue`, `width`, `minWidth`.',
       table: { type: { summary: 'DataTableColumn<Row>[]' } },
     },
     getRowId: {
@@ -302,6 +420,55 @@ const meta = {
       description: 'Opções de linhas por página. Vazio esconde o seletor.',
       table: { type: { summary: 'number[]' }, defaultValue: { summary: '[10, 20, 50]' } },
     },
+    searchable: {
+      control: { type: 'boolean' },
+      description: 'Campo de busca na barra, que procura nas colunas visíveis (ver Busca).',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    searchPlaceholder: {
+      control: { type: 'text' },
+      description: 'Placeholder do campo de busca.',
+      table: { type: { summary: 'string' }, defaultValue: { summary: "'Buscar'" } },
+    },
+    exportable: {
+      control: { type: 'boolean' },
+      description:
+        'Botão "Exportar CSV" na barra: as linhas filtradas e ordenadas, ou só as selecionadas.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    stickyFirstColumn: {
+      control: { type: 'boolean' },
+      description: 'A primeira coluna de dados fica parada ao rolar para o lado.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    resizableColumns: {
+      control: { type: 'boolean' },
+      description: 'Borda do cabeçalho arrastável (e setas com foco nela) para mudar a largura.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    mobileLayout: {
+      control: { type: 'inline-radio' },
+      options: ['scroll', 'cards'],
+      description:
+        '`cards`: em contêiner com menos de 40rem, cada linha vira um card (ver Cards no celular).',
+      table: { type: { summary: "'scroll' | 'cards'" }, defaultValue: { summary: "'scroll'" } },
+    },
+    manual: {
+      control: { type: 'boolean' },
+      description:
+        'Dados do servidor: a tabela não busca, não filtra, não ordena nem pagina; só avisa pelos `on*Change` (ver Modo servidor). Ligado aqui, as 45 linhas aparecem numa página só.',
+      table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
+    },
+    bulkActions: {
+      control: false,
+      description: 'Ações da faixa que aparece com linhas selecionadas (ver Ações em lote).',
+      table: { type: { summary: '(rows: Row[]) => DataTableBulkAction[]' } },
+    },
+    renderExpanded: {
+      control: false,
+      description: 'Detalhes da linha; com ele, a primeira coluna ganha a seta que expande.',
+      table: { type: { summary: '(row: Row) => ReactNode' } },
+    },
   },
   parameters: {
     layout: 'padded',
@@ -309,8 +476,10 @@ const meta = {
       description: {
         component: [
           'Tabela de dados com ordenação, paginação, seleção, ações por linha, alinhamento,',
-          'densidade e colunas escondíveis. Todo estado é controlável ou não: prop, `default*`',
-          'e callback, como no resto do pacote (ver Controlada).',
+          'densidade, colunas escondíveis, busca, filtro por coluna, ações em lote, linha',
+          'expansível, exportação CSV, modo servidor, coluna fixa, colunas redimensionáveis,',
+          'botão de copiar e cards em contêiner estreito. Todo estado é controlável ou não: prop,',
+          '`default*` e callback, como no resto do pacote (ver Controlada).',
           '',
           'O que o produto pediu:',
           '',
@@ -324,8 +493,23 @@ const meta = {
           '- **Hover que destaca a linha**: fundo `surface-elevated` e a barra da marca de 2px à',
           '  esquerda, a mesma do item em destaque da lista.',
           '',
-          'A tabela ordena e pagina, mas não filtra: a busca é de quem usa, passando `data`',
-          'já filtrado (ver ComBusca).',
+          'Os recursos novos:',
+          '',
+          '- **Busca** (`searchable`): campo na barra que procura nas colunas visíveis, sem acento',
+          '  e sem caixa; `searchValue` na coluna troca o texto procurado ou a tira da busca.',
+          '- **Filtro por coluna** (`filterOptions`): menu no cabeçalho com as opções marcáveis;',
+          '  "Limpar filtros" na barra desfaz busca e filtros.',
+          '- **Ações em lote** (`bulkActions`): com linhas selecionadas, uma faixa acima da tabela.',
+          '- **Linha expansível** (`renderExpanded`): seta na primeira coluna abre os detalhes.',
+          '- **Exportar CSV** (`exportable`): as linhas filtradas e ordenadas, ou só as',
+          '  selecionadas, com `;` e BOM para o Excel em pt-BR; `exportValue` define o valor.',
+          '- **Modo servidor** (`manual` + `rowCount`): a tabela só avisa as mudanças.',
+          '- **Coluna fixa e redimensionável** (`stickyFirstColumn`, `resizableColumns`, `width`).',
+          '- **Copiar** (`DataTableCopyButton`): botão ao lado de hash ou endereço.',
+          '- **Cards no celular** (`mobileLayout="cards"`): abaixo de 40rem de contêiner, cada',
+          '  linha vira um card.',
+          '',
+          'Busca feita por fora, passando `data` já filtrado, continua possível (ver Com busca).',
         ].join('\n'),
       },
     },
@@ -353,6 +537,13 @@ export const Playground: Story = {
     toolbar: true,
     pagination: true,
     loading: false,
+    searchable: false,
+    exportable: false,
+    stickyFirstColumn: false,
+    resizableColumns: false,
+    mobileLayout: 'scroll',
+    manual: false,
+    columns: FEATURE_COLUMNS,
     rowActions,
   },
   render: function Render(args) {
@@ -424,7 +615,10 @@ export const CabecalhoFixo: Story = {
   args: { stickyHeader: true, maxHeight: '20rem', pagination: false },
 }
 
-/** A busca é de quem usa: a story filtra `data` e a tabela recebe só o que passou no filtro. */
+/**
+ * Busca feita por fora: a story filtra `data` e põe o campo em `toolbarStart`. Para a busca da
+ * própria tabela, ver Busca.
+ */
 export const ComBusca: Story = {
   name: 'Com busca',
   render: function Render(args) {
@@ -513,6 +707,264 @@ export const Controlada: Story = {
 export const SemBarraNemPaginacao: Story = {
   name: 'Sem barra nem paginação',
   args: { data: TRANSACTIONS.slice(0, 4), toolbar: false, pagination: false },
+}
+
+// Recursos novos
+
+/** Digite parte do hash, da carteira ou da rede. Sem acento e sem caixa: "eth" acha Ethereum. */
+export const Busca: Story = {
+  args: {
+    columns: FEATURE_COLUMNS,
+    searchable: true,
+    searchPlaceholder: 'Buscar hash, carteira ou rede',
+  },
+}
+
+/**
+ * O funil no cabeçalho de Rede, Tipo e Status abre as opções. Começa filtrando só as pendentes:
+ * o funil de Status fica na cor da marca, e "Limpar filtros" aparece na barra.
+ */
+export const FiltroPorColuna: Story = {
+  name: 'Filtro por coluna',
+  args: {
+    columns: FEATURE_COLUMNS,
+    defaultColumnFilters: { status: ['Pendente'] },
+  },
+}
+
+/**
+ * Marque linhas: a faixa de ações em lote aparece acima da tabela. "Cancelar pendentes" só vale
+ * quando a seleção tem alguma pendente.
+ */
+export const AcoesEmLote: Story = {
+  name: 'Ações em lote',
+  args: {
+    columns: FEATURE_COLUMNS,
+    selectable: true,
+    bulkActions,
+    defaultSelectedRowIds: ['tx-1', 'tx-2'],
+  },
+}
+
+/** A seta à esquerda abre os detalhes da transação. A primeira já começa aberta. */
+export const LinhaExpansivel: Story = {
+  name: 'Linha expansível',
+  args: {
+    columns: FEATURE_COLUMNS,
+    renderExpanded: renderDetails,
+    defaultExpandedRowIds: ['tx-1'],
+    rowActions,
+  },
+}
+
+export const ExportarCsv: Story = {
+  name: 'Exportar CSV',
+  args: {
+    columns: FEATURE_COLUMNS,
+    exportable: true,
+    exportFileName: 'transacoes.csv',
+    searchable: true,
+    selectable: true,
+  },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <p className="text-2xs text-text-secondary">
+        "Exportar CSV", na barra, baixa as linhas filtradas (todas as páginas, na ordem da tabela)
+        ou, com linhas marcadas, só as selecionadas. O valor sai como número e a data em ISO.
+      </p>
+      <DataTable {...args} />
+    </div>
+  ),
+}
+
+type ServerRequest = {
+  page: number
+  pageSize: number
+  sort: DataTableSort | null
+  globalFilter: string
+}
+
+type ServerResponse = { rows: Transaction[]; total: number }
+
+const SERVER_DELAY_MS = 600
+
+/** O "servidor": filtra, ordena e pagina o array e responde depois de um atraso. */
+function fetchTransactions(request: ServerRequest): Promise<ServerResponse> {
+  const term = request.globalFilter.trim().toLowerCase()
+  const matching = term
+    ? TRANSACTIONS.filter((tx) =>
+        [tx.fullHash, tx.hash, tx.owner, tx.network, tx.type, tx.status].some((value) =>
+          value.toLowerCase().includes(term)
+        )
+      )
+    : TRANSACTIONS
+  const sorted = request.sort ? sortTransactions(matching, request.sort) : matching
+  const start = (request.page - 1) * request.pageSize
+  const response = { rows: sorted.slice(start, start + request.pageSize), total: sorted.length }
+  return new Promise((resolve) => setTimeout(() => resolve(response), SERVER_DELAY_MS))
+}
+
+function sortTransactions(rows: Transaction[], sort: DataTableSort) {
+  const accessor = COLUMNS.find((column) => column.id === sort.columnId)?.accessor
+  if (!accessor) return rows
+  const factor = sort.direction === 'asc' ? 1 : -1
+  const key = (value: DataTableSortValue) => (value instanceof Date ? value.getTime() : value)
+  return [...rows].sort((a, b) => {
+    const left = key(accessor(a)) ?? 0
+    const right = key(accessor(b)) ?? 0
+    if (typeof left === 'string' && typeof right === 'string') {
+      return left.localeCompare(right, 'pt-BR') * factor
+    }
+    return (left < right ? -1 : left > right ? 1 : 0) * factor
+  })
+}
+
+/**
+ * Página, tamanho, ordenação e busca vivem na story; cada mudança vira um pedido ao "servidor",
+ * que responde em ~600ms. Enquanto isso, a tabela mostra o Skeleton.
+ */
+export const ModoServidor: Story = {
+  name: 'Modo servidor',
+  render: function Render(args) {
+    const [request, setRequest] = useState<ServerRequest>({
+      page: 1,
+      pageSize: 10,
+      sort: null,
+      globalFilter: '',
+    })
+    const [response, setResponse] = useState<ServerResponse>({ rows: [], total: 45 })
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+      // A resposta de um pedido antigo que chega depois da do novo é descartada.
+      let current = true
+      setLoading(true)
+      void fetchTransactions(request).then((next) => {
+        if (!current) return
+        setResponse(next)
+        setLoading(false)
+      })
+      return () => {
+        current = false
+      }
+    }, [request])
+
+    // Mudar a busca chama `onGlobalFilterChange` e `onPageChange(1)` no mesmo clique: o estado
+    // anterior vem da função, senão uma mudança apagaria a outra.
+    const update = (patch: Partial<ServerRequest>) =>
+      setRequest((previous) => ({ ...previous, ...patch }))
+
+    return (
+      <div className="flex flex-col gap-4">
+        <DataTable
+          {...args}
+          columns={FEATURE_COLUMNS}
+          data={response.rows}
+          manual
+          rowCount={response.total}
+          loading={loading}
+          searchable
+          searchPlaceholder="Buscar hash, carteira ou rede"
+          page={request.page}
+          onPageChange={(page) => update({ page })}
+          pageSize={request.pageSize}
+          onPageSizeChange={(pageSize) => update({ pageSize })}
+          sort={request.sort}
+          onSortChange={(sort) => update({ sort })}
+          globalFilter={request.globalFilter}
+          onGlobalFilterChange={(globalFilter) => update({ globalFilter })}
+        />
+        <p className="text-2xs text-text-secondary">Último pedido ao servidor:</p>
+        <pre className="rounded-2 bg-surface-code p-3 font-mono text-3xs text-text-secondary">
+          {JSON.stringify(request, null, 2)}
+        </pre>
+      </div>
+    )
+  },
+}
+
+/** O contêiner é estreito de propósito: a tabela rola para o lado e o hash fica parado. */
+export const ColunaFixaERedimensionavel: Story = {
+  name: 'Coluna fixa e redimensionável',
+  args: {
+    columns: FEATURE_COLUMNS,
+    stickyFirstColumn: true,
+    resizableColumns: true,
+    selectable: true,
+    rowActions,
+  },
+  render: (args) => (
+    <div className="flex max-w-3xl flex-col gap-4">
+      <p className="text-2xs text-text-secondary">
+        Arraste a borda direita do cabeçalho para mudar a largura da coluna, ou dê foco nela (Tab) e
+        use as setas ← e → (com Shift, passos maiores).
+      </p>
+      <DataTable {...args} />
+    </div>
+  ),
+}
+
+/** O botão ao lado do hash abreviado copia o hash completo. */
+export const Copiar: Story = {
+  args: { columns: COPY_COLUMNS, rowActions },
+}
+
+/**
+ * Abaixo de 40rem de contêiner (não de tela), cada linha vira um card. Mova o controle para ver
+ * a troca entre cards e tabela.
+ */
+export const CardsNoCelular: Story = {
+  name: 'Cards no celular',
+  args: {
+    columns: COPY_COLUMNS,
+    mobileLayout: 'cards',
+    selectable: true,
+    rowActions,
+    renderExpanded: renderDetails,
+    defaultPageSize: 5,
+  },
+  render: function Render(args) {
+    const [width, setWidth] = useState(22)
+    return (
+      <div className="flex flex-col gap-4">
+        <label className="flex max-w-md items-center gap-3 text-2xs text-text-secondary">
+          Largura do contêiner
+          <input
+            type="range"
+            min={20}
+            max={60}
+            step={1}
+            value={width}
+            onChange={(event) => setWidth(Number(event.target.value))}
+            className="flex-1 accent-brand"
+          />
+          <output className="w-12 font-mono tabular-nums">{width}rem</output>
+        </label>
+        <div style={{ width: `${width}rem` }} className="max-w-full">
+          <DataTable {...args} />
+        </div>
+      </div>
+    )
+  },
+}
+
+/** Todos os recursos juntos. Em contêiner com menos de 40rem, as linhas viram cards. */
+export const Completa: Story = {
+  args: {
+    columns: COPY_COLUMNS,
+    searchable: true,
+    searchPlaceholder: 'Buscar hash, carteira ou rede',
+    selectable: true,
+    bulkActions,
+    renderExpanded: renderDetails,
+    exportable: true,
+    exportFileName: 'transacoes.csv',
+    stickyFirstColumn: true,
+    resizableColumns: true,
+    mobileLayout: 'cards',
+    rowActions,
+    defaultSort: { columnId: 'date', direction: 'desc' },
+  },
 }
 
 // Medidas

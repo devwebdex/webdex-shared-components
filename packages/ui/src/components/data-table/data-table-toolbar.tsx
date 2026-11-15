@@ -1,3 +1,4 @@
+import { cn } from '../../lib/cn.js'
 import { Check } from '../../lib/icons.js'
 import { Menu, type MenuItem } from '../menu/menu.js'
 import { paginationItemClass } from '../pagination/pagination-item.js'
@@ -6,8 +7,10 @@ import {
   AlignLeft,
   AlignRight,
   Columns,
+  Download,
   RowsComfortable,
   RowsDense,
+  X,
 } from './data-table-icons.js'
 import type { DataTableAlign, DataTableToolbarProps } from './types.js'
 
@@ -25,6 +28,8 @@ import type { DataTableAlign, DataTableToolbarProps } from './types.js'
  * tela, já que o ícone é `aria-hidden`.
  *
  * Os botões de ícone usam o item da Pagination: mesmo quadrado de 32px, raio, hover e foco.
+ * "Limpar filtros" tem texto visível, e não só ícone: um X solto não diria o que limpa. Ele usa o
+ * mesmo item, com padding para o texto.
  *
  * A região `aria-live` da seleção fica sempre no DOM, mesmo vazia: leitor de tela só anuncia
  * mudança numa região que já existia antes dela.
@@ -51,6 +56,8 @@ export function DataTableToolbar({
   columns,
   onToggleColumn,
   selectedCount,
+  onExport,
+  onClearFilters,
 }: DataTableToolbarProps) {
   const CurrentAlignIcon = AlignIcon[align]
   const compact = density === 'compact'
@@ -73,6 +80,16 @@ export function DataTableToolbar({
           {selectedCount > 0 &&
             `${selectedCount.toLocaleString('pt-BR')} ${selectedCount === 1 ? 'selecionada' : 'selecionadas'}`}
         </span>
+        {onClearFilters !== undefined && (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className={cn(paginationItemClass, 'me-1 gap-1 px-2 text-3xs [&_svg]:size-3')}
+          >
+            <X />
+            Limpar filtros
+          </button>
+        )}
         <button
           type="button"
           aria-label={alignLabel[align]}
@@ -108,6 +125,17 @@ export function DataTableToolbar({
               </button>
             }
           />
+        )}
+        {onExport !== undefined && (
+          <button
+            type="button"
+            aria-label="Exportar CSV"
+            title="Exportar CSV"
+            onClick={onExport}
+            className={iconButtonClass}
+          >
+            <Download />
+          </button>
         )}
       </div>
     </div>

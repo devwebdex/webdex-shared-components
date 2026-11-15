@@ -17,6 +17,12 @@ import type { DataTableAlign, DataTableHeaderCellProps } from './types.js'
  * (`tracking-widest`; .06em de 11px dá 0,66px), padding 8px 12px (`py-2 px-3`; 8px 10px no
  * HTML) e ícone 16px (`size-4`), o mesmo da seta da Pagination. O botão herda fonte e cor do
  * `th` (preflight do Tailwind); a coluna ordenada fica em text-secondary para se destacar.
+ *
+ * O filtro fica ao lado do título, fora do botão de ordenar (botão dentro de botão não é válido).
+ * O `th` é sempre `relative`, para a alça de redimensionar se posicionar na borda direita. A
+ * largura vai também em `minWidth`: sem ela, a tabela `w-full` encolhe a coluna abaixo do pedido.
+ * Fixa à esquerda, a célula precisa de fundo opaco para o conteúdo rolado não aparecer por baixo;
+ * o `top-0` do cabeçalho fixo vem do `thead`.
  */
 
 const thAlignClass: Record<DataTableAlign, string> = {
@@ -36,6 +42,10 @@ const ariaSortValue = { asc: 'ascending', desc: 'descending' } as const
 export function DataTableHeaderCell({
   header,
   align,
+  filter,
+  resizer,
+  width,
+  sticky = false,
   onToggleSort,
   sortDirection,
   className,
@@ -44,38 +54,51 @@ export function DataTableHeaderCell({
   const SortIcon =
     sortDirection === 'asc' ? ArrowUp : sortDirection === 'desc' ? ArrowDown : ArrowUpDown
 
+  const title = sortable ? (
+    <button
+      type="button"
+      onClick={onToggleSort}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-1 cursor-pointer select-none',
+        'transition-colors duration-100 motion-reduce:transition-none',
+        'hover:text-text-primary',
+        'outline-none focus-visible:outline-solid focus-visible:outline-2',
+        'focus-visible:outline-offset-2 focus-visible:outline-brand',
+        '[&_svg]:size-4 [&_svg]:shrink-0',
+        filter === undefined && 'w-full',
+        sortDirection && 'text-text-secondary',
+        buttonJustifyClass[align]
+      )}
+    >
+      {header}
+      <SortIcon />
+    </button>
+  ) : (
+    header
+  )
+
   return (
     <th
       scope="col"
       aria-sort={sortable ? (sortDirection ? ariaSortValue[sortDirection] : 'none') : undefined}
+      style={width === undefined ? undefined : { width, minWidth: width }}
       className={cn(
-        'border-b border-line-default px-3 py-2 align-middle',
+        'relative border-b border-line-default px-3 py-2 align-middle',
         'font-mono text-3xs font-medium tracking-widest text-text-disabled whitespace-nowrap',
         thAlignClass[align],
+        sticky && 'sticky left-0 z-20 bg-background',
         className
       )}
     >
-      {sortable ? (
-        <button
-          type="button"
-          onClick={onToggleSort}
-          className={cn(
-            'inline-flex w-full items-center gap-1 rounded-1 cursor-pointer select-none',
-            'transition-colors duration-100 motion-reduce:transition-none',
-            'hover:text-text-primary',
-            'outline-none focus-visible:outline-solid focus-visible:outline-2',
-            'focus-visible:outline-offset-2 focus-visible:outline-brand',
-            '[&_svg]:size-4 [&_svg]:shrink-0',
-            sortDirection && 'text-text-secondary',
-            buttonJustifyClass[align]
-          )}
-        >
-          {header}
-          <SortIcon />
-        </button>
+      {filter === undefined ? (
+        title
       ) : (
-        header
+        <div className={cn('flex items-center gap-1', buttonJustifyClass[align])}>
+          {title}
+          {filter}
+        </div>
       )}
+      {resizer}
     </th>
   )
 }

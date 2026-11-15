@@ -6,6 +6,10 @@ import type { SVGProps } from 'react'
  * ficarem iguais lado a lado com o Check e as setas da Pagination. O tamanho vem de quem usa.
  */
 
+// Busca, seta de expandir (ChevronRight, girada 90° quando aberta) e X de limpar já existem em
+// lib/icons.tsx: reexportados, para as partes da tabela importarem todos os ícones daqui.
+export { ChevronRight, Close as X, Search } from '../../lib/icons.js'
+
 /** Três pontos do botão de ações da linha. */
 export function MoreHorizontal(props: SVGProps<SVGSVGElement>) {
   return (
@@ -202,6 +206,83 @@ export function Columns(props: SVGProps<SVGSVGElement>) {
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <path d="M9 4v16" />
       <path d="M15 4v16" />
+    </svg>
+  )
+}
+
+/** Filtro da coluna (funil). */
+export function Filter(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5Z" />
+    </svg>
+  )
+}
+
+/** Exportar CSV. */
+export function Download(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M12 4v11" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 20h14" />
+    </svg>
+  )
+}
+
+/** Copiar o valor da célula. */
+export function Copy(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </svg>
+  )
+}
+
+/** Valor copiado: o mesmo desenho do Copy, com a marca de feito dentro. */
+export function CopyCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+      <path d="m12 15 2 2 4-4" />
     </svg>
   )
 }
