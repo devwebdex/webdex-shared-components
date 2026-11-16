@@ -1,6 +1,7 @@
 export * from './components/alert/index.js'
 export * from './components/button/index.js'
 export * from './components/card/index.js'
+export * from './components/chart/index.js'
 export * from './components/combobox/index.js'
 export * from './components/input-field/index.js'
 export * from './components/menu/index.js'
