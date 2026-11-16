@@ -1,0 +1,24 @@
+{
+  "$description": "PROVISÓRIO: modo claro, ativado por data-theme=\"light\" no <html> ou em qualquer contêiner. O Figma tem só o modo escuro (A7); estes valores são proposta para o design validar. Só entram aqui as cores que mudam: a marca é a mesma nos dois modos. As escadas de estado (-hover, -focus...) e os fundos -bg são derivados pelo build.mjs da cor base deste arquivo, com o mesmo alpha do modo escuro.",
+  "color": {
+    "background": { "$value": "#fbf7fa" },
+    "surface-card": { "$value": "#ffffff" },
+    "surface-code": { "$value": "#1b10200a" },
+    "surface-input": { "$value": "#ffffff" },
+
+    "text-primary": { "$value": "#1b1020" },
+    "text-secondary": { "$value": "#1b1020a3" },
+    "text-disabled": { "$value": "#1b102057" },
+    "text-syntax": { "$value": "#6a4bd6" },
+
+    "line-default": { "$value": "#1b10201a" },
+    "line-enabled": { "$value": "#1b102038" },
+    "line-hovered": { "$value": "#1b102052" },
+    "line-pressed": { "$value": "#1b102099" },
+
+    "success": { "$value": "#0e9767" },
+    "warning": { "$value": "#b26d00" },
+    "danger": { "$value": "#d93a1c" },
+    "info": { "$value": "#0b84b5" }
+  }
+}
