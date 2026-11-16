@@ -8,7 +8,7 @@ import { Skeleton } from '../skeleton/skeleton.js'
 import { DataTableBulkBar } from './data-table-bulk-bar.js'
 import { DataTableCardList } from './data-table-card-list.js'
 import { DataTableColumnFilter } from './data-table-column-filter.js'
-import { downloadCsv, toCsv } from './data-table-csv.js'
+import { downloadBlob, downloadCsv, toCsv } from './data-table-csv.js'
 import { DataTableFooter } from './data-table-footer.js'
 import { DataTableHeaderCell } from './data-table-header-cell.js'
 import { ChevronRight } from './data-table-icons.js'
@@ -41,6 +41,7 @@ import {
   dataTableStickyLeftClass,
   dataTableToolbarAreaClass,
 } from './data-table-variants.js'
+import { toXlsx } from './data-table-xlsx.js'
 import type { DataTableColumn, DataTableProps } from './types.js'
 import { useDataTable } from './use-data-table.js'
 
@@ -85,6 +86,8 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
     renderExpanded,
     exportable = false,
     exportFileName,
+    excelExportable = false,
+    excelFileName,
     stickyFirstColumn = false,
     resizableColumns = false,
     mobileLayout = 'scroll',
@@ -96,6 +99,7 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
   const state = useDataTable(options)
   const { scrollRef, scrollable } = useScrollable()
   const detailIdPrefix = useId()
+  const [exportingExcel, setExportingExcel] = useState(false)
 
   const columns = state.visibleColumns
   const expandable = renderExpanded !== undefined
@@ -188,6 +192,21 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
                   ),
                   exportFileName ?? 'tabela.csv'
                 ),
+            })}
+            {...(excelExportable && {
+              exportingExcel,
+              onExportExcel: () => {
+                setExportingExcel(true)
+                toXlsx(
+                  state.selectedRows.length ? state.selectedRows : state.filteredRows,
+                  columns,
+                  {
+                    title: caption,
+                  }
+                )
+                  .then((blob) => downloadBlob(blob, excelFileName ?? 'tabela.xlsx'))
+                  .finally(() => setExportingExcel(false))
+              },
             })}
             {...(state.isFiltered && { onClearFilters: state.clearFilters })}
           />

@@ -1,6 +1,6 @@
 export { DataTable } from './data-table.js'
 export { DataTableCopyButton } from './data-table-copy-button.js'
-export { downloadCsv, toCsv } from './data-table-csv.js'
+export { downloadBlob, downloadCsv, toCsv } from './data-table-csv.js'
 export {
   dataTableActionsColClass,
   dataTableBulkAreaClass,
@@ -26,6 +26,7 @@ export {
   dataTableStickyLeftClass,
   dataTableToolbarAreaClass,
 } from './data-table-variants.js'
+export { type DataTableXlsxOptions, toXlsx } from './data-table-xlsx.js'
 export type {
   DataTableAlign,
   DataTableBulkAction,

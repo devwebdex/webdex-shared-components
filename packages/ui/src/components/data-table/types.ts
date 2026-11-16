@@ -148,6 +148,10 @@ export type DataTableProps<Row> = {
   exportable?: boolean
   /** Padrão: "tabela.csv". */
   exportFileName?: string
+  /** Botão "Exportar Excel": .xlsx com a marca WEbdEX, as mesmas linhas do CSV. */
+  excelExportable?: boolean
+  /** Padrão: "tabela.xlsx". */
+  excelFileName?: string
 
   /**
    * Dados vindos do servidor: `data` já é a página atual, ordenada e filtrada. A tabela não
@@ -324,6 +328,10 @@ export type DataTableToolbarProps = {
   selectedCount: number
   /** Com ele, a barra mostra o botão "Exportar CSV". */
   onExport?: () => void
+  /** Com ele, a barra mostra o botão "Exportar Excel". */
+  onExportExcel?: () => void
+  /** O Excel está sendo gerado: o botão fica ocupado. */
+  exportingExcel?: boolean
   /** Com ele, a barra mostra "Limpar filtros". */
   onClearFilters?: () => void
 }

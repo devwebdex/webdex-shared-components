@@ -223,7 +223,7 @@ const FEATURES: Record<string, Partial<DataTableColumn<Transaction>>> = {
   // Número no CSV, não o texto formatado com sinal e separador de milhar.
   amount: { searchValue: false, exportValue: (tx) => tx.amount, width: 150 },
   status: { filterOptions: options(STATUSES), width: 140 },
-  date: { exportValue: (tx) => tx.date.toISOString(), width: 170 },
+  date: { width: 170 },
 }
 
 const FEATURE_COLUMNS: DataTableColumn<Transaction>[] = COLUMNS.map((column) => ({
@@ -503,6 +503,7 @@ const meta = {
           '- **Linha expansível** (`renderExpanded`): seta na primeira coluna abre os detalhes.',
           '- **Exportar CSV** (`exportable`): as linhas filtradas e ordenadas, ou só as',
           '  selecionadas, com `;` e BOM para o Excel em pt-BR; `exportValue` define o valor.',
+          '- **Exportar Excel** (`excelExportable`): .xlsx com o logo e as cores da WEbdEX.',
           '- **Modo servidor** (`manual` + `rowCount`): a tabela só avisa as mudanças.',
           '- **Coluna fixa e redimensionável** (`stickyFirstColumn`, `resizableColumns`, `width`).',
           '- **Copiar** (`DataTableCopyButton`): botão ao lado de hash ou endereço.',
@@ -758,19 +759,23 @@ export const LinhaExpansivel: Story = {
 }
 
 export const ExportarCsv: Story = {
-  name: 'Exportar CSV',
+  name: 'Exportar CSV e Excel',
   args: {
     columns: FEATURE_COLUMNS,
     exportable: true,
     exportFileName: 'transacoes.csv',
+    excelExportable: true,
+    excelFileName: 'transacoes.xlsx',
     searchable: true,
     selectable: true,
   },
   render: (args) => (
     <div className="flex flex-col gap-4">
       <p className="text-2xs text-text-secondary">
-        "Exportar CSV", na barra, baixa as linhas filtradas (todas as páginas, na ordem da tabela)
-        ou, com linhas marcadas, só as selecionadas. O valor sai como número e a data em ISO.
+        "Exportar CSV" e "Exportar Excel", na barra, baixam as linhas filtradas (todas as páginas,
+        na ordem da tabela) ou, com linhas marcadas, só as selecionadas. O Excel sai com a marca:
+        faixa com o logo WEbdEX, cabeçalho magenta congelado com filtro, linhas alternadas, valores
+        como número e datas em dd/mm/aaaa.
       </p>
       <DataTable {...args} />
     </div>
@@ -959,6 +964,8 @@ export const Completa: Story = {
     renderExpanded: renderDetails,
     exportable: true,
     exportFileName: 'transacoes.csv',
+    excelExportable: true,
+    excelFileName: 'transacoes.xlsx',
     stickyFirstColumn: true,
     resizableColumns: true,
     mobileLayout: 'cards',

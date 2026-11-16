@@ -8,6 +8,7 @@ import {
   AlignRight,
   Columns,
   Download,
+  FileSpreadsheet,
   RowsComfortable,
   RowsDense,
   X,
@@ -57,6 +58,8 @@ export function DataTableToolbar({
   onToggleColumn,
   selectedCount,
   onExport,
+  onExportExcel,
+  exportingExcel = false,
   onClearFilters,
 }: DataTableToolbarProps) {
   const CurrentAlignIcon = AlignIcon[align]
@@ -135,6 +138,20 @@ export function DataTableToolbar({
             className={iconButtonClass}
           >
             <Download />
+          </button>
+        )}
+        {onExportExcel !== undefined && (
+          <button
+            type="button"
+            aria-label="Exportar Excel"
+            title="Exportar Excel"
+            // Gerar o .xlsx carrega o ExcelJS e leva um instante: o botão avisa e não aceita outro clique.
+            aria-busy={exportingExcel || undefined}
+            aria-disabled={exportingExcel || undefined}
+            onClick={exportingExcel ? undefined : onExportExcel}
+            className={cn(iconButtonClass, 'aria-busy:cursor-wait aria-busy:animate-pulse')}
+          >
+            <FileSpreadsheet />
           </button>
         )}
       </div>

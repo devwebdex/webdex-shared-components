@@ -30,7 +30,12 @@ export function toCsv<Row>(rows: Row[], columns: DataTableColumn<Row>[]): string
 }
 
 export function downloadCsv(csv: string, fileName: string): void {
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), fileName)
+}
+
+/** Baixa um arquivo gerado no navegador por um link temporário. Usado pelo CSV e pelo Excel. */
+export function downloadBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = fileName
