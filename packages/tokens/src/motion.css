@@ -40,4 +40,21 @@
       opacity: 0;
     }
   }
+
+  /* Fechamento da Drawer: o painel volta deslizando para o lado de onde veio. A entrada não
+     precisa de token: é uma transição com @starting-style, como a do Modal. */
+  --animate-slide-out-right: slide-out-right 200ms ease-in forwards;
+  --animate-slide-out-left: slide-out-left 200ms ease-in forwards;
+
+  @keyframes slide-out-right {
+    to {
+      translate: 100% 0;
+    }
+  }
+
+  @keyframes slide-out-left {
+    to {
+      translate: -100% 0;
+    }
+  }
 }
