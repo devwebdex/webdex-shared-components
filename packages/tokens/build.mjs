@@ -69,3 +69,65 @@ writeFileSync('dist/theme.css', theme.replace('@theme {', `@theme {\n${reset}\n`
 // O DTCG não descreve @keyframes: o movimento vem de um CSS escrito à mão, anexado ao mesmo arquivo
 // para quem consome continuar importando só o theme.css.
 appendFileSync('dist/theme.css', `\n${readFileSync('src/motion.css', 'utf8')}`)
+
+appendFileSync('dist/theme.css', `\n${modoClaro()}`)
+
+function modoClaro() {
+  const escuro = coresAchatadas()
+  const claro = Object.fromEntries(
+    Object.entries(JSON.parse(readFileSync('modes/light.json', 'utf8')).color).map(
+      ([nome, token]) => [nome, token.$value]
+    )
+  )
+  const desconhecidos = Object.keys(claro).filter((nome) => !(nome in escuro))
+  if (desconhecidos.length) {
+    throw new Error(
+      `modes/light.json tem cores que o modo escuro não tem: ${desconhecidos.join(', ')}`
+    )
+  }
+
+  for (const [nome, valor] of Object.entries(escuro)) {
+    const [, base, estado] =
+      nome.match(/^(.+)-(hover|focus|disabled|pressed|selected|active)$/) ?? []
+    const [, baseBg] = nome.match(/^(.+)-bg$/) ?? []
+    if (base && claro[base] && !(nome in claro)) {
+      const alpha = Math.round((ALPHA_DO_ESTADO[estado] * 255) / 100)
+      claro[nome] = `${claro[base].slice(0, 7)}${alpha.toString(16).padStart(2, '0')}`
+    } else if (baseBg && claro[baseBg] && !(nome in claro)) {
+      claro[nome] = `${claro[baseBg].slice(0, 7)}${valor.slice(7, 9)}`
+    }
+  }
+
+  let mudou = true
+  while (mudou) {
+    mudou = false
+    for (const [nome, valor] of Object.entries(escuro)) {
+      const [, ref] = valor.match(/^\{color\.(.+)\}$/) ?? []
+      const alvo = ref?.replaceAll('.', '-')
+      if (alvo && alvo in claro && !(nome in claro)) {
+        claro[nome] = `var(--color-${alvo})`
+        mudou = true
+      }
+    }
+  }
+
+  const linhas = Object.entries(claro).map(([nome, valor]) => `  --color-${nome}: ${valor};`)
+  return ['[data-theme="light"] {', '  color-scheme: light;', ...linhas, '}', ''].join('\n')
+}
+
+function coresAchatadas() {
+  const todas = {}
+  const visitar = (grupo, prefixo) => {
+    for (const [chave, valor] of Object.entries(grupo)) {
+      if (chave.startsWith('$')) continue
+      const nome = prefixo ? `${prefixo}-${chave}` : chave
+      if (valor && typeof valor === 'object' && '$value' in valor)
+        todas[nome] = String(valor.$value)
+      else if (valor && typeof valor === 'object') visitar(valor, nome)
+    }
+  }
+  for (const arquivo of ['color.json', 'color-estado.json', 'color-chart.json']) {
+    visitar(JSON.parse(readFileSync(`src/${arquivo}`, 'utf8')).color, '')
+  }
+  return todas
+}

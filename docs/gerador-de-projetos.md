@@ -296,7 +296,21 @@ Registrado em 2026-11-01, pelos critérios de aceite do componente de loading.
 - **Button `loading`**: prop, porque é estado da aplicação, não do Figma. O botão fica com `aria-busy` e `aria-disabled`, sem `disabled`: com `disabled`, o foco sairia do botão no meio do envio. O clique é ignorado e o `type` vira `button`, para o `submit` não disparar. O spinner vem na cor do texto (o colorido sumiria sobre o gradiente brand). O Button continua sem `'use client'`.
   - Revisão do operador em 2026-11-01 ("não gostei, mais variantes"): a primeira versão escondia o rótulo e usava só o losango, que fica apagado em boa parte do ciclo no tamanho de ícone. Agora `loadingIndicator` (`ring`, padrão, `pixel` ou `dots`), `loadingPosition` (`start`, padrão: no lugar do ícone da esquerda, com o rótulo visível; `end`: no lugar do da direita; `center`: rótulo transparente, sem mudar a largura) e `loadingText` (rótulo durante o carregamento, que vira o nome acessível).
 
-### D19. DataTable
+### D19. Gráficos: ECharts, paleta de séries e modo claro provisório
+
+Registrado em 2026-11-16, pelos critérios da tarefa de gráficos (linha, barra, área e pizza/donut, com tooltip, legenda, skeleton e estado vazio, nos temas claro e escuro, acessíveis por teclado).
+
+- **Biblioteca: ECharts** (`echarts`, versão fixada), escolhido pelo operador entre Recharts, ECharts e visx. Pesou ter mais tipos de gráfico para o que vier depois e o desempenho com muitos pontos. A importação é por partes (`echarts/core` com linha, barra, pizza, grade, tooltip e o renderizador SVG): o ECharts inteiro passa de 1 MB. SVG, e não canvas, para o gráfico ficar nítido em qualquer zoom.
+- **Componentes**: `LineChart`, `AreaChart` (`stacked`), `BarChart` (`stacked`, `orientation`) e `PieChart` (`donut`, com o total no meio). Os três cartesianos recebem os dados do mesmo jeito: `data`, `categoryKey` e `series`. Ficam em `Componentes/Dados/` no Storybook.
+- **Cores só por token**: o ECharts desenha com valores, não com classes. O gráfico lê as variáveis CSS (`--color-chart-*`, `--color-text-*`, `--spacing-*`, `--text-*`, `--radius-2`) do próprio elemento com `getComputedStyle` e relê quando um `data-theme` muda em qualquer ancestral. Como o Tailwind 4 só emite a variável de um token que alguma classe usa, `chartTokenClasses` lista essas classes para o Tailwind encontrá-las ao varrer o pacote; o `css-charts.test.mjs` confere que todas chegaram.
+- **Paleta de séries**: `color.chart-1` a `chart-6` (provisória), referências a cores que já existem: brand, info, success, warning, text-syntax e a neutra text-secondary, para "Outros". Alterna matiz para séries vizinhas não se confundirem e evita danger e coral, próximos demais da brand. O preenchimento da área é `opacity.chart-area` (24%).
+- **Tooltip** do ECharts, estilizado com os tokens. **Legenda** própria, em botões com `aria-pressed`, e não a do ECharts, que não recebe foco: Tab chega a ela e Espaço esconde ou mostra a série.
+- **Teclado e leitor de tela**: o gráfico é um grupo focável (`role="group"`, `aria-roledescription="gráfico"`). As setas percorrem as categorias, ou as fatias, com o tooltip acompanhando; Home e End vão às pontas; Esc fecha. Uma região viva anuncia os valores, e uma tabela escondida repete os dados.
+- **Estados**: `loading` mostra o `Skeleton` com `aria-busy`, sem montar o ECharts; sem dados, ou só com valores ausentes, aparece a mensagem de vazio (`emptyMessage`).
+- **Modo claro provisório** (fecha parte da A7): `packages/tokens/modes/light.json` traz só as cores que mudam, e o build gera um bloco `[data-theme="light"]` que redefine as variáveis. As escadas de estado e os fundos `-bg` são derivados da base clara, e os tokens que referenciam uma cor sobrescrita (`chart-2` → `info`) são redeclarados, para o modo claro valer também num contêiner, e não só no `<html>`. O Storybook ganhou o seletor de tema na barra de ferramentas. A marca é a mesma nos dois modos.
+- **Lacuna do modo claro**: texto `brand` sobre o fundo claro fica em 3,76:1, abaixo dos 4,5:1 de texto (variantes outlined e text do Button). Resolver pede uma decisão do design: escurecer a marca no claro ou usar `brand-deep` para texto. Componentes que usam branco com alpha literal (`white/15` no disabled do Button) não acompanham o tema.
+
+### D20. DataTable
 
 Registrado em 2026-11-15, pelo pedido do operador: ações "…" por linha, um botão que muda a orientação do texto das linhas, paginação integrada, hover que destaca a linha e outras variações.
 
@@ -323,7 +337,7 @@ Registrado em 2026-11-15, pelo pedido do operador: ações "…" por linha, um b
 | A3 | Assento Figma | O time de design precisa de assento Dev ou Full em plano Professional ou superior. A conta testada (Starter/View) tem limite de 20 chamadas por mês; a biblioteca inicial estimada consome ~125. Análise: [ui/figma-mcp-limites.md](ui/figma-mcp-limites.md) |
 | A4 | Identidade do repositório | O nome `webdex-shared-components` não descreve um gerador |
 | A5 | Projeto piloto | Primeiro projeto real que vai usar o gerador e define o escopo mínimo da v1 |
-| A7 | Temas e modos | Modos das Variables do Figma (ex.: dark): o build de tokens gera só um modo |
+| A7 | Temas e modos | Modo claro provisório entregue com os gráficos (D19), em `packages/tokens/modes/light.json`. Falta o design validar os valores, decidir a marca em texto sobre fundo claro e o Figma ganhar o modo, para os tokens virem de Variable |
 | A9 | Publicação | Implementada (D12); falta a primeira execução no GitHub, que acontece no merge na `prod`, e a configuração única do repositório descrita em [publicacao.md](publicacao.md) |
 | A11 | Dockerfile por app | Adiado até A9 |
 | A13 | Microserviços | Única opção ainda "em breve" na TUI; entra como `webdex add service` |
