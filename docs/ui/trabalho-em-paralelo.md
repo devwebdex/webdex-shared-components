@@ -7,61 +7,45 @@ O que está aqui foi medido neste repositório, não é precaução genérica.
 
 ## Antes de tudo: a linha "tema claro e escuro" da DoD
 
-**Hoje, nenhum componente cumpre essa linha, e não dá para cumprir sozinho.**
+O modo claro existe desde os gráficos (D19 em [gerador-de-projetos.md](../gerador-de-projetos.md)),
+e é **provisório**: o Figma só tem o modo escuro, e os valores claros são proposta para o design
+validar (A7).
 
-O tema claro não existe neste repositório. Não é que esteja incompleto -- não há mecanismo
-nenhum:
+- `data-theme="light"` no `<html>`, ou em qualquer contêiner, troca as cores. Sem ele, vale o
+  escuro.
+- Os valores claros ficam em `packages/tokens/modes/light.json`, só as cores que mudam. O build
+  deriva o resto: as escadas de estado (`-hover`, `-focus`...) e os fundos `-bg` saem da base
+  clara com o mesmo alpha do escuro.
+- No Storybook, o seletor de tema fica na barra de ferramentas.
 
-```
-$ grep -rniE 'prefers-color-scheme|data-theme|\.dark|\.light|light-dark\(' \
-    packages/tokens/src apps/storybook/.storybook packages/ui/src
-(nada)
-```
-
-O `packages/tokens/dist/theme.css` gerado tem um `@theme` só, com um valor por token. E
-**56 das 88 cores têm alpha embutido** -- `line-default` é `rgba(255,255,255,0.10)`,
-`danger-bg` é `rgba(255,92,64,0.14)`. Branco a 10% só se lê sobre fundo escuro. Sobre fundo
-claro ele some. Essas cores não têm "versão clara" óbvia: precisam ser rederivadas no Figma,
-uma a uma, com o design decidindo cada valor. A maior parte é a escada de estado
-(`white-hover`, `danger-pressed`...), que o Figma já tem também em preto.
-
-O `preview.tsx` do Storybook já diz isso em comentário: *"O design system é só escuro: as
-cores com alpha só se leem sobre o fundo da marca."*
-
-### Por que isso é um problema de merge, e não só uma pendência
-
-Se dez pessoas receberem "funcionando nos temas claro e escuro" como critério de aceite sem
-que o mecanismo exista, cada uma inventa o seu. Uma usa `prefers-color-scheme`, outra uma
-classe `.dark` na raiz, outra um `data-theme`, outra uma prop `theme` no componente. O Git
-mescla as dez sem um único conflito -- e o resultado não funciona, porque são quatro
-mecanismos incompatíveis convivendo. Esse é o conflito caro: o que o Git não vê.
+Trocar o tema é redefinir as variáveis, não mexer nos componentes. Os componentes usam classe
+de token de papel (`bg-surface-card`, `text-text-primary`), que vira `var(--color-surface-card)`:
+quem usa só isso já funciona nos dois modos.
 
 ### O combinado
 
-1. **A tarefa de tema vem antes e sozinha.** Nada de componente novo em paralelo com ela.
-2. **Até ela entrar, a DoD das outras tarefas é "só escuro".** Risque a linha do tema.
-3. Quando a tarefa de tema for escrita, ela **não é** "revisar os 12 componentes". Ver abaixo.
+1. **Só token de papel.** Nada de primitiva (`text-white`, `white/50`) nem hex
+   (`bg-[#4f4f4f]`): branco continua branco no modo claro e some sobre o fundo.
+2. **Um mecanismo só: o `data-theme`.** Nada de `prefers-color-scheme`, classe `.dark` ou prop
+   `theme` no componente. O Git mescla quatro mecanismos diferentes sem um único conflito, e o
+   resultado não funciona. Esse é o conflito caro: o que o Git não vê.
+3. **Confira nos dois modos no Storybook antes de abrir a PR.** É isso que cumpre a linha da
+   DoD.
+4. **Cor nova que muda no claro:** o token entra em `packages/tokens/src` e o valor claro em
+   `modes/light.json`, na mesma PR. Sem o valor claro, a cor fica igual nos dois modos. O build
+   para se `light.json` tiver uma cor que o escuro não tem.
+5. **Não discuta o valor claro na PR de componente.** Ele é proposta até o design validar (A7).
+   Achou um valor ruim? Anote para o design.
 
-### Como a tarefa de tema deve ser feita
+### O que ainda não acompanha o tema
 
-Os componentes não usam cor crua: usam classe de token (`bg-surface-card`,
-`text-text-primary`). Essas classes viram `var(--color-surface-card)`. Então **trocar o tema
-é redefinir as variáveis, não mexer nos componentes.** A tarefa certa toca
-`packages/tokens` e o `preview.tsx`, e mais nada:
+**Texto `brand` sobre fundo claro** fica em 3,76:1, abaixo dos 4,5:1 de texto (variantes
+`outlined` e `text` do Button). Resolver pede uma decisão do design: escurecer a marca no claro
+ou usar `brand-deep` para texto.
 
-```css
-/* uma origem só para os dois temas */
-:root { --color-surface-card: <escuro>; }
-:root[data-theme='light'] { --color-surface-card: <claro>; }
-```
-
-Escrita assim, ela **não conflita com nenhuma PR de componente** -- mexe em arquivos que
-ninguém mais está tocando. Escrita como "revisar Alert, Button, InputField, ..." ela toca os
-12 componentes e colide com toda PR aberta no mesmo dia.
-
-A exceção são as cores que o componente escolhe pela **primitiva**, e não pelo papel. Elas
-não acompanham a troca de variável, porque branco continua branco no tema claro. Restam onze
-usos, todos no Button:
+**Cores escolhidas pela primitiva**, e não pelo papel, ficam iguais nos dois modos: branco
+continua branco. Restam onze usos, todos no Button. No modo claro, o Button desabilitado fica
+com texto branco quase transparente sobre fundo quase branco:
 
 | Onde | O quê |
 |---|---|
@@ -70,10 +54,9 @@ usos, todos no Button:
 | `hover:` do Contained na cor `code` (×1) | `inset-ring-white/50` |
 
 Os do meio já são token -- a escada de estado do Figma aplicada ao branco --, mas a
-primitiva `white`. O Figma tem a mesma escada para `black`: num tema claro, esses usos
-teriam de virar `black-*`, ou ganhar um token de papel (`disabled-text`) que troque de
-primitiva com o tema. Isso é uma segunda tarefa, separada, que toca componente: entra
-**sozinha**, não junto com a do tema.
+primitiva `white`. O Figma tem a mesma escada para `black`: no modo claro, esses usos teriam
+de virar `black-*`, ou ganhar um token de papel (`disabled-text`) que troque de primitiva com
+o tema. É uma tarefa que toca componente: entra **sozinha**, não junto com outra do Button.
 
 ## Conflito garantido: `packages/ui/src/index.ts`
 
