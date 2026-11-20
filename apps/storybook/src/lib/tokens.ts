@@ -12,7 +12,11 @@
  * O glob pega todo JSON da pasta, então um arquivo de token novo aparece aqui sozinho. Antes
  * disto, a lista de escalas da MeasureTable era escrita à mão, e ficou para trás na primeira
  * vez que a escala mudou.
+ *
+ * A exceção são as cores do modo claro: ver `colorsOf`.
  */
+
+import theme from '@devwebdex/tokens/theme.css?raw'
 
 const files = import.meta.glob<Record<string, unknown>>('../../../../packages/tokens/src/*.json', {
   eager: true,
@@ -74,6 +78,41 @@ export function tokensOf(namespace: string): Token[] {
     return target === undefined ? value : resolve(target, depth + 1)
   }
   return raw.map((token) => ({ ...token, value: resolve(token.value) }))
+}
+
+/**
+ * As cores do modo claro (D19) não estão inteiras na fonte: `modes/light.json` traz só as que
+ * mudam, e o build deriva o resto -- as escadas de estado, os fundos `-bg` e os tokens que
+ * referenciam uma cor sobrescrita. Repetir essa conta aqui seria uma segunda cópia para ficar
+ * para trás. Por isso elas saem do CSS compilado, do bloco `[data-theme="light"]`, que é CSS
+ * comum: o Tailwind poda o `@theme`, mas não ele.
+ */
+const blocoClaro = theme.match(/\[data-theme="light"\]\s*\{([^}]*)\}/)?.[1]
+const claro = new Map(
+  [...(blocoClaro ?? '').matchAll(/--color-([\w-]+):\s*([^;]+);/g)].map(
+    ([, nome, valor]) => [nome ?? '', (valor ?? '').trim()] as const
+  )
+)
+
+/** As cores de um modo. Uma cor que o modo claro não redefine é a mesma nos dois. */
+export function colorsOf(mode: 'dark' | 'light'): Token[] {
+  const escuro = tokensOf('color')
+  if (mode === 'dark') return escuro
+  if (!blocoClaro) {
+    // Falhar alto: cair no escuro em silêncio era justamente o defeito que isto corrige.
+    throw new Error('theme.css sem o bloco [data-theme="light"]: rode o build dos tokens')
+  }
+  const valorEscuro = new Map(escuro.map((token) => [token.name, token.value]))
+  const resolve = (value: string, depth = 0): string => {
+    const reference = value.match(/^var\(--color-([\w-]+)\)$/)
+    if (!reference?.[1] || depth > 5) return value
+    const target = claro.get(reference[1]) ?? valorEscuro.get(reference[1])
+    return target === undefined ? value : resolve(target, depth + 1)
+  }
+  return escuro.map((token) => {
+    const value = claro.get(token.name)
+    return value === undefined ? token : { ...token, value: resolve(value) }
+  })
 }
 
 /** Só os nomes, para quem precisa comparar medida com escala. */
