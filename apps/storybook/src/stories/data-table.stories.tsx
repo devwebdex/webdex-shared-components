@@ -304,7 +304,7 @@ function Wide({ children }: { children: ReactNode }) {
 }
 
 const meta = {
-  title: 'Componentes/DataTable',
+  title: 'Componentes/Dados/DataTable',
   component: DataTable<Transaction>,
   args: {
     data: TRANSACTIONS,
