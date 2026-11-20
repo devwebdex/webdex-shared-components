@@ -46,7 +46,7 @@ function Footer({ action }: { action: ReactNode }) {
 }
 
 const meta = {
-  title: 'Componentes/Modal',
+  title: 'Componentes/Sobreposição/Modal',
   component: Modal,
   args: {
     title: 'Renomear workspace',
