@@ -99,7 +99,7 @@ publicado.
 | `Campos` | InputField, TextField | Formulário avançado |
 | `Dropdown` | Combobox, Menu, Select, Visão geral | -- |
 | `Loading` | Skeleton, Spinner | Progress bar |
-| `Dados` | -- | Tabela de dados, Gráficos, Timeline de eventos |
+| `Dados` | AreaChart, BarChart, LineChart, PieChart | Tabela de dados, Timeline de eventos |
 | `Sobreposição` | Drawer, Modal | Modal de confirmação |
 | `Feedback` | -- (`Alert` está solto) | Badge/Tag, Status pill, Empty state |
 | `Navegação` | -- (`Pagination` está solto) | Tabs, Stepper |

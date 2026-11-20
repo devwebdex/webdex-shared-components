@@ -4,6 +4,10 @@
     "overlay": {
       "$description": "Fundo escurecido atrás do Modal. Alto o bastante para o conteúdo da página não competir com o diálogo sobre o fundo escuro da marca.",
       "$value": "72%"
+    },
+    "chart-area": {
+      "$description": "Preenchimento do AreaChart: a cor da série a 24%, para a linha continuar sendo o que se lê e as áreas empilhadas não se apagarem umas às outras.",
+      "$value": "24%"
     }
   }
 }

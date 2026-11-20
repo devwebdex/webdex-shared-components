@@ -1,0 +1,13 @@
+{
+  "color": {
+    "$type": "color",
+    "$description": "PROVISÓRIO: paleta das séries dos gráficos (LineChart, AreaChart, BarChart, PieChart), na ordem em que as séries recebem cor. Não há Variable de gráfico no Figma; cada uma referencia uma cor que já existe, e por isso acompanha o modo claro sozinha. A ordem alterna matiz (rosa, ciano, verde, âmbar, lilás) para séries vizinhas não se confundirem, e evita danger e coral, próximos demais da brand. A 6 é neutra, para 'outros'.",
+
+    "chart-1": { "$value": "{color.brand}" },
+    "chart-2": { "$value": "{color.info}" },
+    "chart-3": { "$value": "{color.success}" },
+    "chart-4": { "$value": "{color.warning}" },
+    "chart-5": { "$value": "{color.text-syntax}" },
+    "chart-6": { "$value": "{color.text-secondary}" }
+  }
+}
