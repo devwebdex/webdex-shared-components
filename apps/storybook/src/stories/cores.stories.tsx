@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { type Token, tokensOf } from '../lib/tokens.js'
+import { colorsOf, type Token } from '../lib/tokens.js'
 
 /**
  * Todas as cores do tema, lidas de `packages/tokens/src` -- um token novo aparece aqui sozinho.
  *
- * O fundo da página é o `background` da marca, de propósito: metade das cores tem alpha
- * embutido e só se lê sobre ele. O design system é só escuro.
+ * O fundo da página é o `background` do modo, de propósito: metade das cores tem alpha
+ * embutido e só se lê sobre ele. O seletor de tema da barra troca os valores: no claro, que é
+ * provisório (D19), eles vêm do bloco `[data-theme="light"]` do `theme.css`.
  */
 const meta = {
   title: 'Fundação/Cores',
@@ -67,9 +68,9 @@ function Amostra({ token }: { token: Token }) {
  * o valor e, quando houver, a descrição que veio do JSON.
  */
 export const Paleta: Story = {
-  render: () => (
+  render: (_args, { globals }) => (
     <div className="flex flex-col gap-10 p-8">
-      {agrupar(tokensOf('color')).map(([titulo, membros]) => (
+      {agrupar(colorsOf(globals.theme === 'light' ? 'light' : 'dark')).map(([titulo, membros]) => (
         <section key={titulo} className="flex flex-col gap-4">
           <h2 className="font-semibold text-text-primary text-xs">
             {titulo} <span className="font-normal text-text-secondary">· {membros.length}</span>
