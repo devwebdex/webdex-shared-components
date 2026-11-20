@@ -310,6 +310,26 @@ Registrado em 2026-11-16, pelos critérios da tarefa de gráficos (linha, barra,
 - **Modo claro provisório** (fecha parte da A7): `packages/tokens/modes/light.json` traz só as cores que mudam, e o build gera um bloco `[data-theme="light"]` que redefine as variáveis. As escadas de estado e os fundos `-bg` são derivados da base clara, e os tokens que referenciam uma cor sobrescrita (`chart-2` → `info`) são redeclarados, para o modo claro valer também num contêiner, e não só no `<html>`. O Storybook ganhou o seletor de tema na barra de ferramentas. A marca é a mesma nos dois modos.
 - **Lacuna do modo claro**: texto `brand` sobre o fundo claro fica em 3,76:1, abaixo dos 4,5:1 de texto (variantes outlined e text do Button). Resolver pede uma decisão do design: escurecer a marca no claro ou usar `brand-deep` para texto. Componentes que usam branco com alpha literal (`white/15` no disabled do Button) não acompanham o tema.
 
+### D20. DataTable
+
+Registrado em 2026-11-15, pelo pedido do operador: ações "…" por linha, um botão que muda a orientação do texto das linhas, paginação integrada, hover que destaca a linha e outras variações.
+
+- **Lógica própria, sem biblioteca de tabela.** O TanStack Table (base do data table do shadcn) está na 9.x, um major que não foi avaliado aqui. Ordenar, paginar, selecionar e esconder colunas no cliente cabe num hook (`useDataTable`), e a API pública fica sob controle do pacote. Se a tabela precisar de paginação no servidor, filtros por coluna ou virtualização, reavaliar.
+- "Orientação do texto" foi lida como **alinhamento horizontal**: um botão na barra avança esquerda → centro → direita. Coluna com `align` próprio (ex.: valores à direita) não muda.
+- Reaproveita os componentes do pacote: `Menu` com gatilho "…" para as ações, `Pagination` e `Select` (linhas por página) no rodapé, `Skeleton` nas linhas carregando.
+- Variações: densidade `comfortable`/`compact` (com botão, `aria-pressed`), listrada, cabeçalho fixo com `maxHeight`, ordenação por coluna (`aria-sort`), seleção com checkbox e "selecionar a página" (`indeterminate`), menu de colunas visíveis, vazia, carregando (`aria-busy`), slot para busca. Toda prop de estado tem par controlado/não controlado.
+- O contrato fica em `components/data-table/types.ts`, e cada parte (hook, cabeçalho, ações, barra, rodapé, tabela) em arquivo próprio: foi o que permitiu dividir o trabalho entre subagentes sem conflito.
+- O contêiner usa `border`, não `inset-ring`: o fundo das linhas e do cabeçalho fixo pintaria por cima da sombra. A barra do hover é sombra interna na primeira célula, porque `position: relative` em `<tr>` não vale em todo navegador.
+- O design system não desenha tabela de dados: o cabeçalho segue a tabela de tokens do HTML (`table.tk`), e o resto é proposta para revisão do design. O Empty state da lista de tarefas ainda não existe; a tabela tem `emptyState` como slot até ele entrar.
+- Segunda rodada (pedido do operador em 2026-11-15, A2 a A10): busca global (sem acento e sem caixa; datas em pt-BR e ISO), filtro por coluna (OU dentro da coluna, E entre colunas), ações em lote com as linhas selecionadas de todas as páginas, linha expansível, exportar CSV, modo servidor (`manual` + `rowCount`), primeira coluna fixa, colunas redimensionáveis (arrastar ou setas), botão de copiar e cards em contêiner estreito.
+  - CSV com `;` e BOM, para o Excel em português abrir com acento e colunas certas; texto que começa com `=`, `+`, `-`, `@` (mesmo depois de espaços) ganha apóstrofo, contra injeção de fórmula na planilha; e todo texto vai entre aspas, para uma planilha que separa por vírgula não cortar o campo e soltar uma fórmula (apontado pela revisão de segurança).
+  - Os cards usam container query (`@container`, abaixo de 40rem): dependem da largura da tabela, não da tela, e funcionam numa coluna estreita de um painel largo.
+  - **Exportar Excel com a marca** (escolha do operador em 2026-11-15, entre .xlsx, PDF e HTML disfarçado de .xls): `excelExportable` gera um .xlsx com faixa escura e o wordmark WEbdEX, título, data da exportação, cabeçalho magenta congelado com filtro, linhas alternando com `magenta.10`, números com milhar, datas em dd/mm/aaaa e impressão em paisagem numa folha de largura. Corpo claro, não o fundo escuro da interface: planilha se imprime e se edita.
+  - Dependência nova: **ExcelJS 4.4.0** (MIT). Entra por `import()` só no clique, então não pesa no carregamento; mas instala 133 pacotes transitivos em todo projeto que usa o `@devwebdex/ui`. Se isso incomodar, o caminho é mover o Excel para um pacote à parte (`@devwebdex/ui-export`, por exemplo).
+  - O Excel só aceita PNG, JPEG ou GIF: o wordmark (SVG pixelado do design system, em `webdex-wordmark.ts`) é desenhado num canvas e vira PNG na hora de exportar. Sem canvas (servidor, testes), a planilha sai sem o logo.
+  - No .xlsx, texto é gravado como texto e não é avaliado como fórmula: não precisa da proteção com apóstrofo do CSV.
+  - Limite conhecido do modo servidor: a tabela só conhece as linhas da página atual, então as ações em lote e o CSV recebem as selecionadas que estão nessa página. Seleção entre páginas no servidor fica para quem usa, pelos ids de `onSelectionChange`.
+
 ## Em aberto
 
 | # | Tema | Pendência |
