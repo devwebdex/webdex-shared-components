@@ -100,7 +100,7 @@ publicado.
 | `Dropdown` | Combobox, Menu, Select, Visão geral | -- |
 | `Loading` | Skeleton, Spinner | Progress bar |
 | `Dados` | AreaChart, BarChart, LineChart, PieChart | Tabela de dados, Timeline de eventos |
-| `Sobreposição` | -- (`Modal` está solto) | Drawer, Modal de confirmação |
+| `Sobreposição` | Drawer, Modal | Modal de confirmação |
 | `Feedback` | -- (`Alert` está solto) | Badge/Tag, Status pill, Empty state |
 | `Navegação` | -- (`Pagination` está solto) | Tabs, Stepper |
 | `Superfícies` | -- (`Card` está solto) | Avatar, Cards de perfil, Cards de métricas |
